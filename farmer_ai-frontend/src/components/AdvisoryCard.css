@@ -1,0 +1,49 @@
+.advisory-card {
+    background: white;
+    border-left: 4px solid #2d5016;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.advisory-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.advisory-date {
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.advisory-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2d5016;
+    margin-bottom: 0.5rem;
+}
+
+.advisory-summary {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
+.advisory-link {
+    color: #2d5016;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: gap 0.2s ease;
+}
+
+.advisory-link:hover {
+    gap: 0.5rem;
+    text-decoration: underline;
+}

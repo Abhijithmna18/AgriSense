@@ -1,0 +1,292 @@
+/* Admin Console Dark Mode Theme */
+
+:root {
+    /* Dark Mode Colors */
+    --admin-bg-primary: #0F1419;
+    --admin-bg-secondary: #1A1F2E;
+    --admin-bg-tertiary: #252B3B;
+
+    /* Neon Cyber Green */
+    --cyber-green: #00FF88;
+    --cyber-green-bright: #39FF14;
+    --cyber-green-dim: #00CC6A;
+
+    /* Alert Colors */
+    --alert-red: #FF3366;
+    --alert-amber: #FFB800;
+    --alert-blue: #00D4FF;
+
+    /* Glassmorphism */
+    --glass-bg: rgba(26, 31, 46, 0.7);
+    --glass-border: rgba(0, 255, 136, 0.2);
+
+    /* Typography */
+    --font-admin: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Roboto Mono', 'Courier New', monospace;
+}
+
+/* Admin Body Override */
+body.admin-mode {
+    background: linear-gradient(135deg, var(--admin-bg-primary) 0%, var(--admin-bg-secondary) 100%);
+    font-family: var(--font-admin);
+    color: #E8E8E8;
+}
+
+/* Admin Glass Effect */
+.admin-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 136, 0.1);
+}
+
+/* Neon Glow Effect */
+.neon-glow {
+    box-shadow:
+        0 0 5px var(--cyber-green),
+        0 0 10px var(--cyber-green),
+        0 0 20px var(--cyber-green-dim);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 5px var(--cyber-green),
+            0 0 10px var(--cyber-green),
+            0 0 20px var(--cyber-green-dim);
+    }
+
+    50% {
+        box-shadow:
+            0 0 10px var(--cyber-green-bright),
+            0 0 20px var(--cyber-green-bright),
+            0 0 30px var(--cyber-green);
+    }
+}
+
+/* Cyber Text */
+.cyber-text {
+    color: var(--cyber-green);
+    text-shadow: 0 0 10px var(--cyber-green);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+/* Mission Control Grid */
+.mission-grid {
+    background-image:
+        linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Alert Banner */
+.alert-banner {
+    background: linear-gradient(90deg, var(--alert-red) 0%, rgba(255, 51, 102, 0.3) 100%);
+    border-left: 4px solid var(--alert-red);
+    animation: alert-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes alert-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Circular Progress */
+.circular-progress {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.circular-progress svg {
+    transform: rotate(-90deg);
+}
+
+.circular-progress circle {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+.circular-progress .bg-circle {
+    stroke: rgba(255, 255, 255, 0.1);
+}
+
+.circular-progress .progress-circle {
+    stroke: var(--cyber-green);
+    filter: drop-shadow(0 0 8px var(--cyber-green));
+}
+
+/* Ticker Animation */
+.ticker-scroll {
+    animation: ticker 30s linear infinite;
+}
+
+@keyframes ticker {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* Drag Handle */
+.drag-handle {
+    cursor: move;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.admin-widget:hover .drag-handle {
+    opacity: 1;
+}
+
+/* FAB Button */
+.admin-fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyber-green) 0%, var(--cyber-green-bright) 100%);
+    box-shadow:
+        0 4px 20px rgba(0, 255, 136, 0.4),
+        0 0 40px rgba(0, 255, 136, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.admin-fab:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow:
+        0 6px 30px rgba(0, 255, 136, 0.6),
+        0 0 60px rgba(0, 255, 136, 0.3);
+}
+
+/* Scrollbar Dark Theme */
+.admin-mode ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.admin-mode ::-webkit-scrollbar-track {
+    background: var(--admin-bg-secondary);
+}
+
+.admin-mode ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--cyber-green), var(--cyber-green-dim));
+    border-radius: 4px;
+}
+
+.admin-mode ::-webkit-scrollbar-thumb:hover {
+    background: var(--cyber-green-bright);
+}
+
+/* Data Cards */
+.data-card {
+    background: var(--admin-bg-tertiary);
+    border: 1px solid rgba(0, 255, 136, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.data-card:hover {
+    border-color: var(--cyber-green);
+    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-badge.active {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--cyber-green);
+    border: 1px solid var(--cyber-green);
+}
+
+.status-badge.warning {
+    background: rgba(255, 184, 0, 0.2);
+    color: var(--alert-amber);
+    border: 1px solid var(--alert-amber);
+}
+
+.status-badge.critical {
+    background: rgba(255, 51, 102, 0.2);
+    color: var(--alert-red);
+    border: 1px solid var(--alert-red);
+}
+
+/* Interactive Buttons */
+.admin-btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    font-family: var(--font-admin);
+}
+
+.admin-btn-primary {
+    background: var(--cyber-green);
+    color: var(--admin-bg-primary);
+}
+
+.admin-btn-primary:hover {
+    background: var(--cyber-green-bright);
+    box-shadow: 0 0 20px var(--cyber-green);
+}
+
+.admin-btn-secondary {
+    background: transparent;
+    border: 1px solid var(--cyber-green);
+    color: var(--cyber-green);
+}
+
+.admin-btn-secondary:hover {
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.admin-btn-danger {
+    background: var(--alert-red);
+    color: white;
+}
+
+.admin-btn-danger:hover {
+    background: #FF5580;
+    box-shadow: 0 0 20px var(--alert-red);
+}

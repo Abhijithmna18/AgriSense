@@ -1,0 +1,29 @@
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.spinner-sm {
+    padding: 0.5rem;
+}
+
+.spinner-lg {
+    padding: 4rem;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+.spinner-sm .spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.spinner-lg .spinner-border {
+    width: 5rem;
+    height: 5rem;
+}

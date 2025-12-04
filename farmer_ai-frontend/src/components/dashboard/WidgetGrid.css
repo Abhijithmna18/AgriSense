@@ -1,0 +1,63 @@
+.widget-grid {
+    position: relative;
+}
+
+.widget-container {
+    transition: all 0.3s cubic-bezier(0.6, 0.05, 0.01, 0.9);
+}
+
+.react-grid-item {
+    transition: all 200ms ease;
+    transition-property: left, top, width, height;
+}
+
+.react-grid-item.cssTransforms {
+    transition-property: transform, width, height;
+}
+
+.react-grid-item.resizing {
+    transition: none;
+    z-index: 100;
+    will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+    transition: none;
+    z-index: 100;
+    will-change: transform;
+}
+
+.react-grid-item.react-grid-placeholder {
+    background: rgba(214, 249, 185, 0.2);
+    opacity: 0.5;
+    transition-duration: 100ms;
+    z-index: 2;
+    border-radius: 1rem;
+    border: 2px dashed #D4AF37;
+}
+
+.react-grid-item>.react-resizable-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+}
+
+.react-grid-item>.react-resizable-handle::after {
+    content: "";
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #D4AF37;
+    border-bottom: 2px solid #D4AF37;
+    opacity: 0.5;
+}
+
+.react-grid-item:hover>.react-resizable-handle::after {
+    opacity: 1;
+}
+
+.widget-drag-handle {
+    cursor: move;
+}

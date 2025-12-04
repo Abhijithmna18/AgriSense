@@ -1,0 +1,248 @@
+.hero {
+    position: relative;
+    height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-top: 70px;
+}
+
+/* Decorative Floating Elements */
+.hero::before {
+    content: '🌾';
+    position: absolute;
+    font-size: 8rem;
+    opacity: 0.05;
+    top: 10%;
+    left: 5%;
+    animation: float 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.hero::after {
+    content: '🌱';
+    position: absolute;
+    font-size: 6rem;
+    opacity: 0.05;
+    bottom: 15%;
+    right: 8%;
+    animation: float 8s ease-in-out infinite reverse;
+    pointer-events: none;
+}
+
+.heroBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.backgroundImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    animation: slowZoom 30s ease-in-out infinite alternate;
+}
+
+@keyframes slowZoom {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.1);
+    }
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(var(--gradient-angle),
+            var(--gradient-start),
+            var(--gradient-end));
+    opacity: 0.7;
+}
+
+.heroContent {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 2rem;
+    max-width: 900px;
+}
+
+.textContainer {
+    background: rgba(255, 255, 255, calc(var(--glass-opacity) / 100));
+    backdrop-filter: blur(var(--blur-intensity)) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, calc(var(--border-whiteness) / 100));
+    border-radius: 30px;
+    padding: 3rem 2.5rem;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    position: relative;
+    overflow: hidden;
+}
+
+.textContainer::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg,
+            transparent 30%,
+            rgba(212, 175, 55, 0.3) 50%,
+            transparent 70%);
+    border-radius: inherit;
+    opacity: 0;
+    animation: borderGlow 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes borderGlow {
+
+    0%,
+    100% {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateX(100%);
+    }
+}
+
+.title {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+    text-shadow:
+        2px 4px 8px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(46, 204, 113, 0.2);
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    color: var(--color-text);
+    margin-bottom: 2.5rem;
+    opacity: 0.95;
+    font-weight: 300;
+    text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ctaButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow:
+        0 10px 30px rgba(212, 175, 55, 0.4),
+        0 0 0 0 rgba(212, 175, 55, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.ctaButton::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, calc(var(--metallic-accent) / 200)),
+            transparent);
+    transition: left 0.5s ease;
+}
+
+.ctaButton:hover::before {
+    left: 100%;
+}
+
+.ctaButton:hover {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow:
+        0 15px 40px rgba(212, 175, 55, 0.6),
+        0 0 30px rgba(212, 175, 55, 0.4);
+}
+
+.ctaButton:active {
+    transform: scale(0.98);
+}
+
+.editable {
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.editable:hover {
+    background: rgba(255, 255, 255, 0.1);
+    outline: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+.editInput,
+.ctaInput {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--color-secondary);
+    color: var(--color-text);
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-size: inherit;
+    font-weight: inherit;
+    width: 100%;
+    outline: none;
+}
+
+.ctaInput {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.5rem;
+    width: auto;
+    min-width: 150px;
+}
+
+@media (max-width: 768px) {
+    .hero {
+        height: 70vh;
+    }
+
+    .title {
+        font-size: 2.5rem;
+    }
+
+    .subtitle {
+        font-size: 1.125rem;
+    }
+
+    .textContainer {
+        padding: 2rem 1.5rem;
+    }
+
+    .hero::before,
+    .hero::after {
+        font-size: 4rem;
+    }
+}

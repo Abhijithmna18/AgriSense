@@ -1,0 +1,74 @@
+.googleButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #DADCE0;
+    border-radius: 50px;
+    /* Rounded to match other buttons */
+    padding: 2px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    font-family: 'Roboto', sans-serif;
+    /* Google uses Roboto */
+    margin-top: 1rem;
+    min-height: 48px;
+    /* Touch target */
+}
+
+.googleButton:hover:not(:disabled) {
+    background-color: #F7FAFC;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-color: #D2E3FC;
+}
+
+.googleButton:active:not(:disabled) {
+    background-color: #F1F3F4;
+    box-shadow: none;
+}
+
+.googleButton:focus-visible {
+    outline: 2px solid #4285F4;
+    outline-offset: 2px;
+}
+
+.googleButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(100%);
+}
+
+.iconWrapper {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: white;
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+.text {
+    flex-grow: 1;
+    text-align: center;
+    color: #3C4043;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.25px;
+    padding-right: 40px;
+    /* Balance the icon width */
+}
+
+/* Dark mode adjustments if needed, though Google button usually stays white */
+:global(.dark) .googleButton {
+    background-color: #FFFFFF;
+    /* Keep white for brand recognition */
+    border-color: rgba(255, 255, 255, 0.2);
+}
