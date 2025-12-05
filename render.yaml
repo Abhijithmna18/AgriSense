@@ -1,4 +1,27 @@
 services:
+  - type: web
+    name: agrisense-backend
+    env: node
+    root: farmer_ai-backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    branch: main
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        fromService:
+          type: static
+          name: agrisense-frontend
+          property: url
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
   - type: static
     name: agrisense-frontend
     env: node
@@ -6,3 +29,9 @@ services:
     buildCommand: npm install && npm run build
     publishPath: dist
     branch: main
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: agrisense-backend
+          property: url
