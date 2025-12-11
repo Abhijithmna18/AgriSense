@@ -8,7 +8,8 @@ import {
     ShoppingBag,
     Link as LinkIcon,
     Settings,
-    LogOut
+    LogOut,
+    Sprout
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -18,6 +19,7 @@ const Sidebar = ({ onLogout }) => {
         { icon: BarChart2, label: 'Analytics', path: '/analytics' },
         { icon: TrendingUp, label: 'Forecasting', path: '/forecasting' },
         { icon: BrainCircuit, label: 'AI Models', path: '/ai-models' },
+        { icon: Sprout, label: 'Recommendations', path: '/recommendations' },
         { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace' },
         { icon: LinkIcon, label: 'Blockchain', path: '/blockchain' },
         { icon: Settings, label: 'Settings', path: '/settings' },

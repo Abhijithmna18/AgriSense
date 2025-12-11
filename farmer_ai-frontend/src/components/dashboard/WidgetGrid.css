@@ -1,63 +1,44 @@
-.widget-grid {
+/* WidgetGrid.css */
+.react-grid-layout {
     position: relative;
-}
-
-.widget-container {
-    transition: all 0.3s cubic-bezier(0.6, 0.05, 0.01, 0.9);
+    transition: height 200ms ease;
 }
 
 .react-grid-item {
     transition: all 200ms ease;
-    transition-property: left, top, width, height;
+    transition-property: left, top;
 }
 
 .react-grid-item.cssTransforms {
-    transition-property: transform, width, height;
+    transition-property: transform;
 }
 
 .react-grid-item.resizing {
-    transition: none;
     z-index: 100;
-    will-change: width, height;
-}
-
-.react-grid-item.react-draggable-dragging {
-    transition: none;
-    z-index: 100;
-    will-change: transform;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .react-grid-item.react-grid-placeholder {
-    background: rgba(214, 249, 185, 0.2);
+    background: rgba(0, 0, 0, 0.1) !important;
     opacity: 0.5;
-    transition-duration: 100ms;
     z-index: 2;
-    border-radius: 1rem;
-    border: 2px dashed #D4AF37;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
 }
 
-.react-grid-item>.react-resizable-handle {
-    position: absolute;
-    width: 20px;
-    height: 20px;
+.widget-grid {
+    background: transparent;
 }
 
-.react-grid-item>.react-resizable-handle::after {
-    content: "";
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid #D4AF37;
-    border-bottom: 2px solid #D4AF37;
-    opacity: 0.5;
-}
-
-.react-grid-item:hover>.react-resizable-handle::after {
-    opacity: 1;
-}
-
-.widget-drag-handle {
-    cursor: move;
+.widget-container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }

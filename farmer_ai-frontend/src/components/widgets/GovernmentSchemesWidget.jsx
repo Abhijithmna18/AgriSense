@@ -66,8 +66,8 @@ const GovernmentSchemesWidget = ({ onRemove, onMinimize }) => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className={`text-[10px] px-2 py-0.5 rounded-full ${scheme.status === 'eligible' ? 'bg-green-500/20 text-green-600' :
-                                            scheme.status === 'applied' ? 'bg-yellow-500/20 text-yellow-600' :
-                                                'bg-red-500/20 text-red-600'
+                                        scheme.status === 'applied' ? 'bg-yellow-500/20 text-yellow-600' :
+                                            'bg-red-500/20 text-red-600'
                                         }`}>
                                         {scheme.status.replace('_', ' ')}
                                     </span>

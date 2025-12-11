@@ -1,65 +1,44 @@
-import React, { useState } from 'react';
-import { Search, Bell, User, Edit3, Save } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React from 'react';
+import { Search, Bell, RefreshCw, FileText } from 'lucide-react';
+import '../../styles/admin.css';
 
-const AdminTopBar = ({ isEditMode, onToggleEdit }) => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [hasNotifications, setHasNotifications] = useState(true);
-
+const AdminTopBar = ({ title = 'Dashboard' }) => {
     return (
-        <header className="sticky top-0 z-40 px-8 py-4 admin-glass border-b border-cyber-green/20">
-            <div className="flex items-center justify-between">
-                {/* Left: Search */}
-                <div className="flex-1 max-w-2xl">
-                    <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyber-green transition-colors" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Search farmers, crops, or orders..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 rounded-full bg-admin-bg-tertiary border border-cyber-green/20 focus:border-cyber-green focus:outline-none focus:ring-2 focus:ring-cyber-green/20 transition-all duration-300 placeholder:text-gray-600 text-gray-200"
-                        />
-                    </div>
+        <header className="flex justify-between items-center mb-8 bg-[var(--admin-bg-secondary)] px-6 py-4 rounded-xl border border-[var(--admin-border)] shadow-sm">
+            <div className="flex flex-col">
+                <h1 className="text-2xl font-bold text-[var(--admin-text-primary)] tracking-tight">{title}</h1>
+                <p className="text-[var(--admin-text-secondary)] text-sm mt-1">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+                {/* Global Search (Placeholder) */}
+                <div className="relative hidden md:block group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-secondary)] group-focus-within:text-[var(--admin-accent)] transition-colors" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Search system..."
+                        className="bg-[var(--admin-bg-primary)] text-[var(--admin-text-primary)] pl-10 pr-4 py-2 rounded-lg border border-[var(--admin-border)] focus:outline-none focus:border-[var(--admin-accent)] transition-all w-64 placeholder-[var(--admin-text-muted)]"
+                    />
                 </div>
 
-                {/* Right: Actions */}
-                <div className="flex items-center gap-6 ml-8">
-                    {/* Edit Layout Toggle */}
-                    <button
-                        onClick={onToggleEdit}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium text-sm ${isEditMode
-                                ? 'bg-cyber-green text-admin-bg-primary neon-glow'
-                                : 'bg-admin-bg-tertiary border border-cyber-green/30 text-cyber-green hover:bg-cyber-green/10'
-                            }`}
-                    >
-                        {isEditMode ? <Save size={16} /> : <Edit3 size={16} />}
-                        <span>{isEditMode ? 'Save Layout' : 'Edit Layout'}</span>
-                    </button>
+                <div className="h-8 w-px bg-[var(--admin-border)] mx-2"></div>
 
-                    {/* Notifications */}
-                    <button className="relative p-2 text-gray-400 hover:text-cyber-green transition-colors rounded-full hover:bg-white/5">
-                        <Bell size={20} />
-                        {hasNotifications && (
-                            <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="absolute top-1 right-1 w-2.5 h-2.5 bg-alert-red rounded-full border-2 border-admin-bg-secondary"
-                            />
-                        )}
-                    </button>
+                <button className="p-2 rounded-lg text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] hover:bg-[var(--admin-bg-hover)] transition-colors relative">
+                    <Bell size={20} />
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--admin-accent)] rounded-full"></span>
+                </button>
 
-                    {/* User Profile */}
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-admin-bg-tertiary border border-cyber-green/20">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyber-green to-cyber-green-bright flex items-center justify-center">
-                            <User size={16} className="text-admin-bg-primary" />
-                        </div>
-                        <div className="text-left">
-                            <p className="text-sm font-medium text-gray-200">Admin Console</p>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">Superuser</p>
-                        </div>
-                    </div>
-                </div>
+                <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--admin-bg-hover)] text-[var(--admin-text-primary)] hover:bg-[var(--admin-border)] transition-colors text-sm font-medium">
+                    <RefreshCw size={16} />
+                    <span className="hidden sm:inline">Refetch</span>
+                </button>
+
+                <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--admin-accent)] text-[#0D2818] hover:bg-[var(--admin-accent-hover)] transition-colors text-sm font-bold shadow-md">
+                    <FileText size={16} />
+                    <span className="hidden sm:inline">Report</span>
+                </button>
             </div>
         </header>
     );

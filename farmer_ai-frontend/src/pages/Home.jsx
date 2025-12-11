@@ -1,22 +1,20 @@
 import React from 'react';
-import { Header } from '../components/Header';
-import { LuxuryHero } from '../components/LuxuryHero';
-import { FeatureCards } from '../components/FeatureCards';
-import { LuxuryAbout } from '../components/LuxuryAbout';
-import { PremiumMarketplace } from '../components/PremiumMarketplace';
-import { LuxuryFooter } from '../components/LuxuryFooter';
-import { ThemeToggle } from '../components/ThemeToggle';
+import ModernNavbar from '../components/ModernNavbar';
+import ModernHero from '../components/ModernHero';
+import ModernFeatures from '../components/ModernFeatures';
+import ModernDataViz from '../components/ModernDataViz';
+import ModernMarketplace from '../components/ModernMarketplace';
+import ModernFooter from '../components/ModernFooter';
 
 const Home = () => {
     return (
-        <div className="min-h-screen bg-warm-ivory dark:bg-deep-forest transition-colors duration-300">
-            <Header />
-            <ThemeToggle />
-            <LuxuryHero />
-            <FeatureCards />
-            <LuxuryAbout />
-            <PremiumMarketplace />
-            <LuxuryFooter />
+        <div className="min-h-screen bg-white font-sans text-slate-900">
+            <ModernNavbar />
+            <ModernHero />
+            <ModernFeatures />
+            <ModernDataViz />
+            <ModernMarketplace />
+            <ModernFooter />
         </div>
     );
 };

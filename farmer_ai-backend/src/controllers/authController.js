@@ -1,9 +1,12 @@
 const User = require('../models/User');
 const crypto = require('crypto');
 const { generateAccessToken } = require('../utils/jwt');
-const { sendVerificationEmail } = require('../services/mailer');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/mailer');
 const { body, validationResult } = require('express-validator');
 const admin = require('../config/firebase');
+
+// Helper to generate secure OTP
+const generateOTP = () => String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 
 /**
  * @route   POST /api/auth/register
@@ -415,6 +418,189 @@ exports.googleLogin = async (req, res) => {
     }
 };
 
+
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Request password reset
+ * @access  Public
+ */
+exports.forgotPassword = [
+    body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
+
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ success: false, errors: errors.array() });
+            }
+
+            const { email } = req.body;
+            const user = await User.findOne({ email });
+
+            // Always return success to prevent enumeration
+            if (!user) {
+                return res.status(200).json({
+                    success: true,
+                    message: 'If that email exists we sent a verification code'
+                });
+            }
+
+            // Check rate info if it exists (simple check)
+            // Ideally we should check user.otp.lastSentAt etc.
+            if (user.otp && user.otp.lastSentAt) {
+                const oneHour = 60 * 60 * 1000;
+                if (Date.now() - new Date(user.otp.lastSentAt).getTime() < oneHour && user.otp.sentCount >= 5) {
+                    // Log internal warning?
+                    // Return success fake
+                    return res.status(200).json({
+                        success: true,
+                        message: 'If that email exists we sent a verification code'
+                    });
+                }
+            }
+
+            // Generate OTP
+            const otp = generateOTP();
+            user.setOtp(otp, 'password_reset');
+            await user.save();
+
+            // Send email
+            const resetLink = `${process.env.FRONTEND_URL}/reset-password?email=${encodeURIComponent(email)}&code=${otp}`;
+
+            try {
+                await sendPasswordResetEmail({
+                    to: email,
+                    name: user.firstName,
+                    otp,
+                    link: resetLink
+                });
+            } catch (emailErr) {
+                console.error('Failed to send reset email', emailErr);
+                // Still return success to user? Or error?
+                // Usually better to return error if email service is down so they can retry.
+                // But for security enumeration, maybe 200 checks out.
+                // Let's return 200 but log it.
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'If that email exists we sent a verification code'
+            });
+
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    }
+];
+
+/**
+ * @route   POST /api/auth/verify-reset
+ * @desc    Verify OTP and reset password
+ * @access  Public
+ */
+exports.verifyReset = [
+    body('email').isEmail().normalizeEmail(),
+    body('code').isLength({ min: 6, max: 6 }).isNumeric().withMessage('Invalid code'),
+    body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ success: false, errors: errors.array() });
+            }
+
+            const { email, code, newPassword } = req.body;
+            const user = await User.findOne({ email }).select('+password');
+
+            if (!user) {
+                return res.status(400).json({ success: false, message: 'Invalid or expired code' });
+            }
+
+            // Verify OTP
+            // Check if type is password_reset
+            if (user.otp && user.otp.type !== 'password_reset') {
+                return res.status(400).json({ success: false, message: 'Invalid code type' });
+            }
+
+            const verification = user.verifyOtp(code);
+            if (!verification.success) {
+                await user.save(); // increment tries
+                if (verification.message.includes('Maximum')) {
+                    return res.status(429).json({ success: false, message: 'Too many attempts. Please request a new code.' });
+                }
+                return res.status(400).json({ success: false, message: 'Invalid or expired code' });
+            }
+
+            // Success - Reset Password
+            user.password = newPassword; // Will be hashed by pre-save
+            user.clearOtp();
+            await user.save();
+
+            // Optional: Auto login? Or require login?
+            // Requirement said "Optionally generate a JWT... or response success"
+            // Let's return success and let them login to be safe/simple.
+
+            res.status(200).json({
+                success: true,
+                message: 'Password reset successful. Please login with your new password.'
+            });
+
+        } catch (error) {
+            console.error('Reset password error:', error);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    }
+];
+
+/**
+ * @route   POST /api/auth/resend-reset
+ * @desc    Resend password reset code
+ * @access  Public
+ */
+exports.resendReset = [
+    body('email').isEmail().normalizeEmail(),
+
+    async (req, res) => {
+        try {
+            const { email } = req.body;
+            const user = await User.findOne({ email });
+
+            if (!user) {
+                return res.status(200).json({ success: true, message: 'Code resent' });
+            }
+
+            // Rate limit check specific to resend
+            const oneHour = 60 * 60 * 1000;
+            if (user.otp && user.otp.lastSentAt) {
+                if (Date.now() - new Date(user.otp.lastSentAt).getTime() < oneHour && user.otp.sentCount >= 3) {
+                    return res.status(429).json({ success: false, message: 'Too many requests. Try again later.' });
+                }
+            }
+
+            // Generate new OTP
+            const otp = generateOTP();
+            user.setOtp(otp, 'password_reset');
+            await user.save();
+
+            const resetLink = `${process.env.FRONTEND_URL}/reset-password?email=${encodeURIComponent(email)}&code=${otp}`;
+            await sendPasswordResetEmail({
+                to: email,
+                name: user.firstName,
+                otp,
+                link: resetLink
+            });
+
+            res.status(200).json({ success: true, message: 'Code resent' });
+
+        } catch (error) {
+            console.error('Resend reset error:', error);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    }
+];
+
 /**
  * @route   POST /api/auth/logout
  * @desc    Logout user
@@ -437,3 +623,4 @@ exports.logout = async (req, res) => {
         });
     }
 };
+

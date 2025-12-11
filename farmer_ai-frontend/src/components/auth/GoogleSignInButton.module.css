@@ -3,72 +3,44 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    background-color: #FFFFFF;
-    border: 1px solid #DADCE0;
-    border-radius: 50px;
-    /* Rounded to match other buttons */
-    padding: 2px;
+    padding: 0.875rem;
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
     cursor: pointer;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-    font-family: 'Roboto', sans-serif;
-    /* Google uses Roboto */
-    margin-top: 1rem;
-    min-height: 48px;
-    /* Touch target */
+    transition: all 0.2s ease;
+    gap: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.googleButton:hover:not(:disabled) {
-    background-color: #F7FAFC;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    border-color: #D2E3FC;
-}
-
-.googleButton:active:not(:disabled) {
-    background-color: #F1F3F4;
-    box-shadow: none;
-}
-
-.googleButton:focus-visible {
-    outline: 2px solid #4285F4;
-    outline-offset: 2px;
+.googleButton:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .googleButton:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    filter: grayscale(100%);
+    transform: none;
 }
 
 .iconWrapper {
-    width: 40px;
-    height: 40px;
+    width: 1.25rem;
+    height: 1.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background-color: white;
 }
 
 .icon {
-    width: 20px;
-    height: 20px;
-    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .text {
-    flex-grow: 1;
-    text-align: center;
-    color: #3C4043;
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.25px;
-    padding-right: 40px;
-    /* Balance the icon width */
-}
-
-/* Dark mode adjustments if needed, though Google button usually stays white */
-:global(.dark) .googleButton {
-    background-color: #FFFFFF;
-    /* Keep white for brand recognition */
-    border-color: rgba(255, 255, 255, 0.2);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #334155;
 }

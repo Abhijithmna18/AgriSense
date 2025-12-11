@@ -54,8 +54,8 @@ const MarketplaceWidget = ({ onRemove, onMinimize }) => {
                             <div className="text-right">
                                 <div className="text-sm font-bold text-primary-green">{txn.amount}</div>
                                 <div className={`text-[10px] px-2 py-0.5 rounded-full inline-block ${txn.status === 'completed' ? 'bg-green-500/20 text-green-600' :
-                                        txn.status === 'pending' ? 'bg-yellow-500/20 text-yellow-600' :
-                                            'bg-blue-500/20 text-blue-600'
+                                    txn.status === 'pending' ? 'bg-yellow-500/20 text-yellow-600' :
+                                        'bg-blue-500/20 text-blue-600'
                                     }`}>
                                     {txn.status}
                                 </div>

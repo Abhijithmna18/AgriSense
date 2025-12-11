@@ -34,6 +34,10 @@ const UserSchema = new mongoose.Schema({
         enum: ['farmer', 'buyer', 'admin'],
         default: 'farmer'
     },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
     password: {
         type: String,
         required: function () {
@@ -128,9 +132,8 @@ const UserSchema = new mongoose.Schema({
 });
 
 // Update updatedAt on save
-UserSchema.pre('save', function (next) {
+UserSchema.pre('save', function () {
     this.updatedAt = Date.now();
-    next();
 });
 
 // Compound index for email and provider

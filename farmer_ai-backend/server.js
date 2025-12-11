@@ -43,8 +43,10 @@ app.use(limiter);
 // Routes
 app.use('/api/auth', require('./src/routes/authRoutes'));
 app.use('/api/users', require('./src/routes/userRoutes'));
+app.use('/api/admin', require('./src/routes/adminRoutes'));
 app.use('/api/crops', require('./src/routes/cropRoutes'));
 app.use('/api/uploads', require('./src/routes/uploadRoutes'));
+app.use('/api/recommendations', require('./src/routes/recommendationRoutes'));
 
 // Make uploads folder static
 const path = require('path');

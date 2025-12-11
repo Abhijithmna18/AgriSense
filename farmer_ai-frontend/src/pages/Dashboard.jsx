@@ -144,8 +144,8 @@ const Dashboard = () => {
                             <button
                                 onClick={toggleEditMode}
                                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-medium ${isEditMode
-                                        ? 'bg-accent-gold text-white shadow-lg'
-                                        : 'bg-white/5 border border-dark-green-text/10 hover:border-accent-gold hover:text-accent-gold'
+                                    ? 'bg-accent-gold text-white shadow-lg'
+                                    : 'bg-white/5 border border-dark-green-text/10 hover:border-accent-gold hover:text-accent-gold'
                                     }`}
                             >
                                 {isEditMode ? <Save size={18} /> : <Edit3 size={18} />}

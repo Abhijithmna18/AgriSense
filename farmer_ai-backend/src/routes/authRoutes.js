@@ -22,6 +22,9 @@ router.post('/verify-email', authController.verifyEmail);
 router.post('/resend-otp', otpLimiter, authController.resendOtp);
 router.post('/login', authLimiter, authController.login);
 router.post('/google-login', authController.googleLogin);
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
+router.post('/verify-reset', authLimiter, authController.verifyReset);
+router.post('/resend-reset', otpLimiter, authController.resendReset);
 router.post('/logout', authController.logout);
 
 module.exports = router;
