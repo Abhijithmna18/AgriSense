@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DataTable from '../../components/admin/DataTable';
 import adminApi from '../../services/adminApi';
 import { Plus, ToggleLeft, ToggleRight, Edit2 } from 'lucide-react';
+import Slider from '../../components/common/Slider';
 
 const FeatureFlagsAdmin = () => {
     const [flags, setFlags] = useState([]);
@@ -158,13 +159,13 @@ const FeatureFlagsAdmin = () => {
                                 </label>
                             </div>
                             <div>
-                                <label className="block text-gray-400 text-sm mb-1">Rollout Percentage ({formData.rolloutPercentage}%)</label>
-                                <input
-                                    type="range"
-                                    min="0" max="100"
+                                <label className="block text-gray-400 text-sm mb-1">Rollout Percentage</label>
+                                <Slider
+                                    min={0}
+                                    max={100}
                                     value={formData.rolloutPercentage}
-                                    onChange={e => setFormData({ ...formData, rolloutPercentage: parseInt(e.target.value) })}
-                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                    onChange={(val) => setFormData({ ...formData, rolloutPercentage: parseInt(val) })}
+                                    unit="%"
                                 />
                             </div>
                             <div className="flex justify-end gap-3 mt-6">

@@ -21,6 +21,22 @@ import MarketplaceAdmin from './pages/admin/MarketplaceAdmin';
 import RecommendationsAdmin from './pages/admin/RecommendationsAdmin';
 import RolesPermissionsAdmin from './pages/admin/RolesPermissionsAdmin';
 import SettingsAdmin from './pages/admin/SettingsAdmin';
+import Warehouses from './pages/Warehouses';
+import WarehouseDetailsPage from './pages/WarehouseDetailsPage';
+import FeedbackCenter from './pages/FeedbackCenter';
+import BookingRequestForm from './pages/BookingRequestForm';
+import MyBookingsPage from './pages/MyBookingsPage';
+import BookingDetailsPage from './pages/BookingDetailsPage';
+import FarmMonitoringPage from './pages/FarmMonitoringPage';
+import AdminWarehousePage from './pages/admin/AdminWarehousePage';
+import AdminBookingRequestsPage from './pages/admin/AdminBookingRequestsPage';
+import AdminWarehouseReportsPage from './pages/admin/AdminWarehouseReportsPage';
+import AdminFeedbackPage from './pages/admin/AdminFeedbackPage';
+import HeroEditor from './pages/admin/homepage/HeroEditor';
+import FeaturesEditor from './pages/admin/homepage/FeaturesEditor';
+import PerformanceEditor from './pages/admin/homepage/PerformanceEditor';
+import MarketplaceEditor from './pages/admin/homepage/MarketplaceEditor';
+import FooterEditor from './pages/admin/homepage/FooterEditor';
 import { Navigate } from 'react-router-dom';
 
 function App() {
@@ -56,6 +72,50 @@ function App() {
               <Route path="/disease-detection" element={<div className="container mt-5"><h2>Disease Detection Page (Coming Soon)</h2></div>} />
               <Route path="/marketplace" element={<div className="container mt-5"><h2>Marketplace Page (Coming Soon)</h2></div>} />
               <Route path="/advisories" element={<div className="container mt-5"><h2>Advisories Page (Coming Soon)</h2></div>} />
+              <Route
+                path="/feedback"
+                element={
+                  <PrivateRoute>
+                    <FeedbackCenter />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Warehouse Module Routes */}
+              <Route path="/warehouses" element={<Warehouses />} />
+              <Route path="/warehouse/:id" element={<WarehouseDetailsPage />} />
+              <Route
+                path="/booking/request"
+                element={
+                  <PrivateRoute>
+                    <BookingRequestForm />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/my-bookings"
+                element={
+                  <PrivateRoute>
+                    <MyBookingsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/booking/:id"
+                element={
+                  <PrivateRoute>
+                    <BookingDetailsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/monitoring"
+                element={
+                  <PrivateRoute>
+                    <FarmMonitoringPage />
+                  </PrivateRoute>
+                }
+              />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
@@ -69,6 +129,19 @@ function App() {
                 <Route path="roles" element={<RolesPermissionsAdmin />} />
                 <Route path="audit" element={<AuditLogsAdmin />} />
                 <Route path="settings" element={<SettingsAdmin />} />
+
+                {/* Warehouse Admin Routes */}
+                <Route path="warehouses" element={<AdminWarehousePage />} />
+                <Route path="warehouse-requests" element={<AdminBookingRequestsPage />} />
+                <Route path="warehouse-reports" element={<AdminWarehouseReportsPage />} />
+                <Route path="feedback" element={<AdminFeedbackPage />} />
+
+                {/* Homepage Admin Routes */}
+                <Route path="homepage/hero" element={<HeroEditor />} />
+                <Route path="homepage/features" element={<FeaturesEditor />} />
+                <Route path="homepage/performance" element={<PerformanceEditor />} />
+                <Route path="homepage/marketplace" element={<MarketplaceEditor />} />
+                <Route path="homepage/footer" element={<FooterEditor />} />
                 <Route path="*" element={<div className="text-white">Admin Page Not Found</div>} />
               </Route>
             </Routes>

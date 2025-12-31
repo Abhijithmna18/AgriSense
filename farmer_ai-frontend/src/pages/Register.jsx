@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, AlertCircle, Check } from 'lucide-react';
+import { User, Mail, Lock, AlertCircle, Check, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { authAPI } from '../services/authApi';
 import AuthLayout from '../components/auth/AuthLayout';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
+import ValidatedInput from '../components/auth/ValidatedInput';
 import { auth, googleProvider } from '../config/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { validatePassword } from '../utils/passwordValidation';
@@ -15,6 +16,7 @@ const Register = () => {
         firstName: '',
         lastName: '',
         email: '',
+        phone: '',
         password: '',
         confirmPassword: ''
     });
@@ -52,6 +54,7 @@ const Register = () => {
         if (!formData.firstName.trim()) newErrors.firstName = "Required";
         if (!formData.lastName.trim()) newErrors.lastName = "Required";
         if (!formData.email.trim()) newErrors.email = "Required";
+        if (formData.phone && formData.phone.length < 10) newErrors.phone = "Phone number must be at least 10 digits";
         const passValidation = validatePassword(formData.password);
         if (!passValidation.isValid) newErrors.password = passValidation.errors[0];
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
@@ -69,6 +72,7 @@ const Register = () => {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: formData.email,
+                phone: formData.phone,
                 password: formData.password
             });
             if (response.data.success) {
@@ -98,7 +102,7 @@ const Register = () => {
         }
     };
 
-    const strengthColors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-premium-green'];
+    const strengthColors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-[#2E7D32]'];
 
     return (
         <AuthLayout>
@@ -135,57 +139,73 @@ const Register = () => {
                 <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Name Fields */}
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-deep-charcoal mb-2">First Name</label>
-                            <div className="relative">
-                                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-charcoal/40" />
-                                <input
-                                    type="text" name="firstName" value={formData.firstName} onChange={handleChange}
-                                    className={`w-full pl-12 pr-4 py-3.5 rounded-xl border ${errors.firstName ? 'border-red-300' : 'border-deep-charcoal/20'} bg-white text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-premium-green focus:border-transparent`}
-                                    placeholder="John"
-                                />
-                            </div>
-                            {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-deep-charcoal mb-2">Last Name</label>
-                            <div className="relative">
-                                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-charcoal/40" />
-                                <input
-                                    type="text" name="lastName" value={formData.lastName} onChange={handleChange}
-                                    className={`w-full pl-12 pr-4 py-3.5 rounded-xl border ${errors.lastName ? 'border-red-300' : 'border-deep-charcoal/20'} bg-white text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-premium-green focus:border-transparent`}
-                                    placeholder="Doe"
-                                />
-                            </div>
-                            {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
-                        </div>
+                        <ValidatedInput
+                            type="text"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            label="First Name"
+                            icon={User}
+                            placeholder="John"
+                            validationType="text"
+                            error={errors.firstName}
+                            required
+                        />
+                        <ValidatedInput
+                            type="text"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            label="Last Name"
+                            icon={User}
+                            placeholder="Doe"
+                            validationType="text"
+                            error={errors.lastName}
+                            required
+                        />
                     </div>
 
                     {/* Email */}
-                    <div>
-                        <label className="block text-sm font-semibold text-deep-charcoal mb-2">Email Address</label>
-                        <div className="relative">
-                            <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-charcoal/40" />
-                            <input
-                                type="email" name="email" value={formData.email} onChange={handleChange}
-                                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border ${errors.email ? 'border-red-300' : 'border-deep-charcoal/20'} bg-white text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-premium-green focus:border-transparent`}
-                                placeholder="you@example.com"
-                            />
-                        </div>
-                        {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-                    </div>
+                    <ValidatedInput
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        label="Email Address"
+                        icon={Mail}
+                        placeholder="you@example.com"
+                        validationType="email"
+                        error={errors.email}
+                        required
+                    />
+
+                    {/* Phone Number */}
+                    <ValidatedInput
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        label="Phone Number (Optional)"
+                        icon={Phone}
+                        placeholder="1234567890"
+                        validationType="phone"
+                        error={errors.phone}
+                    />
 
                     {/* Password */}
                     <div>
-                        <label className="block text-sm font-semibold text-deep-charcoal mb-2">Password</label>
-                        <div className="relative">
-                            <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-charcoal/40" />
-                            <input
-                                type="password" name="password" value={formData.password} onChange={handleChange}
-                                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border ${errors.password ? 'border-red-300' : 'border-deep-charcoal/20'} bg-white text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-premium-green focus:border-transparent`}
-                                placeholder="Create a strong password"
-                            />
-                        </div>
+                        <ValidatedInput
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            label="Password"
+                            icon={Lock}
+                            placeholder="Create a strong password"
+                            validationType="password"
+                            error={errors.password}
+                            required
+                        />
                         {/* Strength Meter */}
                         {formData.password && (
                             <div className="mt-2 flex items-center gap-2">
@@ -197,29 +217,30 @@ const Register = () => {
                                 <span className="text-xs font-medium text-deep-charcoal/60">{passwordStrength.label}</span>
                             </div>
                         )}
-                        {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
                     </div>
 
                     {/* Confirm Password */}
-                    <div>
-                        <label className="block text-sm font-semibold text-deep-charcoal mb-2">Confirm Password</label>
-                        <div className="relative">
-                            <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-charcoal/40" />
-                            <input
-                                type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange}
-                                className={`w-full pl-12 pr-4 py-3.5 rounded-xl border ${errors.confirmPassword ? 'border-red-300' : 'border-deep-charcoal/20'} bg-white text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-premium-green focus:border-transparent`}
-                                placeholder="Confirm your password"
-                            />
-                            {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                                <Check size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-premium-green" />
-                            )}
-                        </div>
-                        {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
+                    <div className="relative">
+                        <ValidatedInput
+                            type="password"
+                            name="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            label="Confirm Password"
+                            icon={Lock}
+                            placeholder="Confirm your password"
+                            validationType="password"
+                            error={errors.confirmPassword}
+                            required
+                        />
+                        {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                            <Check size={18} className="absolute right-4 top-[46px] text-[#2E7D32]" />
+                        )}
                     </div>
 
                     {/* Terms */}
                     <p className="text-xs text-deep-charcoal/60 text-center">
-                        By signing up, you agree to our <a href="#" className="text-premium-green hover:underline">Terms</a> and <a href="#" className="text-premium-green hover:underline">Privacy Policy</a>.
+                        By signing up, you agree to our <a href="#" className="text-[#2E7D32] hover:underline">Terms</a> and <a href="#" className="text-[#2E7D32] hover:underline">Privacy Policy</a>.
                     </p>
 
                     {/* Submit Button */}
@@ -228,7 +249,7 @@ const Register = () => {
                         disabled={loading}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
-                        className="w-full py-3.5 bg-dark-accent-green text-white rounded-xl font-semibold shadow-lg shadow-dark-accent-green/20 hover:bg-premium-green transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full py-3.5 bg-[#2E7D32] text-white rounded-xl font-semibold shadow-lg shadow-[#2E7D32]/20 hover:bg-[#1B5E20] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {loading ? (
                             <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -241,7 +262,7 @@ const Register = () => {
                 {/* Footer */}
                 <p className="text-center text-deep-charcoal/70 mt-8 text-sm">
                     Already have an account?{' '}
-                    <Link to="/login" className="text-premium-green hover:text-dark-accent-green font-semibold transition-colors">
+                    <Link to="/login" className="text-[#2E7D32] hover:text-[#1B5E20] font-semibold transition-colors">
                         Sign In
                     </Link>
                 </p>

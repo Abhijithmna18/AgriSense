@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import { Search, Bell, MessageSquare, ChevronDown, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import '../../styles/admin.css';
 
 const TopBar = ({ user, onLogout }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
     return (
-        <header className="sticky top-0 z-30 px-8 py-4 glass border-b border-accent-gold/10 flex items-center justify-between">
+        <header className="sticky top-0 z-30 px-8 py-4 border-b border-[var(--admin-border)] flex items-center justify-between bg-[var(--admin-bg-secondary)]">
             {/* Left: Mobile Menu Trigger (Hidden on Desktop) & Subtitle */}
             <div className="flex items-center gap-4">
                 <div className="md:hidden">
                     {/* Mobile Menu Trigger Placeholder */}
-                    <div className="w-8 h-8 bg-primary-green/20 rounded-lg"></div>
+                    <div className="w-8 h-8 bg-[var(--admin-bg-hover)] rounded-lg"></div>
                 </div>
-                <h2 className="text-lg font-serif font-medium text-dark-green-text dark:text-warm-ivory hidden md:block">
+                <h2 className="text-lg font-serif font-medium hidden md:block text-[var(--admin-text-primary)]">
                     AgriSense Ecosystem Platform
                 </h2>
             </div>
@@ -21,11 +22,11 @@ const TopBar = ({ user, onLogout }) => {
             {/* Center: Search Bar */}
             <div className="flex-1 max-w-xl mx-8 hidden md:block">
                 <div className="relative group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-green-text/40 group-focus-within:text-accent-gold transition-colors" size={20} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--admin-text-muted)] group-focus-within:text-[var(--admin-accent)] transition-colors" size={20} />
                     <input
                         type="text"
                         placeholder="Search farms, crops, or reports..."
-                        className="w-full pl-12 pr-4 py-3 rounded-full bg-white/50 dark:bg-black/20 border border-transparent focus:border-accent-gold/50 focus:bg-white dark:focus:bg-black/40 focus:outline-none focus:ring-2 focus:ring-accent-gold/20 transition-all duration-300 placeholder:text-dark-green-text/30"
+                        className="w-full pl-12 pr-4 py-3 rounded-full bg-[var(--admin-bg-primary)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] focus:bg-[var(--admin-bg-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent)]/20 transition-all duration-300 placeholder:text-[var(--admin-text-muted)] text-[var(--admin-text-primary)]"
                     />
                 </div>
             </div>
@@ -34,17 +35,17 @@ const TopBar = ({ user, onLogout }) => {
             <div className="flex items-center gap-6">
                 {/* Notifications */}
                 <div className="flex items-center gap-4">
-                    <button className="relative p-2 text-dark-green-text/60 hover:text-accent-gold transition-colors rounded-full hover:bg-primary-green/5">
+                    <button className="relative p-2 text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] transition-colors rounded-full hover:bg-[var(--admin-bg-hover)]">
                         <Bell size={20} />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-warm-ivory dark:border-deep-forest"></span>
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[var(--admin-bg-secondary)]"></span>
                     </button>
-                    <button className="p-2 text-dark-green-text/60 hover:text-accent-gold transition-colors rounded-full hover:bg-primary-green/5">
+                    <button className="p-2 text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] transition-colors rounded-full hover:bg-[var(--admin-bg-hover)]">
                         <MessageSquare size={20} />
                     </button>
                 </div>
 
                 {/* Divider */}
-                <div className="h-8 w-px bg-dark-green-text/10"></div>
+                <div className="h-8 w-px bg-[var(--admin-border)]"></div>
 
                 {/* User Profile */}
                 <div className="relative">
@@ -53,23 +54,23 @@ const TopBar = ({ user, onLogout }) => {
                         className="flex items-center gap-3 group focus:outline-none"
                     >
                         <div className="text-right hidden md:block">
-                            <p className="text-sm font-medium text-dark-green-text dark:text-warm-ivory group-hover:text-accent-gold transition-colors">
+                            <p className="text-sm font-medium transition-colors text-[var(--admin-text-primary)]">
                                 Hello, {user?.firstName || 'User'}
                             </p>
-                            <p className="text-[10px] text-dark-green-text/50 uppercase tracking-wider">
+                            <p className="text-[10px] uppercase tracking-wider text-[var(--admin-text-secondary)]">
                                 {user?.role || 'Farmer'}
                             </p>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-green to-light-green p-0.5 ring-2 ring-transparent group-hover:ring-accent-gold transition-all">
-                            <div className="w-full h-full rounded-full bg-deep-forest flex items-center justify-center overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-[var(--admin-bg-primary)] p-0.5 ring-2 ring-transparent group-hover:ring-[var(--admin-accent)] transition-all">
+                            <div className="w-full h-full rounded-full bg-[var(--admin-bg-secondary)] flex items-center justify-center overflow-hidden border border-[var(--admin-border)]">
                                 {user?.avatar ? (
                                     <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
                                 ) : (
-                                    <User size={20} className="text-warm-ivory" />
+                                    <User size={20} className="text-[var(--admin-text-muted)]" />
                                 )}
                             </div>
                         </div>
-                        <ChevronDown size={16} className={`text-dark-green-text/50 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown size={16} className="text-[var(--admin-text-secondary)] transition-transform duration-300" style={{ transform: isProfileOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                     </button>
 
                     {/* Dropdown */}
@@ -79,24 +80,24 @@ const TopBar = ({ user, onLogout }) => {
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute right-0 top-full mt-4 w-56 glass rounded-xl shadow-gold overflow-hidden py-2"
+                                className="absolute right-0 top-full mt-4 w-56 bg-[var(--admin-bg-secondary)] rounded-xl shadow-lg border border-[var(--admin-border)] overflow-hidden py-2"
                             >
-                                <div className="px-4 py-3 border-b border-accent-gold/10 md:hidden">
-                                    <p className="text-sm font-medium text-dark-green-text dark:text-warm-ivory">
+                                <div className="px-4 py-3 border-b border-[var(--admin-border)] md:hidden">
+                                    <p className="text-sm font-medium text-[var(--admin-text-primary)]">
                                         {user?.firstName} {user?.lastName}
                                     </p>
-                                    <p className="text-xs text-dark-green-text/50">{user?.email}</p>
+                                    <p className="text-xs text-[var(--admin-text-muted)]">{user?.email}</p>
                                 </div>
-                                <a href="#profile" className="block px-4 py-2 text-sm text-dark-green-text/80 hover:bg-primary-green/10 hover:text-accent-gold transition-colors">
+                                <a href="#profile" className="block px-4 py-2 text-sm text-[var(--admin-text-primary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-accent)] transition-colors">
                                     Profile Settings
                                 </a>
-                                <a href="#billing" className="block px-4 py-2 text-sm text-dark-green-text/80 hover:bg-primary-green/10 hover:text-accent-gold transition-colors">
+                                <a href="#billing" className="block px-4 py-2 text-sm text-[var(--admin-text-primary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-accent)] transition-colors">
                                     Billing & Plans
                                 </a>
-                                <div className="h-px bg-accent-gold/10 my-2"></div>
+                                <div className="h-px bg-[var(--admin-border)] my-2"></div>
                                 <button
                                     onClick={onLogout}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                                    className="w-full text-left px-4 py-2 text-sm text-[var(--admin-danger)] hover:bg-red-50 transition-colors"
                                 >
                                     Sign Out
                                 </button>

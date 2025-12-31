@@ -2,21 +2,52 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Sprout, ShoppingBag,
-    Flag, Shield, Activity, Settings, LogOut
+    Flag, Shield, Activity, Settings, LogOut,
+    Building, ClipboardList, TrendingUp, MessageSquare, Home
 } from 'lucide-react';
 import '../../styles/admin.css';
 
 const AdminNav = () => {
+    const [openSubmenus, setOpenSubmenus] = React.useState({});
+
+    const toggleSubmenu = (label) => {
+        setOpenSubmenus(prev => ({
+            ...prev,
+            [label]: !prev[label]
+        }));
+    };
+
     const navItems = [
         { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        {
+            label: 'Home Page',
+            icon: Home,
+            // Importing Home icon dynamically or I need to add it to imports
+            children: [
+                { to: '/admin/homepage/hero', label: 'Hero Section' },
+                { to: '/admin/homepage/features', label: 'Features' },
+                { to: '/admin/homepage/performance', label: 'Performance' },
+                { to: '/admin/homepage/marketplace', label: 'Marketplace' },
+                { to: '/admin/homepage/footer', label: 'Footer' },
+            ]
+        },
         { to: '/admin/users', icon: Users, label: 'Users' },
         { to: '/admin/farms', icon: Sprout, label: 'Farms' },
         { to: '/admin/marketplace', icon: ShoppingBag, label: 'Marketplace' },
         { to: '/admin/feature-flags', icon: Flag, label: 'Feature Flags' },
         { to: '/admin/roles', icon: Shield, label: 'Roles' },
         { to: '/admin/audit', icon: Activity, label: 'Audit Logs' },
+        { to: '/admin/feedback', icon: MessageSquare, label: 'Feedback Manager' },
         { to: '/admin/settings', icon: Settings, label: 'Settings' },
+        // Warehouse Module
+        { to: '/admin/warehouses', icon: Building, label: 'Warehouses' },
+        { to: '/admin/warehouse-requests', icon: ClipboardList, label: 'Booking Requests' },
+        { to: '/admin/warehouse-reports', icon: TrendingUp, label: 'AI Reports' },
     ];
+
+    // Add Imports
+    // I can't easily add imports with this tool if I don't replace the top of the file.
+    // I'll replace the loop to handle children.
 
     return (
         <nav className="w-64 bg-[var(--admin-bg-secondary)] border-r border-[var(--admin-border)] flex flex-col h-screen fixed left-0 top-0 z-[var(--z-nav)] transition-colors duration-300">
@@ -32,24 +63,62 @@ const AdminNav = () => {
             <div className="flex-1 py-6 overflow-y-auto">
                 <ul className="space-y-1 px-4">
                     {navItems.map((item) => (
-                        <li key={item.to}>
-                            <NavLink
-                                to={item.to}
-                                className={({ isActive }) =>
-                                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium border-l-2
-                                    ${isActive
-                                        ? 'bg-[var(--admin-bg-hover)] text-[var(--admin-accent)] border-[var(--admin-accent)]'
-                                        : 'text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-text-primary)] border-transparent'
-                                    }`
-                                }
-                            >
-                                {({ isActive }) => (
-                                    <>
-                                        <item.icon size={18} className={isActive ? "opacity-100" : "opacity-70"} />
-                                        {item.label}
-                                    </>
-                                )}
-                            </NavLink>
+                        <li key={item.label}>
+                            {item.children ? (
+                                <div>
+                                    <button
+                                        onClick={() => toggleSubmenu(item.label)}
+                                        className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium border-l-2 border-transparent text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-text-primary)]`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {/* Fallback for icon if not directly imported */}
+                                            {item.icon ? <item.icon size={18} /> : <Settings size={18} />}
+                                            {item.label}
+                                        </div>
+                                        <div className={`transition-transform duration-200 ${openSubmenus[item.label] ? 'rotate-180' : ''}`}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </div>
+                                    </button>
+                                    {openSubmenus[item.label] && (
+                                        <ul className="pl-6 mt-1 space-y-1">
+                                            {item.children.map((child) => (
+                                                <li key={child.to}>
+                                                    <NavLink
+                                                        to={child.to}
+                                                        className={({ isActive }) =>
+                                                            `flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium border-l-2
+                                                            ${isActive
+                                                                ? 'bg-[var(--admin-bg-hover)] text-[var(--admin-accent)] border-[var(--admin-accent)]'
+                                                                : 'text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] border-transparent'
+                                                            }`
+                                                        }
+                                                    >
+                                                        {child.label}
+                                                    </NavLink>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            ) : (
+                                <NavLink
+                                    to={item.to}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium border-l-2
+                                        ${isActive
+                                            ? 'bg-[var(--admin-bg-hover)] text-[var(--admin-accent)] border-[var(--admin-accent)]'
+                                            : 'text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-text-primary)] border-transparent'
+                                        }`
+                                    }
+                                >
+                                    {({ isActive }) => (
+                                        <>
+                                            <item.icon size={18} className={isActive ? "opacity-100" : "opacity-70"} />
+                                            {item.label}
+                                        </>
+                                    )}
+                                </NavLink>
+                            )}
                         </li>
                     ))}
                 </ul>

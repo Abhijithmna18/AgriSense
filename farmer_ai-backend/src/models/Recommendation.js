@@ -31,7 +31,7 @@ const RecommendationSchema = new mongoose.Schema({
         },
         season: String,
         constraints: {
-            maxWaterUse: Number,
+            maxWaterUse: String,
             minProfitPerHa: Number
         }
     },
@@ -48,6 +48,7 @@ const RecommendationSchema = new mongoose.Schema({
             type: String,
             enum: ['low', 'medium', 'high']
         },
+        riskFactors: [String],
         // Soil-based corrections specific to this crop
         soilActions: {
             addNkgHa: Number,

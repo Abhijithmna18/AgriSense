@@ -62,29 +62,34 @@ exports.runRecommendation = async (req, res) => {
         if (process.env.GEMINI_API_KEY) {
             try {
                 const prompt = `
-                    Act as an expert agronomist. 
+                    Act as an expert agronomist and agricultural economist. 
                     Given the following inputs:
                     Location: ${location.name} (Lat: ${location.lat}, Lng: ${location.lng})
                     Soil: N=${soil.n} kg/ha, P=${soil.p} kg/ha, K=${soil.k} kg/ha, pH=${soil.ph}, Texture=${soil.texture}
-                    Season: ${season || 'General'}
-                    Season: ${season || 'General'}
+                    Season: ${season || 'Current Season'}
                     Constraints: Max Water Use ${constraints?.maxWaterUse || 'N/A'}, Min Profit ${constraints?.minProfitPerHa || 'N/A'}
                     
-                    Recommend the best 5 crops.
+                    Task: Recommend the TOP 3 most suitable crops.
+                    Criteria for ranking: 
+                    1. Soil Suitability
+                    2. Market Momentum (High demand/price trends)
+                    3. Risk Factors (Price volatility, weather risks)
+
                     Return ONLY a JSON array with this structure for each crop:
                     {
                         "cropName": "String",
-                        "suitability": Number (0.0-1.0),
+                        "suitability": Number (0-100 score),
                         "estimatedYieldKgHa": Number,
                         "expectedProfitPerHa": Number (in INR),
-                        "risk": "low" | "medium" | "high",
+                        "marketMomentum": "String (e.g., 'High Demand', 'Stable', 'Volatile')",
+                        "riskFactors": ["String"],
                         "soilActions": { "addNkgHa": Number, "addPkgHa": Number, "addKkgHa": Number, "limeKgHa": Number, "note": "String" },
                         "explanation": { 
                             "featureContributions": [ { "feature": "String", "contribution": Number (0-1) } ],
-                            "ruleMatches": ["String"]
+                            "marketReasoning": "String"
                         }
                     }
-                    Ensure suggestions are realistic for India/tropical regions if location implies.
+                    Ensure suggestions are realistic for the location and season.
                 `;
 
                 const result = await model.generateContent(prompt);
@@ -104,17 +109,19 @@ exports.runRecommendation = async (req, res) => {
                 console.error("Gemini AI failed, falling back to logic:", aiError.message);
                 modelVersion = 'logic-fallback-v1';
                 const logicResults = predictCropsFallback(soil, location, constraints);
-                // Fallback: straight logic results, simplistic scoring
-                recommendations = logicResults.map((crop, idx) => ({
+                recommendations = logicResults.slice(0, 3).map((crop, idx) => ({ // Slice to Top 3
                     rank: idx + 1,
                     ...crop,
+                    marketMomentum: 'Stable',
+                    riskFactors: ['General Market Volatility'],
+                    suitability: crop.suitability * 100, // Convert 0-1 to 0-100 for consistency
                     soilActions: { ...baseSoilActions, note: baseSoilActions.note },
                     explanation: {
                         featureContributions: [
                             { feature: 'Soil pH', contribution: 0.3 },
                             { feature: 'Nitrogen', contribution: 0.2 }
                         ],
-                        ruleMatches: baseSoilActions.note ? [baseSoilActions.note] : []
+                        marketReasoning: "Standard market stability assumed in fallback mode."
                     }
                 }));
             }
@@ -122,16 +129,19 @@ exports.runRecommendation = async (req, res) => {
             // No API Key -> Logic Model
             modelVersion = 'logic-v1.0';
             const logicResults = predictCropsFallback(soil, location, constraints);
-            recommendations = logicResults.map((crop, idx) => ({
+            recommendations = logicResults.slice(0, 3).map((crop, idx) => ({
                 rank: idx + 1,
                 ...crop,
+                marketMomentum: 'Stable',
+                riskFactors: ['Market fluctuation'],
+                suitability: crop.suitability * 100,
                 soilActions: { ...baseSoilActions, note: baseSoilActions.note },
                 explanation: {
                     featureContributions: [
                         { feature: 'Soil pH', contribution: 0.3 },
                         { feature: 'Nitrogen', contribution: 0.2 }
                     ],
-                    ruleMatches: baseSoilActions.note ? [baseSoilActions.note] : []
+                    marketReasoning: "Standard market stability."
                 }
             }));
         }

@@ -26,7 +26,9 @@ const UserSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: [true, 'Please add a phone number'],
+        required: [function () {
+            return this.provider === 'local';
+        }, 'Please add a phone number'],
         trim: true
     },
     role: {

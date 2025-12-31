@@ -1,101 +1,244 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingBag, Star, ArrowRight, Tag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, ShoppingCart, Eye, ArrowRight } from 'lucide-react';
 
-const products = [
-    {
-        name: "Organic Wheat Seeds",
-        price: "₹1,200",
-        rating: 4.8,
-        image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80",
-        category: "Seeds",
-        tag: "Best Seller"
-    },
-    {
-        name: "Smart Soil Sensor",
-        price: "₹4,500",
-        rating: 4.9,
-        image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=500&q=80",
-        category: "Tools",
-        tag: "Tech"
-    },
-    {
-        name: "Premium Fertilizer",
-        price: "₹850",
-        rating: 4.7,
-        image: "https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=500&q=80",
-        category: "Nutrients",
-        tag: "Organic"
-    },
-    {
-        name: "Harvest Basket",
-        price: "₹1,500",
-        rating: 4.6,
-        image: "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=500&q=80",
-        category: "Equipment",
-        tag: "Durable"
+const ModernMarketplace = ({ config }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
+
+    // Default fallback data
+    const defaultConfig = {
+        title: 'Shop Our Best-Sellers',
+        subtitle: 'Premium agricultural products and solutions',
+        viewAllLink: '/marketplace',
+        carousel: {
+            autoPlay: true,
+            slideDuration: 3,
+            navigationStyle: 'dots',
+            itemsPerView: { desktop: 4, tablet: 2, mobile: 1 }
+        },
+        featuredProducts: [
+            {
+                productId: '1',
+                productName: 'Premium Saffron Bulbs',
+                productPrice: 12500,
+                carouselImage: 'https://images.unsplash.com/photo-1599909533730-c1b6e3c1e9d8?w=600&q=80',
+                badge: 'new',
+                quickAction: 'viewDetails',
+                showOnHome: true
+            },
+            {
+                productId: '2',
+                productName: 'Organic Wheat Seeds',
+                productPrice: 2800,
+                carouselImage: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
+                badge: 'bestseller',
+                quickAction: 'addToCart',
+                showOnHome: true
+            },
+            {
+                productId: '3',
+                productName: 'Heirloom Tomatoes',
+                productPrice: 450,
+                carouselImage: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&q=80',
+                badge: 'none',
+                quickAction: 'viewDetails',
+                showOnHome: true
+            }
+        ]
+    };
+
+    const marketplaceConfig = config?.marketplace || defaultConfig;
+    const { title, subtitle, viewAllLink, carousel, featuredProducts } = marketplaceConfig;
+
+    // Filter active products
+    const activeProducts = (featuredProducts || defaultConfig.featuredProducts)
+        .filter(p => p.showOnHome !== false)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    // Auto-play effect
+    useEffect(() => {
+        if (carousel?.autoPlay && activeProducts.length > 1) {
+            setAutoPlayEnabled(true);
+            const interval = setInterval(() => {
+                setCurrentIndex((prev) => (prev + 1) % activeProducts.length);
+            }, (carousel.slideDuration || 3) * 1000);
+            return () => clearInterval(interval);
+        }
+    }, [carousel?.autoPlay, carousel?.slideDuration, activeProducts.length]);
+
+    const nextSlide = () => {
+        setCurrentIndex((prev) => (prev + 1) % activeProducts.length);
+    };
+
+    const prevSlide = () => {
+        setCurrentIndex((prev) => (prev - 1 + activeProducts.length) % activeProducts.length);
+    };
+
+    const getBadgeStyles = (badge) => {
+        switch (badge) {
+            case 'new': return 'bg-blue-500 text-white';
+            case 'bestseller': return 'bg-amber-500 text-white';
+            case 'sale': return 'bg-red-500 text-white';
+            default: return '';
+        }
+    };
+
+    const getBadgeLabel = (badge) => {
+        switch (badge) {
+            case 'new': return 'New';
+            case 'bestseller': return 'Best Seller';
+            case 'sale': return 'Sale';
+            default: return '';
+        }
+    };
+
+    if (activeProducts.length === 0) {
+        return null; // Graceful degradation
     }
-];
 
-const ModernMarketplace = () => {
     return (
-        <section id="marketplace" className="py-24 bg-white">
+        <section id="marketplace" className="py-24 bg-gradient-to-b from-white to-gray-50">
             <div className="container mx-auto px-6">
-                <div className="flex justify-between items-end mb-12">
-                    <div>
-                        <span className="text-muted-green font-semibold tracking-wider uppercase text-xs">Agri-Store</span>
-                        <h2 className="text-3xl font-bold text-slate-900 mt-2">
-                            Marketplace
-                        </h2>
-                    </div>
-                    <button className="hidden md:flex items-center gap-2 text-muted-green font-medium hover:text-emerald-700 transition-colors text-sm">
-                        View All <ArrowRight size={16} />
-                    </button>
-                </div>
-
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {products.map((product, index) => (
-                        <motion.div
-                            key={index}
+                {/* Section Header */}
+                <div className="text-center mb-16">
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-3xl md:text-4xl font-bold text-slate-900 mb-4"
+                    >
+                        {title || defaultConfig.title}
+                    </motion.h2>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.1 }}
+                        className="text-lg text-slate-600 mb-6"
+                    >
+                        {subtitle || defaultConfig.subtitle}
+                    </motion.p>
+                    {viewAllLink && (
+                        <motion.a
+                            href={viewAllLink}
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
-                            className="group bg-white rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 border border-slate-100"
+                            transition={{ delay: 0.2 }}
+                            className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
                         >
-                            <div className="relative h-64 overflow-hidden bg-slate-50">
-                                <img
-                                    src={product.image}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                />
-                                <div className="absolute top-3 left-3">
-                                    <span className="bg-white/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-700 shadow-sm uppercase tracking-wide">
-                                        {product.category}
-                                    </span>
-                                </div>
-                            </div>
+                            View All Products
+                            <ArrowRight size={18} />
+                        </motion.a>
+                    )}
+                </div>
 
-                            <div className="p-5">
-                                <div className="mb-2">
-                                    <h3 className="font-bold text-slate-900 text-base group-hover:text-muted-green transition-colors line-clamp-1">
-                                        {product.name}
-                                    </h3>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <Star size={12} className="text-amber-400 fill-current" />
-                                        <span className="text-xs text-slate-500 font-medium">{product.rating}</span>
+                {/* Carousel */}
+                <div className="relative max-w-7xl mx-auto">
+                    <div className={`grid gap-6 ${carousel?.itemsPerView?.desktop === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'
+                        } md:grid-cols-${carousel?.itemsPerView?.tablet || 2} grid-cols-${carousel?.itemsPerView?.mobile || 1}`}>
+                        <AnimatePresence mode="wait">
+                            {activeProducts.map((product, index) => (
+                                <motion.div
+                                    key={product.productId || index}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="group"
+                                >
+                                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+                                        {/* Product Image */}
+                                        <div className="relative aspect-square overflow-hidden bg-gray-100">
+                                            <img
+                                                src={product.carouselImage || 'https://via.placeholder.com/400'}
+                                                alt={product.productName}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                loading="lazy"
+                                            />
+
+                                            {/* Badge Overlay */}
+                                            {product.badge && product.badge !== 'none' && (
+                                                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${getBadgeStyles(product.badge)}`}>
+                                                    {getBadgeLabel(product.badge)}
+                                                </div>
+                                            )}
+
+                                            {/* Quick Action Button */}
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                                {product.quickAction === 'addToCart' ? (
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        className="px-6 py-3 bg-white text-slate-900 rounded-lg font-semibold flex items-center gap-2 shadow-lg"
+                                                    >
+                                                        <ShoppingCart size={18} />
+                                                        Quick Add
+                                                    </motion.button>
+                                                ) : (
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        className="px-6 py-3 bg-white text-slate-900 rounded-lg font-semibold flex items-center gap-2 shadow-lg"
+                                                    >
+                                                        <Eye size={18} />
+                                                        View Details
+                                                    </motion.button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Product Info */}
+                                        <div className="p-6">
+                                            <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-2">
+                                                {product.productName}
+                                            </h3>
+                                            <div className="text-2xl font-bold text-emerald-600">
+                                                ₹{product.productPrice?.toLocaleString('en-IN')}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
 
-                                <div className="flex justify-between items-center mt-4">
-                                    <span className="text-lg font-bold text-slate-900">{product.price}</span>
-                                    <button className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-muted-green hover:text-white transition-colors">
-                                        <ShoppingBag size={18} />
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
+                    {/* Navigation Controls */}
+                    {carousel?.navigationStyle === 'arrows' && activeProducts.length > 1 && (
+                        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-4 pointer-events-none">
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={prevSlide}
+                                className="pointer-events-auto w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                            >
+                                <ChevronLeft size={24} className="text-slate-900" />
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={nextSlide}
+                                className="pointer-events-auto w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                            >
+                                <ChevronRight size={24} className="text-slate-900" />
+                            </motion.button>
+                        </div>
+                    )}
+
+                    {/* Dot Indicators */}
+                    {carousel?.navigationStyle === 'dots' && activeProducts.length > 1 && (
+                        <div className="flex justify-center gap-2 mt-8">
+                            {activeProducts.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentIndex(index)}
+                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex ? 'bg-emerald-600 w-8' : 'bg-gray-300'
+                                        }`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

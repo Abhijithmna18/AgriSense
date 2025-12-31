@@ -16,7 +16,9 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // CORS configuration
 const corsOptions = {
@@ -47,6 +49,11 @@ app.use('/api/admin', require('./src/routes/adminRoutes'));
 app.use('/api/crops', require('./src/routes/cropRoutes'));
 app.use('/api/uploads', require('./src/routes/uploadRoutes'));
 app.use('/api/recommendations', require('./src/routes/recommendationRoutes'));
+app.use('/api/warehouses', require('./src/routes/warehouseRoutes'));
+app.use('/api/bookings', require('./src/routes/bookingRoutes'));
+app.use('/api/feedback', require('./src/routes/feedbackRoutes'));
+app.use('/api/homepage', require('./src/routes/homepageRoutes'));
+
 
 // Make uploads folder static
 const path = require('path');
@@ -70,11 +77,12 @@ app.get('/', (req, res) => {
 // Error Handler Middleware (must be last)
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+if (require.main === module) {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    });
+}
 
 module.exports = app;
 

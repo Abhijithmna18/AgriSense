@@ -3,8 +3,26 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const ModernHero = () => {
+const ModernHero = ({ config }) => {
     const navigate = useNavigate();
+
+    const headline = config?.headline || "Cultivating a Smarter Future";
+    // Handle HTML in headline if simplified, or just render text. The original had <br/>.
+    // I'll render it as is or split it. For now, let's treat it as simple text or use a dangerouslySetInnerHTML if we want rich text later.
+    // But the design had specific span styling.
+    // Let's try to preserve the design for the default case, but render simple text if config is present.
+
+    // Better approach: Check if config is present.
+
+    const subheadline = config?.subheadline || "Harness the power of artificial intelligence to optimize yields, monitor crop health, and make data-driven decisions for sustainable farming.";
+
+    const trustIndicators = config?.trustIndicators && config.trustIndicators.length > 0
+        ? config.trustIndicators
+        : [
+            { value: "30%", label: "Yield Increase" },
+            { value: "95%", label: "Accuracy Rate" },
+            { value: "24/7", label: "Real-time Monitoring" }
+        ];
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-warm-ivory">
@@ -28,14 +46,22 @@ const ModernHero = () => {
                         <span className="inline-block px-4 py-1.5 mb-6 text-sm font-semibold tracking-wider text-fresh-green bg-mint-leaf rounded-full uppercase">
                             AI-Powered Agriculture
                         </span>
-                        <h1 className="text-5xl md:text-7xl font-bold text-slate-900 leading-tight mb-6 font-sans">
-                            Cultivating a <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-fresh-green to-emerald-600">
-                                Smarter Future
-                            </span>
-                        </h1>
+
+                        {config?.headline ? (
+                            <h1 className="text-5xl md:text-7xl font-bold text-slate-900 leading-tight mb-6 font-sans">
+                                {config.headline}
+                            </h1>
+                        ) : (
+                            <h1 className="text-5xl md:text-7xl font-bold text-slate-900 leading-tight mb-6 font-sans">
+                                Cultivating a <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-fresh-green to-emerald-600">
+                                    Smarter Future
+                                </span>
+                            </h1>
+                        )}
+
                         <p className="text-xl text-slate-600 mb-10 leading-relaxed max-w-2xl">
-                            Harness the power of artificial intelligence to optimize yields, monitor crop health, and make data-driven decisions for sustainable farming.
+                            {subheadline}
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4">
@@ -60,18 +86,12 @@ const ModernHero = () => {
                         transition={{ delay: 0.4, duration: 0.6 }}
                         className="mt-16 grid grid-cols-3 gap-8 border-t border-slate-200/60 pt-8 max-w-2xl"
                     >
-                        <div>
-                            <p className="text-3xl font-bold text-slate-900">30%</p>
-                            <p className="text-sm text-slate-500 font-medium">Yield Increase</p>
-                        </div>
-                        <div>
-                            <p className="text-3xl font-bold text-slate-900">95%</p>
-                            <p className="text-sm text-slate-500 font-medium">Accuracy Rate</p>
-                        </div>
-                        <div>
-                            <p className="text-3xl font-bold text-slate-900">24/7</p>
-                            <p className="text-sm text-slate-500 font-medium">Real-time Monitoring</p>
-                        </div>
+                        {trustIndicators.map((stat, index) => (
+                            <div key={index}>
+                                <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+                                <p className="text-sm text-slate-500 font-medium">{stat.label}</p>
+                            </div>
+                        ))}
                     </motion.div>
                 </div>
             </div>

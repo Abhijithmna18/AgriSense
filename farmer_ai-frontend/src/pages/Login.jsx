@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { authAPI } from '../services/authApi';
 import AuthLayout from '../components/auth/AuthLayout';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
+import ValidatedInput from '../components/auth/ValidatedInput';
 import { auth, googleProvider } from '../config/firebase';
 import { signInWithPopup } from 'firebase/auth';
 
@@ -13,7 +14,6 @@ const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -100,48 +100,34 @@ const Login = () => {
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Email */}
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-semibold text-deep-charcoal mb-2">
-                            Email Address
-                        </label>
-                        <div className="relative">
-                            <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-charcoal/40" />
-                            <input
-                                id="email"
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-deep-charcoal/20 bg-white text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-premium-green focus:border-transparent transition-all"
-                                placeholder="you@example.com"
-                                required
-                            />
-                        </div>
-                    </div>
+                    <ValidatedInput
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        label="Email Address"
+                        icon={Mail}
+                        placeholder="you@example.com"
+                        validationType="email"
+                        required
+                    />
 
                     {/* Password */}
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-semibold text-deep-charcoal mb-2">
-                            Password
-                        </label>
-                        <div className="relative">
-                            <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-charcoal/40" />
-                            <input
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-deep-charcoal/20 bg-white text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-premium-green focus:border-transparent transition-all"
-                                placeholder="Enter your password"
-                                required
-                            />
-                        </div>
-                    </div>
+                    <ValidatedInput
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        label="Password"
+                        icon={Lock}
+                        placeholder="Enter your password"
+                        validationType="password"
+                        required
+                    />
 
                     {/* Forgot Password */}
                     <div className="flex justify-end">
-                        <Link to="/forgot-password" className="text-sm text-premium-green hover:text-dark-accent-green font-medium transition-colors">
+                        <Link to="/forgot-password" className="text-sm text-[#2E7D32] hover:text-[#1B5E20] font-medium transition-colors">
                             Forgot Password?
                         </Link>
                     </div>
@@ -152,7 +138,7 @@ const Login = () => {
                         disabled={loading}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
-                        className="w-full py-3.5 bg-dark-accent-green text-white rounded-xl font-semibold shadow-lg shadow-dark-accent-green/20 hover:bg-premium-green transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full py-3.5 bg-[#2E7D32] text-white rounded-xl font-semibold shadow-lg shadow-[#2E7D32]/20 hover:bg-[#1B5E20] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {loading ? (
                             <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -165,7 +151,7 @@ const Login = () => {
                 {/* Footer */}
                 <p className="text-center text-deep-charcoal/70 mt-8 text-sm">
                     Don't have an account?{' '}
-                    <Link to="/register" className="text-premium-green hover:text-dark-accent-green font-semibold transition-colors">
+                    <Link to="/register" className="text-[#2E7D32] hover:text-[#1B5E20] font-semibold transition-colors">
                         Create Account
                     </Link>
                 </p>

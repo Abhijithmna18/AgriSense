@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { Settings, X, Palette, Droplet, Sparkles } from 'lucide-react';
 import styles from './ColorPanel.module.css';
+import Slider from './common/Slider';
 
 export const ColorPanel = () => {
     const { theme, updateTheme, applyPreset, presets } = useTheme();
@@ -109,14 +110,13 @@ export const ColorPanel = () => {
                         </div>
 
                         <div className={styles.control}>
-                            <label>Angle: {theme.gradientAngle}°</label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="360"
+                            <Slider
+                                label="Angle"
+                                min={0}
+                                max={360}
                                 value={theme.gradientAngle}
-                                onChange={(e) => handleSliderChange('gradientAngle', e.target.value)}
-                                className={styles.slider}
+                                onChange={(val) => handleSliderChange('gradientAngle', val)}
+                                unit="°"
                             />
                         </div>
                     </div>
@@ -129,38 +129,35 @@ export const ColorPanel = () => {
                         </h4>
 
                         <div className={styles.control}>
-                            <label>Blur: {theme.blurIntensity}px</label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="50"
+                            <Slider
+                                label="Blur"
+                                min={0}
+                                max={50}
                                 value={theme.blurIntensity}
-                                onChange={(e) => handleSliderChange('blurIntensity', e.target.value)}
-                                className={styles.slider}
+                                onChange={(val) => handleSliderChange('blurIntensity', val)}
+                                unit="px"
                             />
                         </div>
 
                         <div className={styles.control}>
-                            <label>Opacity: {theme.opacity}%</label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
+                            <Slider
+                                label="Opacity"
+                                min={0}
+                                max={100}
                                 value={theme.opacity}
-                                onChange={(e) => handleSliderChange('opacity', e.target.value)}
-                                className={styles.slider}
+                                onChange={(val) => handleSliderChange('opacity', val)}
+                                unit="%"
                             />
                         </div>
 
                         <div className={styles.control}>
-                            <label>Border Whiteness: {theme.borderWhiteness}%</label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
+                            <Slider
+                                label="Border Whiteness"
+                                min={0}
+                                max={100}
                                 value={theme.borderWhiteness}
-                                onChange={(e) => handleSliderChange('borderWhiteness', e.target.value)}
-                                className={styles.slider}
+                                onChange={(val) => handleSliderChange('borderWhiteness', val)}
+                                unit="%"
                             />
                         </div>
                     </div>
@@ -170,14 +167,13 @@ export const ColorPanel = () => {
                         <h4 className={styles.sectionTitle}>Metallic Accent</h4>
 
                         <div className={styles.control}>
-                            <label>Gold Sheen: {theme.metallicAccent}%</label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
+                            <Slider
+                                label="Gold Sheen"
+                                min={0}
+                                max={100}
                                 value={theme.metallicAccent}
-                                onChange={(e) => handleSliderChange('metallicAccent', e.target.value)}
-                                className={styles.slider}
+                                onChange={(val) => handleSliderChange('metallicAccent', val)}
+                                unit="%"
                             />
                         </div>
                     </div>
