@@ -10,6 +10,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Recommendations from './pages/Recommendations';
+import AddFarmPage from './pages/AddFarmPage';
 import PrivateRoute from './components/PrivateRoute';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -68,6 +69,14 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/farms/new"
+                element={
+                  <PrivateRoute>
+                    <AddFarmPage />
+                  </PrivateRoute>
+                }
+              />
               <Route path="/crops/:id" element={<div className="container mt-5"><h2>Crop Detail Page (Coming Soon)</h2></div>} />
               <Route path="/disease-detection" element={<div className="container mt-5"><h2>Disease Detection Page (Coming Soon)</h2></div>} />
               <Route path="/marketplace" element={<div className="container mt-5"><h2>Marketplace Page (Coming Soon)</h2></div>} />
@@ -123,6 +132,7 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="users" element={<UsersAdmin />} />
                 <Route path="farms" element={<FarmsAdmin />} />
+                {/* <Route path="farms" element={<FarmsAdmin />} /> Duplicate removed */}
                 <Route path="marketplace" element={<MarketplaceAdmin />} />
                 <Route path="recommendations" element={<RecommendationsAdmin />} />
                 <Route path="feature-flags" element={<FeatureFlagsAdmin />} />

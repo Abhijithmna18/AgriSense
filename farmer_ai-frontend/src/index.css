@@ -102,6 +102,18 @@ h2 {
   background: var(--accent-gold);
 }
 
+/* No Scrollbar Utility */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Glassmorphism Utility */
 .glass {
   background: rgba(255, 255, 255, 0.1);

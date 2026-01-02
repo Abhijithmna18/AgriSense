@@ -7,6 +7,11 @@ import {
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { authAPI } from '../services/authApi';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/dashboard/Sidebar';
+import TopBar from '../components/dashboard/TopBar';
+import '../styles/admin.css';
 
 // --- MOCK DATA ---
 const MOCK_SENSOR_DATA = {
@@ -270,40 +275,81 @@ const BottomSection = ({ feeds }) => (
 );
 
 // --- MAIN PAGE COMPONENT ---
+// --- MAIN PAGE COMPONENT ---
+
 const FarmMonitoringPage = () => {
-    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isLoadingData, setIsLoadingData] = useState(false);
     const [data, setData] = useState(MOCK_SENSOR_DATA);
 
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const res = await authAPI.getMe();
+                setUser(res.data);
+            } catch (err) {
+                console.error(err);
+                if (err.response?.status === 401) navigate('/login');
+            } finally {
+                setLoading(false);
+            }
+        };
+        init();
+    }, [navigate]);
+
     const handleRefresh = () => {
-        setIsLoading(true);
-        // Simulate network request
+        setIsLoadingData(true);
         setTimeout(() => {
             setData({
                 ...MOCK_SENSOR_DATA,
                 temperature: (28 + Math.random() * 2).toFixed(1),
                 humidity: Math.floor(60 + Math.random() * 5),
-                soilMoisture: Math.floor(25 + Math.random() * 10), // Randomize around threshold
+                soilMoisture: Math.floor(25 + Math.random() * 10),
                 lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             });
-            setIsLoading(false);
+            setIsLoadingData(false);
         }, 1200);
     };
 
+    const handleLogout = async () => {
+        try {
+            await authAPI.logout();
+            localStorage.removeItem('auth_token');
+            navigate('/login');
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    if (loading) return <div className="p-10 text-center">Loading...</div>;
+
     return (
-        <div className="p-6 md:p-8 bg-[#F8FAF9] min-h-screen font-sans">
-            <div className="max-w-7xl mx-auto">
-                <MonitoringHeader lastUpdated={data.lastUpdated} onRefresh={handleRefresh} />
+        <div className="flex h-screen bg-[#F8FAF9] font-sans overflow-hidden">
+            {/* Sidebar */}
+            <Sidebar onLogout={handleLogout} />
 
-                {isLoading && (
-                    <div className="mb-4 p-2 bg-green-50 text-green-700 text-sm text-center rounded-lg animate-pulse">
-                        Syncing with IoT Gateway...
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 md:ml-64">
+                <TopBar user={user} onLogout={handleLogout} />
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
+                    <div className="w-full pb-10">
+                        <MonitoringHeader lastUpdated={data.lastUpdated} onRefresh={handleRefresh} />
+
+                        {isLoadingData && (
+                            <div className="mb-4 p-2 bg-green-50 text-green-700 text-sm text-center rounded-lg animate-pulse">
+                                Syncing with IoT Gateway...
+                            </div>
+                        )}
+
+                        <CriticalAlerts soilMoisture={data.soilMoisture} />
+                        <SensorMetrics data={data} />
+                        <TrendCharts data={MOCK_TREND_DATA} />
+                        <BottomSection feeds={MOCK_FEEDS} />
                     </div>
-                )}
-
-                <CriticalAlerts soilMoisture={data.soilMoisture} />
-                <SensorMetrics data={data} />
-                <TrendCharts data={MOCK_TREND_DATA} />
-                <BottomSection feeds={MOCK_FEEDS} />
+                </div>
             </div>
         </div>
     );

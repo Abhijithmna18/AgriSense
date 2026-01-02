@@ -18,6 +18,7 @@ import {
 // Components
 import Sidebar from '../components/dashboard/Sidebar';
 import TopBar from '../components/dashboard/TopBar';
+import FarmManagementCard from '../components/dashboard/FarmManagementCard';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -212,6 +213,9 @@ const Dashboard = () => {
                                                 )}
                                             </AnimatePresence>
                                         </div>
+
+                                        {/* Farm Management Card - NEW */}
+                                        <FarmManagementCard />
 
                                         {/* Action Cards Grid */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
