@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { authAPI } from '../services/authApi';
+import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/auth/AuthLayout';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import ValidatedInput from '../components/auth/ValidatedInput';
@@ -20,21 +21,25 @@ const Login = () => {
         if (error) setError('');
     };
 
+    const { login } = useAuth();
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
         try {
-            const response = await authAPI.login(formData);
-            if (response.data.success) {
-                localStorage.setItem('auth_token', response.data.token);
+            const user = await login(formData);
+            console.log('Login successful. User:', user);
+            console.log('Active Role:', user.activeRole);
+            console.log('Roles:', user.roles);
 
-                // Redirect based on role
-                if (response.data.user?.role === 'admin') {
-                    navigate('/admin/dashboard');
-                } else {
-                    navigate('/dashboard');
-                }
+            // Redirect based on active role
+            if (user.roles && user.roles.includes('admin')) {
+                navigate('/admin/dashboard');
+            } else if (user.activeRole === 'buyer' || (user.roles && user.roles.includes('buyer') && !user.roles.includes('farmer'))) {
+                navigate('/buyer-dashboard');
+            } else {
+                navigate('/farmer-dashboard'); // Default to farmer dashboard
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please try again.');
@@ -52,11 +57,18 @@ const Login = () => {
             if (response.data.success) {
                 localStorage.setItem('auth_token', response.data.token);
 
-                // Redirect based on role
-                if (response.data.user?.role === 'admin') {
+                const userData = response.data.user;
+
+                // Prioritize activeRole for navigation
+                const activeRole = userData.activeRole || (userData.roles && userData.roles[0]) || userData.role || 'farmer';
+
+                // Redirect based on active role
+                if (activeRole === 'admin' || (userData.roles && userData.roles.includes('admin'))) {
                     navigate('/admin/dashboard');
+                } else if (activeRole === 'buyer') {
+                    navigate('/buyer-dashboard');
                 } else {
-                    navigate('/dashboard');
+                    navigate('/farmer-dashboard');
                 }
             }
         } catch (error) {

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, AlertCircle, Check, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { authAPI } from '../services/authApi';
+import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/auth/AuthLayout';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import ValidatedInput from '../components/auth/ValidatedInput';
@@ -54,7 +55,17 @@ const Register = () => {
         if (!formData.firstName.trim()) newErrors.firstName = "Required";
         if (!formData.lastName.trim()) newErrors.lastName = "Required";
         if (!formData.email.trim()) newErrors.email = "Required";
-        if (formData.phone && formData.phone.length < 10) newErrors.phone = "Phone number must be at least 10 digits";
+
+        // Validate cleaned phone number (same as what backend receives)
+        const cleanPhone = formData.phone.replace(/[^\d+]/g, '');
+        if (!formData.phone.trim()) {
+            newErrors.phone = "Required";
+        } else if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+            newErrors.phone = "Phone number must be 10-15 digits";
+        } else if (!/^\+?\d{10,15}$/.test(cleanPhone)) {
+            newErrors.phone = "Phone number can only contain digits and optional + prefix";
+        }
+
         const passValidation = validatePassword(formData.password);
         if (!passValidation.isValid) newErrors.password = passValidation.errors[0];
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
@@ -62,24 +73,58 @@ const Register = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const { register } = useAuth();
+    const [roles, setRoles] = useState(['farmer']); // Default to farmer
+
+    // ... (handleChange existing)
+
+    const toggleRole = (role) => {
+        setRoles(prev =>
+            prev.includes(role)
+                ? prev.filter(r => r !== role)
+                : [...prev, role]
+        );
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setGeneralError('');
         if (!validateForm()) return;
+
+        if (roles.length === 0) {
+            setGeneralError("Please select at least one role.");
+            return;
+        }
+
         setLoading(true);
         try {
-            const response = await authAPI.register({
+            // Sanitize phone (remove spaces, dashes, parentheses)
+            const cleanPhone = formData.phone.replace(/[^\d+]/g, '');
+
+            await register({
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: formData.email,
-                phone: formData.phone,
-                password: formData.password
+                phone: cleanPhone,
+                password: formData.password,
+                roles: roles
             });
-            if (response.data.success) {
-                navigate(`/verify?email=${encodeURIComponent(formData.email)}`);
-            }
+            navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
         } catch (err) {
-            setGeneralError(err.response?.data?.message || 'Registration failed.');
+            console.error("Registration Error:", err);
+            let errorMessage = 'Registration failed.';
+
+            if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+                // Handle express-validator errors array
+                errorMessage = err.response.data.errors.map(e => e.msg).join('. ');
+            } else if (err.response?.data?.message) {
+                // Handle standard message
+                errorMessage = err.response.data.message;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+
+            setGeneralError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -93,7 +138,20 @@ const Register = () => {
             const response = await authAPI.googleLogin(idToken);
             if (response.data.success) {
                 localStorage.setItem('auth_token', response.data.token);
-                navigate('/dashboard');
+
+                const userData = response.data.user;
+
+                // Prioritize activeRole for navigation
+                const activeRole = userData.activeRole || (userData.roles && userData.roles[0]) || userData.role || 'farmer';
+
+                // Redirect based on active role
+                if (activeRole === 'admin' || (userData.roles && userData.roles.includes('admin'))) {
+                    navigate('/admin/dashboard');
+                } else if (activeRole === 'buyer') {
+                    navigate('/buyer-dashboard');
+                } else {
+                    navigate('/farmer-dashboard');
+                }
             }
         } catch (error) {
             setGeneralError("Google Sign-Up failed. Please try again.");
@@ -185,11 +243,12 @@ const Register = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        label="Phone Number (Optional)"
+                        label="Phone Number"
                         icon={Phone}
                         placeholder="1234567890"
                         validationType="phone"
                         error={errors.phone}
+                        required
                     />
 
                     {/* Password */}
@@ -242,6 +301,32 @@ const Register = () => {
                     <p className="text-xs text-deep-charcoal/60 text-center">
                         By signing up, you agree to our <a href="#" className="text-[#2E7D32] hover:underline">Terms</a> and <a href="#" className="text-[#2E7D32] hover:underline">Privacy Policy</a>.
                     </p>
+
+                    {/* Role Selection */}
+                    <div className="space-y-3">
+                        <label className="block text-sm font-medium text-deep-charcoal">I am a...</label>
+                        <div className="grid grid-cols-2 gap-4">
+                            {['farmer', 'buyer'].map((role) => (
+                                <div
+                                    key={role}
+                                    onClick={() => toggleRole(role)}
+                                    className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${roles.includes(role)
+                                        ? 'border-[#2E7D32] bg-[#2E7D32]/5'
+                                        : 'border-gray-200 hover:border-[#2E7D32]/50'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${roles.includes(role) ? 'border-[#2E7D32] bg-[#2E7D32]' : 'border-gray-300'
+                                            }`}>
+                                            {roles.includes(role) && <Check size={12} className="text-white" />}
+                                        </div>
+                                        <span className="capitalize font-medium text-deep-charcoal">{role}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <p className="text-xs text-deep-charcoal/60">You can select both and switch anytime.</p>
+                    </div>
 
                     {/* Submit Button */}
                     <motion.button
