@@ -31,9 +31,14 @@ const UserSchema = new mongoose.Schema({
         }, 'Please add a phone number'],
         trim: true
     },
-    role: {
+    roles: {
+        type: [String],
+        enum: ['farmer', 'buyer', 'admin', 'vendor'],
+        default: ['farmer']
+    },
+    activeRole: {
         type: String,
-        enum: ['farmer', 'buyer', 'admin'],
+        enum: ['farmer', 'buyer', 'admin', 'vendor'],
         default: 'farmer'
     },
     isActive: {
@@ -47,6 +52,56 @@ const UserSchema = new mongoose.Schema({
         },
         minlength: 6,
         select: false // Don't return password by default
+    },
+    // Vendor Profile (Specific to users who want to sell)
+    vendorProfile: {
+        status: {
+            type: String,
+            enum: ['pending', 'approved', 'rejected'],
+            default: 'pending'
+        },
+        businessName: String,
+        vendorType: {
+            type: String,
+            enum: ['individual', 'company', 'cooperative']
+        },
+        gstin: String, // Optional
+        licenseId: String, // Optional
+        bankDetails: {
+            bankName: String,
+            accountNumber: String,
+            ifscCode: String,
+            upiId: String
+        },
+        pickupAddress: {
+            addressLine: String,
+            city: String,
+            state: String,
+            pinCode: String
+        },
+        productCategories: [String], // e.g., 'seeds', 'tools'
+        approvalRemarks: String,
+
+        // New Extended Fields
+        yearsOperation: Number,
+        expectedSellingMethod: {
+            type: String,
+            enum: ['direct', 'bulk', 'both'],
+            default: 'direct'
+        },
+        deliverySupport: {
+            type: String,
+            enum: ['self', 'platform', 'both'],
+            default: 'self'
+        },
+        documents: {
+            identityProof: String, // URL
+            businessProof: String  // URL
+        },
+        agreementAccepted: {
+            type: Boolean,
+            default: false
+        }
     },
     // New authentication fields
     isEmailVerified: {
@@ -102,7 +157,6 @@ const UserSchema = new mongoose.Schema({
     addresses: [{
         label: {
             type: String,
-            enum: ['home', 'office'],
             default: 'home'
         },
         addressLine: String,
@@ -127,6 +181,10 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false
+    },
     updatedAt: {
         type: Date,
         default: Date.now
@@ -140,6 +198,8 @@ UserSchema.pre('save', function () {
 
 // Compound index for email and provider
 UserSchema.index({ email: 1, provider: 1 });
+// Index for vendor status for admin queries
+UserSchema.index({ 'vendorProfile.status': 1 });
 
 // Encrypt password using bcrypt
 UserSchema.pre('save', async function () {

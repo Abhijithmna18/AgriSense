@@ -1,0 +1,49 @@
+[2026-01-08T09:27:46.398Z] Create Order Request: User=695ca1d72e380139e087c4ab, Items=[{"itemId":"1","type":"buy","quantity":1,"rentalDuration":0,"startDate":"2026-01-08T09:27:46.086Z","endDate":"2026-01-08T09:27:46.086Z"}]
+[2026-01-08T09:27:46.402Z] Order Error: CastError: Cast to ObjectId failed for value "1" (type string) at path "_id" for model "MarketplaceListing"
+    at SchemaObjectId.cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schemaType.js:1280:12)
+    at SchemaType.castForQuery (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schemaType.js:1706:17)
+    at cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:5016:12)
+    at Query._castConditions (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:2380:10)
+    at model.Query._findOne (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:2708:8)
+    at model.Query.exec (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.createOrder (D:\New folder\intern\Agri\farmer_ai-backend\src\controllers\marketplaceController.js:55:29)
+[2026-01-08T09:42:56.279Z] Create Order Request: User=695ca1d72e380139e087c4ab, Items=[{"itemId":"1","type":"buy","quantity":1,"rentalDuration":0,"startDate":"2026-01-08T09:42:56.038Z","endDate":"2026-01-08T09:42:56.038Z"}]
+[2026-01-08T09:42:56.280Z] Order Error: CastError: Cast to ObjectId failed for value "1" (type string) at path "_id" for model "MarketplaceListing"
+    at SchemaObjectId.cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schemaType.js:1280:12)
+    at SchemaType.castForQuery (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schemaType.js:1706:17)
+    at cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:5016:12)
+    at Query._castConditions (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:2380:10)
+    at model.Query._findOne (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:2708:8)
+    at model.Query.exec (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.createOrder (D:\New folder\intern\Agri\farmer_ai-backend\src\controllers\marketplaceController.js:55:29)
+[2026-01-09T05:43:34.198Z] Create Order Request: User=69605ef958ae90593ddfc755, Items=[{"itemId":"69608d79e8fea9398794e3fc","type":"buy","quantity":10,"rentalDuration":0,"startDate":"2026-01-09T05:43:34.142Z","endDate":"2026-01-09T05:43:34.142Z"}]
+[2026-01-09T06:06:56.718Z] Create Order Request: User=696041ea7d758329ea67e0c6, Items=[{"itemId":"1","type":"buy","quantity":1,"rentalDuration":0,"startDate":"2026-01-09T06:06:56.662Z","endDate":"2026-01-09T06:06:56.662Z"},{"itemId":"69608d79e8fea9398794e403","type":"buy","quantity":58,"rentalDuration":0,"startDate":"2026-01-09T06:06:56.662Z","endDate":"2026-01-09T06:06:56.662Z"}]
+[2026-01-09T06:06:56.728Z] Order Error: CastError: Cast to ObjectId failed for value "1" (type string) at path "_id" for model "MarketplaceListing"
+    at SchemaObjectId.cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schemaType.js:1280:12)
+    at SchemaType.castForQuery (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schemaType.js:1706:17)
+    at cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:5016:12)
+    at Query._castConditions (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:2380:10)
+    at model.Query._findOne (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:2708:8)
+    at model.Query.exec (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.createOrder (D:\New folder\intern\Agri\farmer_ai-backend\src\controllers\marketplaceController.js:55:29)
+[2026-01-09T06:06:56.807Z] Create Order Request: User=696041ea7d758329ea67e0c6, Items=[{"itemId":"1","type":"buy","quantity":1,"rentalDuration":0,"startDate":"2026-01-09T06:06:56.750Z","endDate":"2026-01-09T06:06:56.750Z"},{"itemId":"69608d79e8fea9398794e403","type":"buy","quantity":58,"rentalDuration":0,"startDate":"2026-01-09T06:06:56.750Z","endDate":"2026-01-09T06:06:56.750Z"}]
+[2026-01-09T06:06:56.808Z] Order Error: CastError: Cast to ObjectId failed for value "1" (type string) at path "_id" for model "MarketplaceListing"
+    at SchemaObjectId.cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schemaType.js:1280:12)
+    at SchemaType.castForQuery (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\schemaType.js:1706:17)
+    at cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:5016:12)
+    at Query._castConditions (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:2380:10)
+    at model.Query._findOne (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:2708:8)
+    at model.Query.exec (D:\New folder\intern\Agri\farmer_ai-backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exports.createOrder (D:\New folder\intern\Agri\farmer_ai-backend\src\controllers\marketplaceController.js:55:29)

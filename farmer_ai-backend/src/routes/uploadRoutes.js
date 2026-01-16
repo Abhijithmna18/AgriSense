@@ -2,11 +2,24 @@ const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
 
+const uploadDocument = require('../middleware/uploadDocument');
+
 router.post('/', upload.single('image'), (req, res) => {
     if (req.file) {
         res.status(200).json({
             message: 'Image uploaded successfully',
             imageUrl: `/${req.file.path.replace(/\\/g, '/')}`
+        });
+    } else {
+        res.status(400).json({ message: 'No file uploaded' });
+    }
+});
+
+router.post('/document', uploadDocument.single('file'), (req, res) => {
+    if (req.file) {
+        res.status(200).json({
+            message: 'Document uploaded successfully',
+            fileUrl: `/${req.file.path.replace(/\\/g, '/')}`
         });
     } else {
         res.status(400).json({ message: 'No file uploaded' });

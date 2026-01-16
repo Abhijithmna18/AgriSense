@@ -22,6 +22,30 @@ exports.getFarms = async (req, res, next) => {
     }
 };
 
+// @desc    Get all farms (Admin)
+// @route   GET /api/farms/admin/all
+// @access  Private (Admin)
+exports.getAllFarms = async (req, res, next) => {
+    try {
+        const farms = await Farm.find()
+            .populate('user', 'firstName lastName email phone')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: farms.length,
+            data: farms
+        });
+    } catch (err) {
+        console.error('Error fetching all farms:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching farms',
+            error: err.message
+        });
+    }
+};
+
 // @desc    Get single farm by ID
 // @route   GET /api/farms/:id
 // @access  Private

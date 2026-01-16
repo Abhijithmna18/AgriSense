@@ -53,4 +53,16 @@ export const auditAction = async (action, entity, entityId, changes, details) =>
     }
 };
 
+// Marketplace
+export const getMarketplaceListings = (params) => adminApi.get('/admin/marketplace/listings', { params });
+export const createMarketplaceListing = (data) => adminApi.post('/admin/marketplace/listings', data);
+export const updateMarketplaceListing = (id, data) => adminApi.put(`/admin/marketplace/listings/${id}`, data);
+
+export const getMarketplaceOrders = (params) => adminApi.get('/admin/marketplace/orders', { params });
+export const updateOrderStatus = (id, data) => adminApi.put(`/admin/marketplace/orders/${id}/status`, data);
+
+export const getMarketplacePayments = (params) => adminApi.get('/admin/marketplace/payments', { params });
+export const verifyPayment = (id, data) => adminApi.put(`/admin/marketplace/payments/${id}/verify`, data);
+export const getMarketplaceStats = () => adminApi.get('/admin/marketplace/stats');
+
 export default adminApi;

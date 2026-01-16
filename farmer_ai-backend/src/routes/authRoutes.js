@@ -16,6 +16,8 @@ const otpLimiter = rateLimit({
     message: { success: false, message: 'Too many OTP requests, please try again later' }
 });
 
+const { protect } = require('../middleware/auth');
+
 // Auth routes
 router.post('/register', authLimiter, authController.register);
 router.post('/verify-email', authController.verifyEmail);
@@ -26,5 +28,14 @@ router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/verify-reset', authLimiter, authController.verifyReset);
 router.post('/resend-reset', otpLimiter, authController.resendReset);
 router.post('/logout', authController.logout);
+router.post('/switch-role', protect, authController.switchRole);
+router.post('/add-role', protect, authController.addRole);
+router.post('/change-password', protect, authController.changePassword);
+router.post('/2fa/enable', protect, authController.enable2FA);
+router.post('/2fa/verify', protect, authController.verify2FA);
+router.post('/2fa/disable', protect, authController.disable2FA);
+router.post('/logout-all', protect, authController.logoutAll);
+router.post('/vendor/apply', protect, authController.submitVendorApplication);
+router.get('/vendor/me', protect, authController.getSellerProfile);
 
 module.exports = router;

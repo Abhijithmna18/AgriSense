@@ -88,10 +88,12 @@ const UsersAdmin = () => {
                     }
                 };
 
+                const displayRole = row.role || row.activeRole || 'unknown';
+
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex items-center w-fit ${getRoleStyle(row.role)}`}>
-                        {getRoleIcon(row.role)}
-                        {row.role.charAt(0).toUpperCase() + row.role.slice(1)}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex items-center w-fit ${getRoleStyle(displayRole)}`}>
+                        {getRoleIcon(displayRole)}
+                        {displayRole.charAt(0).toUpperCase() + displayRole.slice(1)}
                     </span>
                 );
             }
@@ -121,8 +123,8 @@ const UsersAdmin = () => {
                 <button
                     onClick={() => handleSuspendClick(row)}
                     className={`text-xs px-3 py-1.5 rounded-lg border transition-all font-medium ${row.isActive
-                            ? 'border-[var(--admin-danger)] text-[var(--admin-danger)] hover:bg-[var(--admin-danger)] hover:text-white'
-                            : 'border-[var(--admin-success)] text-[var(--admin-success)] hover:bg-[var(--admin-success)] hover:text-white'
+                        ? 'border-[var(--admin-danger)] text-[var(--admin-danger)] hover:bg-[var(--admin-danger)] hover:text-white'
+                        : 'border-[var(--admin-success)] text-[var(--admin-success)] hover:bg-[var(--admin-success)] hover:text-white'
                         }`}
                 >
                     {row.isActive ? 'Suspend' : 'Activate'}

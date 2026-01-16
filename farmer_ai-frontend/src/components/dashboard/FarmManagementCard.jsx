@@ -215,22 +215,31 @@ const FarmManagementCard = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
                 <button
-                    onClick={handleViewRecommendations}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-[var(--admin-accent)] text-white rounded-xl font-medium hover:bg-[var(--admin-accent-hover)] transition-all shadow-md hover:shadow-lg"
+                    onClick={() => navigate('/farm-management')}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
                 >
-                    <Sprout size={18} />
-                    View Farm AI Recommendations
+                    <MapPin size={18} />
+                    Open Zone & Farm Manager
                     <ArrowRight size={16} />
                 </button>
-                <button
-                    onClick={handleAddFarm}
-                    className="px-4 py-3 bg-white border-2 border-[var(--admin-accent)] text-[var(--admin-accent)] rounded-xl font-medium hover:bg-[var(--admin-bg-hover)] transition-colors flex items-center gap-2"
-                >
-                    <Plus size={18} />
-                    Add New Farm
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleViewRecommendations}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-[var(--admin-accent)] text-white rounded-xl font-medium hover:bg-[var(--admin-accent-hover)] transition-all shadow-md hover:shadow-lg"
+                    >
+                        <Sprout size={18} />
+                        AI Recommendations
+                    </button>
+                    <button
+                        onClick={handleAddFarm}
+                        className="px-4 py-3 bg-white border-2 border-[var(--admin-accent)] text-[var(--admin-accent)] rounded-xl font-medium hover:bg-[var(--admin-bg-hover)] transition-colors flex items-center gap-2"
+                    >
+                        <Plus size={18} />
+                        New Farm
+                    </button>
+                </div>
             </div>
         </motion.div>
     );

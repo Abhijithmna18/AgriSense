@@ -33,13 +33,17 @@ const Login = () => {
             console.log('Active Role:', user.activeRole);
             console.log('Roles:', user.roles);
 
-            // Redirect based on active role
+            // Calculate effective role for redirection
+            const effectiveRole = user.activeRole || (user.roles && user.roles[0]) || 'farmer';
+
             if (user.roles && user.roles.includes('admin')) {
                 navigate('/admin/dashboard');
-            } else if (user.activeRole === 'buyer' || (user.roles && user.roles.includes('buyer') && !user.roles.includes('farmer'))) {
+            } else if (effectiveRole === 'buyer') {
                 navigate('/buyer-dashboard');
+            } else if (effectiveRole === 'vendor') {
+                navigate('/vendor-dashboard');
             } else {
-                navigate('/farmer-dashboard'); // Default to farmer dashboard
+                navigate('/farmer-dashboard');
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please try again.');

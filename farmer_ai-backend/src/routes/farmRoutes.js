@@ -1,6 +1,7 @@
 const express = require('express');
 const {
     getFarms,
+    getAllFarms,
     getFarm,
     createFarm,
     updateFarm,
@@ -9,10 +10,12 @@ const {
 
 const router = express.Router();
 
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
 // All routes require authentication
 router.use(protect);
+
+router.get('/admin/all', authorize('admin'), getAllFarms);
 
 router.route('/')
     .get(getFarms)

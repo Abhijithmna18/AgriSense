@@ -20,8 +20,9 @@ const ModernFooter = ({ config }) => {
                 links: [
                     { label: 'Features', url: '#' },
                     { label: 'Pricing', url: '#' },
-                    { label: 'Marketplace', url: '#' },
-                    { label: 'AI Advisory', url: '#' }
+                    { label: 'Marketplace', url: '/marketplace' },
+                    { label: 'AI Advisory', url: '/advisories' },
+                    { label: 'Sell on AgriSense', url: '/sell' }
                 ]
             },
             {

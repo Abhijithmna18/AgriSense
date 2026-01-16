@@ -28,7 +28,31 @@ const createAdminUser = async () => {
         const existingAdmin = await User.findOne({ email: adminEmail });
 
         if (existingAdmin) {
-            console.log('\n✅ Admin user already exists!');
+            console.log('\nFound existing admin user. Checking roles...');
+
+            let needsSave = false;
+
+            // Ensure 'admin' is in roles array
+            if (!existingAdmin.roles.includes('admin')) {
+                console.log('Adding "admin" to roles...');
+                existingAdmin.roles.push('admin');
+                needsSave = true;
+            }
+
+            // Ensure activeRole is 'admin'
+            if (existingAdmin.activeRole !== 'admin') {
+                console.log(`Updating activeRole from "${existingAdmin.activeRole}" to "admin"...`);
+                existingAdmin.activeRole = 'admin';
+                needsSave = true;
+            }
+
+            if (needsSave) {
+                await existingAdmin.save();
+                console.log('✅ Admin user roles updated successfully!');
+            } else {
+                console.log('✅ Admin user roles are already correct.');
+            }
+
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             console.log('📧 Email: admin@agrisense.com');
             console.log('🔑 Password: Admin@123 (if unchanged)');

@@ -176,4 +176,19 @@ router.post('/audit', async (req, res) => {
     }
 });
 
+const adminVendorController = require('../controllers/adminVendorController');
+
+// ... existing code ...
+
+// VENDOR MANAGEMENT
+
+// GET /api/admin/vendors/pending
+router.get('/vendors/pending', adminVendorController.getPendingVendors);
+
+// POST /api/admin/vendors/:id/approve
+router.post('/vendors/:id/approve', adminVendorController.approveVendor);
+
+// POST /api/admin/vendors/:id/reject
+router.post('/vendors/:id/reject', adminVendorController.rejectVendor);
+
 module.exports = router;

@@ -49,7 +49,15 @@ export const authAPI = {
     resendReset: (data) => api.post('/api/auth/resend-reset', data),
     logout: () => api.post('/api/auth/logout'),
     getMe: () => api.get('/api/users/me'),
-    getDashboard: () => api.get('/api/dashboard')
+    updateProfile: (data) => api.put('/api/users/profile', data),
+    changePassword: (data) => api.post('/api/auth/change-password', data),
+    enable2FA: () => api.post('/api/auth/2fa/enable'),
+    verify2FA: (data) => api.post('/api/auth/2fa/verify', data),
+    disable2FA: (data) => api.post('/api/auth/2fa/disable', data),
+    logoutAll: () => api.post('/api/auth/logout-all'),
+    getDashboard: () => api.get('/api/dashboard'),
+    switchRole: (data) => api.post('/api/auth/switch-role', data),
+    addRole: (data) => api.post('/api/auth/add-role', data)
 };
 
 export default api;

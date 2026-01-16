@@ -1,10 +1,40 @@
 import React, { useState } from 'react';
-import { Search, Bell, MessageSquare, ChevronDown, User } from 'lucide-react';
+import { Search, Bell, MessageSquare, ChevronDown, User, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/admin.css';
 
 const TopBar = ({ user, onLogout }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const { switchRole, activeRole } = useAuth();
+    const navigate = useNavigate();
+    const [switching, setSwitching] = useState(false);
+
+    const handleRoleSwitch = async () => {
+        setSwitching(true);
+        try {
+            const newRole = activeRole === 'farmer' ? 'vendor' : 'farmer';
+            await switchRole(newRole);
+
+            // Navigate based on new role
+            if (newRole === 'vendor') {
+                navigate('/vendor-dashboard');
+            } else {
+                navigate('/farmer-dashboard');
+            }
+        } catch (error) {
+            console.error("Failed to switch role", error);
+        } finally {
+            setSwitching(false);
+        }
+    };
+
+    const canSwitch = user && (
+        (user.roles && user.roles.includes('vendor')) ||
+        user.role === 'vendor' ||
+        user.vendorProfile?.status === 'approved'
+    );
 
     return (
         <header className="sticky top-0 z-30 px-8 py-4 border-b border-[var(--admin-border)] flex items-center justify-between bg-[var(--admin-bg-secondary)]">
@@ -33,6 +63,19 @@ const TopBar = ({ user, onLogout }) => {
 
             {/* Right: Actions & Profile */}
             <div className="flex items-center gap-6">
+
+                {/* Role Switcher */}
+                {canSwitch && (
+                    <button
+                        onClick={handleRoleSwitch}
+                        disabled={switching}
+                        className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-colors border border-indigo-200"
+                    >
+                        <RefreshCw size={14} className={switching ? "animate-spin" : ""} />
+                        {activeRole === 'farmer' ? 'Switch to Vendor' : 'Switch to Farmer'}
+                    </button>
+                )}
+
                 {/* Notifications */}
                 <div className="flex items-center gap-4">
                     <button className="relative p-2 text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] transition-colors rounded-full hover:bg-[var(--admin-bg-hover)]">
@@ -58,13 +101,13 @@ const TopBar = ({ user, onLogout }) => {
                                 Hello, {user?.firstName || 'User'}
                             </p>
                             <p className="text-[10px] uppercase tracking-wider text-[var(--admin-text-secondary)]">
-                                {user?.role || 'Farmer'}
+                                {activeRole || user?.role || 'Farmer'}
                             </p>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-[var(--admin-bg-primary)] p-0.5 ring-2 ring-transparent group-hover:ring-[var(--admin-accent)] transition-all">
                             <div className="w-full h-full rounded-full bg-[var(--admin-bg-secondary)] flex items-center justify-center overflow-hidden border border-[var(--admin-border)]">
-                                {user?.avatar ? (
-                                    <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
+                                {user?.profilePhotoUrl ? (
+                                    <img src={user.profilePhotoUrl} alt="User" className="w-full h-full object-cover" />
                                 ) : (
                                     <User size={20} className="text-[var(--admin-text-muted)]" />
                                 )}
@@ -88,9 +131,17 @@ const TopBar = ({ user, onLogout }) => {
                                     </p>
                                     <p className="text-xs text-[var(--admin-text-muted)]">{user?.email}</p>
                                 </div>
-                                <a href="#profile" className="block px-4 py-2 text-sm text-[var(--admin-text-primary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-accent)] transition-colors">
+                                <a href="/profile-settings" className="block px-4 py-2 text-sm text-[var(--admin-text-primary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-accent)] transition-colors">
                                     Profile Settings
                                 </a>
+                                {canSwitch && (
+                                    <button
+                                        onClick={handleRoleSwitch}
+                                        className="w-full text-left px-4 py-2 text-sm text-[var(--admin-text-primary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-accent)] transition-colors md:hidden"
+                                    >
+                                        {activeRole === 'farmer' ? 'Switch to Vendor' : 'Switch to Farmer'}
+                                    </button>
+                                )}
                                 <a href="#billing" className="block px-4 py-2 text-sm text-[var(--admin-text-primary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-accent)] transition-colors">
                                     Billing & Plans
                                 </a>

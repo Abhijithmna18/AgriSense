@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-    LayoutDashboard, Users, Sprout, ShoppingBag,
+    LayoutDashboard, Users, Sprout, ShoppingBag, Banknote,
     Flag, Shield, Activity, Settings, LogOut,
     Building, ClipboardList, TrendingUp, MessageSquare, Home
 } from 'lucide-react';
@@ -32,6 +32,8 @@ const AdminNav = () => {
             ]
         },
         { to: '/admin/users', icon: Users, label: 'Users' },
+        { to: '/admin/vendors', icon: ShoppingBag, label: 'Vendor Approvals' },
+        { to: '/admin/loans', icon: Banknote, label: 'Loan Approvals' },
         { to: '/admin/farms', icon: Sprout, label: 'Farms' },
         { to: '/admin/marketplace', icon: ShoppingBag, label: 'Marketplace' },
         { to: '/admin/feature-flags', icon: Flag, label: 'Feature Flags' },

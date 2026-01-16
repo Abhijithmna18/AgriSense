@@ -10,40 +10,58 @@ import {
     Settings,
     Building,
     Activity,
-    MessageSquare
+    MessageSquare,
+    Package
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import recommendationIcon from '../../assets/recommendations_custom.png';
 import '../../styles/admin.css';
 
+import { useAuth } from '../../context/AuthContext';
+
 const Sidebar = ({ onLogout }) => {
+    const { activeRole } = useAuth();
     const [expandedMenu, setExpandedMenu] = React.useState(null);
 
     const toggleMenu = (label) => {
         setExpandedMenu(expandedMenu === label ? null : label);
     };
 
-    const navItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-        { icon: BarChart2, label: 'Analytics', path: '/analytics' },
-        { icon: TrendingUp, label: 'Forecasting', path: '/forecasting' },
-        { icon: BrainCircuit, label: 'AI Models', path: '/ai-models' },
-        { icon: Activity, label: 'Farm Monitoring', path: '/monitoring' },
-        { icon: null, img: recommendationIcon, label: 'Recommendations', path: '/recommendations' },
+    const allNavItems = [
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['farmer', 'buyer', 'admin'] },
+
+        // Farmer Specific
+        { icon: BarChart2, label: 'Analytics', path: '/analytics', roles: ['farmer', 'admin'] },
+        { icon: TrendingUp, label: 'Forecasting', path: '/forecasting', roles: ['farmer', 'admin'] },
+        { icon: BrainCircuit, label: 'AI Models', path: '/ai-models', roles: ['farmer', 'admin'] },
+        { icon: Activity, label: 'Farm Monitoring', path: '/monitoring', roles: ['farmer', 'admin'] },
+        { icon: null, img: recommendationIcon, label: 'Recommendations', path: '/recommendations', roles: ['farmer', 'admin'] },
+
+        // Buyer Specific (New)
+        { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace', roles: ['farmer', 'buyer', 'admin'] },
+        { icon: Package, label: 'Orders', path: '/orders', roles: ['buyer'] },
+        { icon: MessageSquare, label: 'Negotiations', path: '/negotiations', roles: ['buyer'] }, // Using MessageSquare as placeholder if Handshake not avail
+        { icon: LinkIcon, label: 'Saved Suppliers', path: '/saved-suppliers', roles: ['buyer'] }, // Using Link as placeholder
+        { icon: BarChart2, label: 'Market Analytics', path: '/market-analytics', roles: ['buyer'] },
+
+        // Shared
         {
             icon: Building,
             label: 'Warehouses',
-            // path: '/warehouses', // Removed direct path
+            roles: ['farmer', 'admin'], // Removed from buyer
             children: [
                 { label: 'Browse Warehouses', path: '/warehouses' },
                 { label: 'My Bookings', path: '/my-bookings' }
             ]
         },
-        { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace' },
-        { icon: LinkIcon, label: 'Blockchain', path: '/blockchain' },
-        { icon: MessageSquare, label: 'Feedback', path: '/feedback', badge: 'New' }, // Icon will be handled in render
-        { icon: Settings, label: 'Settings', path: '/settings' },
+        // Blockchain removed for buyer
+        { icon: LinkIcon, label: 'Blockchain', path: '/blockchain', roles: ['farmer', 'admin'] },
+
+        { icon: MessageSquare, label: 'Feedback', path: '/feedback', badge: 'New', roles: ['farmer', 'buyer', 'admin'] },
+        { icon: Settings, label: 'Settings', path: '/settings', roles: ['farmer', 'buyer', 'admin'] },
     ];
+
+    const navItems = allNavItems.filter(item => !item.roles || item.roles.includes(activeRole || 'farmer'));
 
     return (
         <aside className="fixed left-0 top-0 h-screen w-64 border-r border-[var(--admin-border)] z-40 hidden md:flex flex-col overflow-hidden box-border bg-[var(--admin-bg-secondary)]">

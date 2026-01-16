@@ -36,6 +36,10 @@ const protect = async (req, res, next) => {
 
             // Attach user to request
             req.user = user;
+
+            // DEBUG: Print user roles for auth debugging
+            // console.log(`Auth Debug - User: ${user._id}, ActiveRole: ${user.activeRole}, Roles: ${user.roles}, LegacyRole: ${user.role}`);
+
             next();
 
         } catch (error) {
@@ -72,19 +76,44 @@ const requireVerified = (req, res, next) => {
  */
 const authorize = (...roles) => {
     return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({
-                success: false,
-                message: 'Not authorized to access this route'
-            });
+        console.log(`[AUTHORIZE] Checking roles: ${roles.join(', ')}`);
+        console.log(`[AUTHORIZE] User activeRole: ${req.user.activeRole}`);
+        console.log(`[AUTHORIZE] User roles array: ${req.user.roles}`);
+        console.log(`[AUTHORIZE] User legacy role: ${req.user.role}`);
+
+        // 1. Check activeRole (Primary)
+        if (req.user.activeRole && roles.includes(req.user.activeRole)) {
+            console.log(`[AUTHORIZE] ✓ Authorized via activeRole: ${req.user.activeRole}`);
+            return next();
         }
-        next();
+
+        // 2. Check roles array (Secondary/Fallback)
+        if (req.user.roles && req.user.roles.some(role => roles.includes(role))) {
+            console.log(`[AUTHORIZE] ✓ Authorized via roles array`);
+            return next();
+        }
+
+        // 3. Check legacy role field (Backward Compatibility)
+        if (req.user.role && roles.includes(req.user.role)) {
+            console.log(`[AUTHORIZE] ✓ Authorized via legacy role: ${req.user.role}`);
+            return next();
+        }
+
+        // If none match, deny access
+        console.log(`[AUTHORIZE] ✗ DENIED - No matching role found`);
+        return res.status(403).json({
+            success: false,
+            message: `Not authorized. Required roles: ${roles.join(', ')}`
+        });
     };
 };
 
 /**
  * Admin only middleware (backward compatibility)
  */
-const adminOnly = authorize('admin');
+// Update adminOnly to correctly use the flexible authorize function
+const adminOnly = (req, res, next) => {
+    return authorize('admin')(req, res, next);
+};
 
 module.exports = { protect, requireVerified, authorize, adminOnly };

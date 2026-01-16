@@ -33,6 +33,13 @@ const validateLogin = [
 
 router.post('/register', validateRegister, registerUser);
 router.post('/login', validateLogin, loginUser);
+// Authorization check for profile update
+const { updateUser, addAddress, deleteAddress, getAddresses } = require('../controllers/userController');
 router.get('/me', protect, getMe);
+router.put('/profile', protect, updateUser);
+
+router.post('/address', protect, addAddress);
+router.delete('/address/:id', protect, deleteAddress);
+router.get('/address', protect, getAddresses);
 
 module.exports = router;

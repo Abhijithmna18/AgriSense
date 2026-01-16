@@ -29,6 +29,15 @@ app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '5mb' })); // Body parser with 5mb limit
 
+// DEBUG: Log all requests
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    if (req.method === 'POST' || req.method === 'PUT') {
+        console.log('Body:', JSON.stringify(req.body, null, 2));
+    }
+    next();
+});
+
 // Logging
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
@@ -54,6 +63,11 @@ app.use('/api/warehouses', require('./src/routes/warehouseRoutes'));
 app.use('/api/bookings', require('./src/routes/bookingRoutes'));
 app.use('/api/feedback', require('./src/routes/feedbackRoutes'));
 app.use('/api/homepage', require('./src/routes/homepageRoutes'));
+app.use('/api/marketplace', require('./src/routes/marketplaceRoutes'));
+app.use('/api/admin/marketplace', require('./src/routes/adminMarketplaceRoutes')); // New Admin Routes
+app.use('/api/notifications', require('./src/routes/notificationRoutes'));
+app.use('/api/finance', require('./src/routes/financeRoutes'));
+app.use('/api/admin/finance', require('./src/routes/adminFinanceRoutes'));
 
 
 // Make uploads folder static
