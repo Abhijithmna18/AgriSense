@@ -1,21 +1,24 @@
 const mongoose = require('mongoose');
 
-const ReviewSchema = new mongoose.Schema({
+const reviewSchema = new mongoose.Schema({
+    buyer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    vendorName: { // Storing name directly for MVP or reference to User if vendors are users
+        type: String,
+        required: true
+    },
+    productName: {
+        type: String,
+        required: true
+    },
+    // Optional link to Product model for integration with Marketplace
     product: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'MarketplaceListing', // Updated reference
-        required: true
-    },
-    reviewer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    // Adding separate vendor ref for faster queries
-    vendor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: 'Product',
+        required: false
     },
     rating: {
         type: Number,
@@ -25,24 +28,14 @@ const ReviewSchema = new mongoose.Schema({
     },
     comment: {
         type: String,
-        required: true,
-        trim: true
+        required: true
     },
-    vendorReply: {
-        text: String,
-        repliedAt: Date
-    },
-    isVerifiedPurchase: {
-        type: Boolean,
-        default: false
-    },
-    createdAt: {
+    date: {
         type: Date,
         default: Date.now
     }
+}, {
+    timestamps: true
 });
 
-// Prevent multiple reviews per product per user
-ReviewSchema.index({ product: 1, reviewer: 1 }, { unique: true });
-
-module.exports = mongoose.model('Review', ReviewSchema);
+module.exports = mongoose.model('Review', reviewSchema);

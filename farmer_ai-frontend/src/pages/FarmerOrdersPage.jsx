@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../services/authApi';
-import { Eye, Package, Calendar } from 'lucide-react';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../services/authApi";
+import { Eye, Package, Calendar } from "lucide-react";
+import { format } from "date-fns";
 
 const FarmerOrdersPage = () => {
     const [orders, setOrders] = useState([]);
@@ -12,7 +12,7 @@ const FarmerOrdersPage = () => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const { data } = await api.get('/api/marketplace/my-orders'); // Ensure this route exists or use /api/marketplace/orders
+                const { data } = await api.get('/api/marketplace/orders'); // Ensure this route exists or use /api/marketplace/orders
                 setOrders(data);
             } catch (error) {
                 console.error("Failed to fetch orders", error);
@@ -56,7 +56,6 @@ const FarmerOrdersPage = () => {
                                     <th className="px-6 py-4">Items</th>
                                     <th className="px-6 py-4">Total</th>
                                     <th className="px-6 py-4">Payment</th>
-                                    <th className="px-6 py-4">Status</th>
                                     <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -80,7 +79,25 @@ const FarmerOrdersPage = () => {
                                                     {order.items?.length} Items
                                                 </span>
                                                 <span className="text-xs text-gray-400 truncate max-w-[200px]">
-                                                    {order.items?.map(i => i.productName).join(', ')}
+                                                    {order.items?.map(i => {
+                                                        // Prefer populated listing name
+                                                        if (i.listing?.productRef?.name) return i.listing.productRef.name;
+                                                        if (typeof i.listing?.productRef === 'string') return i.listing.productRef;
+
+                                                        // Fallback to stored name, cleaning up JSON if present
+                                                        const name = i.productName || '';
+                                                        if (name.includes('{')) {
+                                                            try {
+                                                                const parts = name.split(' - ');
+                                                                const jsonPart = parts[1];
+                                                                const obj = JSON.parse(jsonPart);
+                                                                return parts[0] + ' - ' + (obj.name || 'Product');
+                                                            } catch (e) {
+                                                                return name;
+                                                            }
+                                                        }
+                                                        return name;
+                                                    }).join(', ')}
                                                 </span>
                                             </div>
                                         </td>
@@ -91,11 +108,6 @@ const FarmerOrdersPage = () => {
                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                                                 }`}>
                                                 {order.paymentStatus}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(order.deliveryStatus)}`}>
-                                                {order.deliveryStatus}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">

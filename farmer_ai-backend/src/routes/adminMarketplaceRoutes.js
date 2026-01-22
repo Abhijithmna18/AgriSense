@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, adminOnly } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 const {
     getListings,
     createListing,
@@ -18,7 +19,7 @@ router.use(adminOnly);
 
 // Listings
 router.get('/listings', getListings);
-router.post('/listings', createListing);
+router.post('/listings', upload.single('image'), createListing);
 router.put('/listings/:id', updateListing);
 
 // Orders

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../services/authApi';
-import { MapPin, Plus, CheckCircle, ArrowLeft, Lock } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/authApi";
+import { negotiationAPI } from "../services/negotiationApi";
+import { MapPin, Plus, CheckCircle, ArrowLeft, Lock, MessageSquare, Package, AlertCircle } from "lucide-react";
 import toast from 'react-hot-toast';
 
 const CheckoutPage = () => {
-    const { items, cartTotal, clearCart } = useCart();
+    const { items, cartTotal, clearCart, removeItems } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -15,6 +16,8 @@ const CheckoutPage = () => {
     const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [isAddingAddress, setIsAddingAddress] = useState(false);
+    const [negotiationItems, setNegotiationItems] = useState(new Set());
+    const [isNegotiating, setIsNegotiating] = useState(false);
 
     // New Address Form State
     const [newAddress, setNewAddress] = useState({
@@ -67,6 +70,12 @@ const CheckoutPage = () => {
     const handlePayment = async () => {
         if (!selectedAddressId) {
             toast.error('Please select a delivery address');
+            return;
+        }
+
+        // Check if any items are marked for negotiation
+        if (negotiationItems.size > 0) {
+            await handleNegotiationFlow();
             return;
         }
 
@@ -133,6 +142,90 @@ const CheckoutPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleNegotiationFlow = async () => {
+        setIsNegotiating(true);
+        try {
+            const negotiationPromises = [];
+            
+            // Create negotiations for selected items
+            for (const itemId of negotiationItems) {
+                const item = items.find(i => i._id === itemId);
+                if (item) {
+                    const initialTerms = {
+                        price: item.pricePerUnit * 0.9, // Start with 10% discount request
+                        quantity: item.quantity,
+                        deliveryDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        qualityRequirements: 'Standard',
+                        message: `Bulk order negotiation for ${item.quantity} units of ${item.name}. Looking for better pricing on this large quantity order.`
+                    };
+
+                    negotiationPromises.push(
+                        negotiationAPI.createNegotiation(
+                            item._id,
+                            item.seller._id || item.seller, // Handle both object and string cases
+                            initialTerms
+                        )
+                    );
+                }
+            }
+
+            const results = await Promise.allSettled(negotiationPromises);
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+
+            if (successful > 0) {
+                toast.success(`${successful} negotiation${successful > 1 ? 's' : ''} started successfully!`);
+                
+                // Remove negotiated items from cart
+                const negotiatedItemIds = Array.from(negotiationItems);
+                removeItems(negotiatedItemIds);
+                
+                // Navigate to negotiations page
+                navigate('/negotiations');
+            }
+
+            if (failed > 0) {
+                toast.error(`${failed} negotiation${failed > 1 ? 's' : ''} failed to start`);
+            }
+
+        } catch (error) {
+            console.error('Negotiation flow error:', error);
+            toast.error('Failed to start negotiations');
+        } finally {
+            setIsNegotiating(false);
+        }
+    };
+
+    const toggleNegotiation = (itemId) => {
+        const newNegotiationItems = new Set(negotiationItems);
+        if (newNegotiationItems.has(itemId)) {
+            newNegotiationItems.delete(itemId);
+        } else {
+            newNegotiationItems.add(itemId);
+        }
+        setNegotiationItems(newNegotiationItems);
+    };
+
+    const getBulkItems = () => {
+        return items.filter(item => item.quantity >= 10);
+    };
+
+    const getRegularItems = () => {
+        return items.filter(item => !negotiationItems.has(item._id));
+    };
+
+    const getNegotiationTotal = () => {
+        return items
+            .filter(item => negotiationItems.has(item._id))
+            .reduce((total, item) => total + (item.pricePerUnit * item.quantity), 0);
+    };
+
+    const getRegularTotal = () => {
+        return items
+            .filter(item => !negotiationItems.has(item._id))
+            .reduce((total, item) => total + (item.pricePerUnit * item.quantity), 0);
     };
 
     if (items.length === 0) {
@@ -205,39 +298,157 @@ const CheckoutPage = () => {
                 {/* Right: Order Summary */}
                 <div className="bg-white p-6 rounded-xl border border-gray-200 h-fit sticky top-6">
                     <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
+                    
+                    {/* Bulk Order Negotiation Section */}
+                    {getBulkItems().length > 0 && (
+                        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Package className="text-blue-600" size={18} />
+                                <h4 className="font-medium text-blue-900">Bulk Order Options</h4>
+                            </div>
+                            <p className="text-sm text-blue-700 mb-3">
+                                Items with 10+ quantity qualify for price negotiations
+                            </p>
+                            
+                            <div className="space-y-2">
+                                {getBulkItems().map(item => (
+                                    <div key={item._id} className="flex items-center justify-between p-2 bg-white rounded border">
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id={`negotiate-${item._id}`}
+                                                checked={negotiationItems.has(item._id)}
+                                                onChange={() => toggleNegotiation(item._id)}
+                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <label htmlFor={`negotiate-${item._id}`} className="text-sm cursor-pointer">
+                                                <span className="font-medium">{item.name}</span>
+                                                <span className="text-gray-500 ml-1">({item.quantity} units)</span>
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <MessageSquare size={14} className="text-blue-500" />
+                                            <span className="text-xs text-blue-600">Negotiate</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            {negotiationItems.size > 0 && (
+                                <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                                    <div className="flex items-center gap-2">
+                                        <AlertCircle size={14} className="text-yellow-600" />
+                                        <span className="text-xs text-yellow-700">
+                                            {negotiationItems.size} item{negotiationItems.size > 1 ? 's' : ''} selected for negotiation
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Order Items */}
                     <div className="space-y-2 mb-4 max-h-60 overflow-y-auto custom-scrollbar">
                         {items.map(item => (
-                            <div key={item._id} className="flex justify-between text-sm">
-                                <span className="text-gray-600 truncate max-w-[150px]">
-                                    {item.quantity}x {item.name || item.productRef?.name}
+                            <div key={item._id} className={`flex justify-between text-sm p-2 rounded ${
+                                negotiationItems.has(item._id) ? 'bg-blue-50 border border-blue-200' : ''
+                            }`}>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-600 truncate max-w-[120px]">
+                                        {item.quantity}x {item.name || item.productRef?.name}
+                                    </span>
+                                    {negotiationItems.has(item._id) && (
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                            Negotiating
+                                        </span>
+                                    )}
+                                </div>
+                                <span className={`font-medium ${
+                                    negotiationItems.has(item._id) ? 'text-blue-700' : 'text-gray-900'
+                                }`}>
+                                    ₹{(item.pricePerUnit * item.quantity).toFixed(2)}
                                 </span>
-                                <span className="font-medium">₹{(item.pricePerUnit * item.quantity).toFixed(2)}</span>
                             </div>
                         ))}
                     </div>
 
                     <div className="border-t border-gray-100 pt-3 space-y-2">
-                        <div className="flex justify-between text-gray-500">
-                            <span>Subtotal</span>
-                            <span>₹{cartTotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg text-gray-900">
-                            <span>Total Payable</span>
-                            <span>₹{(cartTotal * 1.05).toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={handlePayment}
-                        disabled={loading}
-                        className="w-full mt-6 py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                        {loading ? 'Processing...' : (
+                        {negotiationItems.size > 0 && (
                             <>
-                                <Lock size={18} /> Pay Securely
+                                <div className="flex justify-between text-sm text-blue-600">
+                                    <span>Items for Negotiation</span>
+                                    <span>₹{getNegotiationTotal().toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-500">
+                                    <span>Pay Now (Regular Items)</span>
+                                    <span>₹{getRegularTotal().toFixed(2)}</span>
+                                </div>
                             </>
                         )}
-                    </button>
+                        
+                        {negotiationItems.size === 0 && (
+                            <div className="flex justify-between text-gray-500">
+                                <span>Subtotal</span>
+                                <span>₹{cartTotal.toFixed(2)}</span>
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-between font-bold text-lg text-gray-900">
+                            <span>Total Payable</span>
+                            <span>₹{(negotiationItems.size > 0 ? getRegularTotal() * 1.05 : cartTotal * 1.05).toFixed(2)}</span>
+                        </div>
+                        
+                        {negotiationItems.size > 0 && (
+                            <div className="text-xs text-gray-500 mt-2">
+                                * Negotiated items will be processed separately
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-6 space-y-3">
+                        {negotiationItems.size > 0 ? (
+                            <>
+                                <button
+                                    onClick={handleNegotiationFlow}
+                                    disabled={isNegotiating}
+                                    className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isNegotiating ? 'Starting Negotiations...' : (
+                                        <>
+                                            <MessageSquare size={18} /> Start Negotiations
+                                        </>
+                                    )}
+                                </button>
+                                
+                                {getRegularTotal() > 0 && (
+                                    <button
+                                        onClick={handlePayment}
+                                        disabled={loading}
+                                        className="w-full py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {loading ? 'Processing...' : (
+                                            <>
+                                                <Lock size={18} /> Pay for Regular Items
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <button
+                                onClick={handlePayment}
+                                disabled={loading}
+                                className="w-full py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {loading ? 'Processing...' : (
+                                    <>
+                                        <Lock size={18} /> Pay Securely
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

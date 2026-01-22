@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, DollarSign, BarChart3, Edit, Trash2, MapPin, Tag, LogOut } from 'lucide-react';
+import { Package, Plus, DollarSign, BarChart3, Edit, Trash2, MapPin, Tag, LogOut, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/authApi';
 
@@ -11,7 +11,8 @@ const VendorDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [formData, setFormData] = useState({
-        productType: 'input', // 'input', 'crop'
+        category: 'inputs', // 'inputs', 'rentals'
+        productType: '', // Free text input
         productRef: '',
         quantity: '',
         unit: 'kg',
@@ -62,7 +63,8 @@ const VendorDashboard = () => {
             fetchListings();
             setIsCreateModalOpen(false);
             setFormData({
-                productType: 'input',
+                category: 'inputs',
+                productType: '',
                 productRef: '',
                 quantity: '',
                 unit: 'kg',
@@ -84,6 +86,11 @@ const VendorDashboard = () => {
             fetchListings();
         } catch (error) {
             console.error('Failed to delete', error);
+            if (error.response?.status === 403) {
+                alert('You do not have permission to delete this product. Please make sure you are logged in as a vendor and this is your product.');
+            } else {
+                alert('Failed to delete product. Please try again.');
+            }
         }
     };
 
@@ -102,6 +109,13 @@ const VendorDashboard = () => {
                             <p className="text-gray-500">Manage your store and listings</p>
                         </div>
                         <div className="flex gap-4">
+                            <button
+                                onClick={() => navigate('/vendor/negotiations')}
+                                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-200"
+                            >
+                                <MessageSquare size={20} />
+                                Negotiations
+                            </button>
                             <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 font-medium flex items-center gap-2">
                                 <LogOut size={18} />
                                 Logout
@@ -156,10 +170,61 @@ const VendorDashboard = () => {
                         </div>
                     </div>
 
+                    {/* Quick Start Section - Only show when no products */}
+                    {!loading && listings.length === 0 && (
+                        <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 border-2 border-green-200 mb-8">
+                            <div className="max-w-3xl mx-auto text-center space-y-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mb-4">
+                                    <Package className="text-white" size={32} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900">Start Selling Your Products</h2>
+                                <p className="text-gray-600 text-lg">
+                                    Welcome to the Vendor Marketplace! List your farming inputs, equipment, or produce to reach farmers across the region.
+                                </p>
+
+                                {/* Quick Start Steps */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                                    <div className="bg-white p-6 rounded-xl shadow-sm">
+                                        <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold mb-3 mx-auto">1</div>
+                                        <h3 className="font-semibold text-gray-900 mb-2">Add Product Details</h3>
+                                        <p className="text-sm text-gray-600">Enter product name, type, price, and quantity</p>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-xl shadow-sm">
+                                        <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold mb-3 mx-auto">2</div>
+                                        <h3 className="font-semibold text-gray-900 mb-2">Set Your Price</h3>
+                                        <p className="text-sm text-gray-600">Choose competitive pricing per unit</p>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-xl shadow-sm">
+                                        <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold mb-3 mx-auto">3</div>
+                                        <h3 className="font-semibold text-gray-900 mb-2">Start Earning</h3>
+                                        <p className="text-sm text-gray-600">Receive orders and manage your sales</p>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                    className="mt-6 px-8 py-4 bg-green-600 text-white rounded-xl font-bold text-lg flex items-center gap-3 hover:bg-green-700 transition shadow-lg shadow-green-200 mx-auto"
+                                >
+                                    <Plus size={24} />
+                                    List Your First Product
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Listings Table */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-6 border-b border-gray-100">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                             <h2 className="text-lg font-bold text-gray-900">My Products</h2>
+                            {listings.length > 0 && (
+                                <button
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-green-700 transition text-sm"
+                                >
+                                    <Plus size={18} />
+                                    Add Product
+                                </button>
+                            )}
                         </div>
 
                         {loading ? (
@@ -167,7 +232,7 @@ const VendorDashboard = () => {
                         ) : listings.length === 0 ? (
                             <div className="p-12 text-center text-gray-500">
                                 <Package className="mx-auto text-gray-300 mb-4" size={48} />
-                                <p>No products listed yet. Click "Add New Product" to start selling.</p>
+                                <p>Your product listings will appear here.</p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
@@ -185,10 +250,33 @@ const VendorDashboard = () => {
                                     <tbody className="divide-y divide-gray-100">
                                         {listings.map(item => (
                                             <tr key={item._id} className="hover:bg-gray-50 transition">
-                                                <td className="px-6 py-4 font-medium text-gray-900">
-                                                    {typeof item.productRef === 'object' && item.productRef !== null
-                                                        ? (item.productRef.name || item.productRef.variety || 'Unknown Product')
-                                                        : item.productRef}
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        {/* Product Image */}
+                                                        {item.images && item.images.length > 0 && item.images[0] ? (
+                                                            <img
+                                                                src={item.images[0]}
+                                                                alt={item.name || 'Product'}
+                                                                className="w-12 h-12 rounded-lg object-cover border border-gray-200"
+                                                                onError={(e) => {
+                                                                    // Hide image and show icon fallback
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.nextSibling.style.display = 'flex';
+                                                                }}
+                                                            />
+                                                        ) : null}
+                                                        {/* Fallback Icon - shown when no image or image fails */}
+                                                        <div
+                                                            className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center border border-gray-200"
+                                                            style={{ display: (item.images && item.images.length > 0 && item.images[0]) ? 'none' : 'flex' }}
+                                                        >
+                                                            <Package size={20} className="text-gray-400" />
+                                                        </div>
+                                                        {/* Product Name */}
+                                                        <span className="font-medium text-gray-900">
+                                                            {item.name || 'Unnamed Product'}
+                                                        </span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-500 capitalize">{item.productType}</td>
                                                 <td className="px-6 py-4 text-gray-900 font-medium">₹{item.pricePerUnit} / {item.unit}</td>
@@ -228,25 +316,49 @@ const VendorDashboard = () => {
                         </div>
 
                         <form onSubmit={handleCreateProduct} className="space-y-4">
+                            {/* Category Selection */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Marketplace Category</label>
+                                <select
+                                    className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                    value={formData.category}
+                                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                >
+                                    <option value="inputs">Farming Inputs (Seeds, Fertilizers, Pesticides)</option>
+                                    <option value="rentals">Tools & Rentals (Tractors, Equipment)</option>
+                                </select>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Type</label>
-                                    <select
-                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
-                                        value={formData.productType}
-                                        onChange={e => setFormData({ ...formData, productType: e.target.value })}
-                                    >
-                                        <option value="input">Farming Input</option>
-                                        <option value="crop">Crop Produce</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Category / Name</label>
+                                    <label className="text-sm font-medium text-gray-700">Product Type</label>
                                     <input
                                         className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
-                                        placeholder="e.g. Urea, Wheat Seeds"
+                                        placeholder="e.g. Seeds, Fertilizer, Equipment"
+                                        value={formData.productType}
+                                        onChange={e => {
+                                            // Prevent leading spaces
+                                            const value = e.target.value;
+                                            if (value.length === 0 || value[0] !== ' ') {
+                                                setFormData({ ...formData, productType: value });
+                                            }
+                                        }}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700">Product Name</label>
+                                    <input
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                        placeholder="e.g. Urea, Wheat Seeds, Tractor"
                                         value={formData.productRef}
-                                        onChange={e => setFormData({ ...formData, productRef: e.target.value })}
+                                        onChange={e => {
+                                            // Prevent leading spaces
+                                            const value = e.target.value;
+                                            if (value.length === 0 || value[0] !== ' ') {
+                                                setFormData({ ...formData, productRef: value });
+                                            }
+                                        }}
                                         required
                                     />
                                 </div>
@@ -297,7 +409,13 @@ const VendorDashboard = () => {
                                     className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500 h-24"
                                     placeholder="Product details..."
                                     value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                    onChange={e => {
+                                        // Prevent leading spaces
+                                        const value = e.target.value;
+                                        if (value.length === 0 || value[0] !== ' ') {
+                                            setFormData({ ...formData, description: value });
+                                        }
+                                    }}
                                 />
                             </div>
 
@@ -307,7 +425,13 @@ const VendorDashboard = () => {
                                     className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
                                     placeholder="Optional (Default: Profile Address)"
                                     value={formData.location}
-                                    onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                    onChange={e => {
+                                        // Prevent leading spaces
+                                        const value = e.target.value;
+                                        if (value.length === 0 || value[0] !== ' ') {
+                                            setFormData({ ...formData, location: value });
+                                        }
+                                    }}
                                 />
                             </div>
 
@@ -317,7 +441,13 @@ const VendorDashboard = () => {
                                     className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
                                     placeholder="Paste image link here..."
                                     value={formData.imageUrl}
-                                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
+                                    onChange={e => {
+                                        // Prevent leading spaces
+                                        const value = e.target.value;
+                                        if (value.length === 0 || value[0] !== ' ') {
+                                            setFormData({ ...formData, imageUrl: value });
+                                        }
+                                    }}
                                 />
                             </div>
 

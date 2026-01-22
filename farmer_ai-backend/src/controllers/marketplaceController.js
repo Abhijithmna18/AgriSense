@@ -1,8 +1,11 @@
-const MarketplaceListing = require('../models/MarketplaceListing'); // Updated Model
+const MarketplaceListing = require('../models/MarketplaceListing');
 const Order = require('../models/Order');
 const Review = require('../models/Review');
 const Notification = require('../models/Notifications');
 const Razorpay = require('razorpay');
+const mongoose = require('mongoose');
+const crypto = require('crypto');
+const AppError = require('../utils/AppError');
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
@@ -40,38 +43,59 @@ exports.getProducts = async (req, res) => {
 // @desc    Create new order & initiate Razorpay payment (Multi-Vendor Support)
 // @route   POST /api/marketplace/order
 // @access  Private (Farmer)
-exports.createOrder = async (req, res) => {
+exports.createOrder = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const { items, deliveryAddress } = req.body;
+        const idempotencyKey = req.headers['x-idempotency-key'] || req.headers['idempotency-key'];
 
-        if (!items || items.length === 0) {
-            return res.status(400).json({ message: 'No items in order' });
-        }
-
-
-        // 0. Stock Verification
-        for (const item of items) {
-            const product = await MarketplaceListing.findById(item.itemId);
-            if (!product) {
-                return res.status(404).json({ message: `Product not found: ${item.itemId}` });
-            }
-            if (product.quantity < item.quantity) {
-                return res.status(400).json({
-                    message: `Insufficient stock for ${typeof product.productRef === 'object' ? (product.productRef.name || 'Product') : product.productRef}. Available: ${product.quantity}`
+        // 0. Idempotency Check
+        if (idempotencyKey) {
+            const existingOrder = await Order.findOne({ idempotencyKey });
+            if (existingOrder) {
+                await session.abortTransaction();
+                return res.status(200).json({
+                    success: true,
+                    message: 'Order already processed (Idempotent)',
+                    orderIds: [existingOrder._id], // Simplify for existing logic
+                    razorpayOrderId: existingOrder.razorpayOrderId,
+                    amount: existingOrder.totalAmount, // This might differ if split, but for idempotency usually fine
+                    currency: existingOrder.currency
                 });
             }
         }
 
-        // 1. Fetch all products and Group items by Seller
+        if (!items || items.length === 0) {
+            throw new AppError('No items in order', 400);
+        }
+
+        // 1. Stock Verification & Deduction (Atomic)
         const sellerGroups = {};
         let totalAmount = 0;
         let subtotal = 0;
         const taxRate = 0.05;
 
         for (const item of items) {
-            const product = await MarketplaceListing.findById(item.itemId);
-            if (!product) continue;
+            const product = await MarketplaceListing.findById(item.itemId).session(session);
 
+            if (!product) {
+                throw new AppError(`Product not found: ${item.itemId}`, 404);
+            }
+            if (product.quantity < item.quantity) {
+                throw new AppError(`Insufficient stock for ${product.name || product.productRef?.name || product.productType || 'Product'}. Available: ${product.quantity}`, 400);
+            }
+
+            // Deduct Stock
+            product.quantity -= item.quantity;
+            if (product.quantity <= 0) {
+                product.quantity = 0;
+                product.status = 'sold';
+            }
+            await product.save({ session });
+
+            // Group by Seller
             const sellerId = product.seller.toString();
             if (!sellerGroups[sellerId]) {
                 sellerGroups[sellerId] = {
@@ -88,7 +112,7 @@ exports.createOrder = async (req, res) => {
 
             sellerGroups[sellerId].items.push({
                 listing: product._id,
-                productName: product.productType + ' - ' + JSON.stringify(product.productRef),
+                productName: product.name || product.productRef?.name || product.productType || 'Product',
                 quantity: item.quantity,
                 priceAtTime: product.pricePerUnit,
                 subtotal: price
@@ -99,7 +123,7 @@ exports.createOrder = async (req, res) => {
         const finalTax = subtotal * taxRate;
         const finalPayable = Math.round(totalAmount + finalTax);
 
-        // 3. Create Razorpay Order (Single Payment for User)
+        // 3. Create Razorpay Order
         let razorpayOrder;
         const isDev = !process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_placeholder';
 
@@ -114,56 +138,71 @@ exports.createOrder = async (req, res) => {
                     receipt: `order_${Date.now()}`
                 });
             } catch (rzpError) {
-                console.error("Razorpay Error:", rzpError);
-                return res.status(500).json({ message: 'Payment gateway initialization failed', error: rzpError.description || rzpError.message });
+                throw new AppError(`Payment gateway initialization failed: ${rzpError.description || rzpError.message}`, 502);
             }
         }
 
-        // 4. Create Individual Orders per Seller
+        // 4. Create Individual Orders
         const orderIds = [];
         const sellerIds = Object.keys(sellerGroups);
+        const orderGroupId = crypto.randomUUID();
 
         for (const sellerId of sellerIds) {
             const group = sellerGroups[sellerId];
             const groupTax = group.subtotal * taxRate;
             const groupTotal = Math.round(group.subtotal + groupTax);
 
-            // Generate unique order number explicitly
             const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
             const order = new Order({
                 orderNumber,
+                orderGroupId,
+                idempotencyKey: idempotencyKey ? `${idempotencyKey}-${sellerId}` : undefined, // Composite key if multiple sellers
+                state: 'PAYMENT_PENDING',
                 buyer: req.user._id,
-                seller: group.sellerId, // Separate Order per Seller
+                seller: group.sellerId,
                 items: group.items,
                 totalAmount: groupTotal,
-                razorpayOrderId: razorpayOrder.id, // Shared Payment ID
+                razorpayOrderId: razorpayOrder.id,
                 deliveryAddress,
                 deliveryStatus: 'pending',
                 paymentStatus: 'pending'
             });
 
-            await order.save();
+            await order.save({ session });
             orderIds.push(order._id);
         }
 
+        await session.commitTransaction();
+        session.endSession();
 
-        // 5. Deduct Stock
-        for (const item of items) {
-            const product = await MarketplaceListing.findById(item.itemId);
-            if (product) {
-                product.quantity -= item.quantity;
-                if (product.quantity <= 0) {
-                    product.quantity = 0;
-                    product.status = 'sold';
-                }
-                await product.save();
+        // Send invoice email asynchronously (don't block response)
+        try {
+            const emailService = require('../services/emailService');
+            const invoiceService = require('../services/invoiceService');
+
+            // Get first order for email (or send separate emails for each)
+            const firstOrder = await Order.findById(orderIds[0])
+                .populate('buyer', 'firstName lastName email')
+                .populate('items.listing', 'productRef productType images');
+
+            if (firstOrder && firstOrder.buyer.email) {
+                const pdfBuffer = await invoiceService.generateInvoicePDF(firstOrder);
+                await emailService.sendInvoiceEmail({
+                    to: firstOrder.buyer.email,
+                    customerName: `${firstOrder.buyer.firstName} ${firstOrder.buyer.lastName}`,
+                    orderNumber: firstOrder.orderNumber || firstOrder._id.toString().slice(-8).toUpperCase(),
+                    pdfBuffer
+                });
             }
+        } catch (emailError) {
+            // Log but don't fail the order
+            console.error('Failed to send invoice email:', emailError);
         }
 
         res.status(201).json({
             success: true,
-            orderIds: orderIds, // Return array of IDs
+            orderIds: orderIds,
             razorpayOrderId: razorpayOrder.id,
             amount: finalPayable,
             currency: "INR",
@@ -171,8 +210,9 @@ exports.createOrder = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Create Order Error:", error);
-        res.status(500).json({ message: 'Order creation failed', error: error.message });
+        await session.abortTransaction();
+        session.endSession();
+        next(error);
     }
 };
 
@@ -232,61 +272,72 @@ exports.updateOrderStatus = async (req, res) => {
 // @desc    Verify Payment Signature
 // @route   POST /api/marketplace/verify-payment
 // @access  Private
-exports.verifyPayment = async (req, res) => {
+exports.verifyPayment = async (req, res, next) => {
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
         // Dev Mode Bypass
         if (razorpay_order_id && razorpay_order_id.startsWith('order_mock_')) {
             console.log("Dev Mode: Verifying Mock Payment");
-            const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
-            if (order) {
-                order.paymentStatus = 'paid'; // 'Completed' -> 'paid' to match enum
-                order.deliveryStatus = 'pending'; // Ensure delivery status is set
-                order.razorpayPaymentId = razorpay_payment_id || `pay_mock_${Date.now()}`;
+            const updateResult = await Order.updateMany(
+                { razorpayOrderId: razorpay_order_id },
+                {
+                    $set: {
+                        state: 'PAID',
+                        paymentStatus: 'paid',
+                        razorpayPaymentId: razorpay_payment_id || `pay_mock_${Date.now()}`
+                    },
+                    $push: {
+                        statusHistory: {
+                            status: 'Payment Verified (Mock)',
+                            updatedBy: req.user._id,
+                            comment: 'Dev mode bypass'
+                        }
+                    }
+                }
+            );
 
-                order.statusHistory.push({
-                    status: 'Payment Verified (Mock)',
-                    updatedBy: req.user._id,
-                    comment: 'Dev mode bypass'
-                });
-
-                await order.save();
+            if (updateResult.modifiedCount > 0) {
                 return res.json({ success: true, message: 'Mock Payment verified' });
             } else {
-                return res.status(404).json({ success: false, message: 'Order not found' });
+                throw new AppError('Order not found', 404);
             }
         }
 
-        const crypto = require('crypto');
         const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder');
-
         hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
         const generated_signature = hmac.digest('hex');
 
         if (generated_signature === razorpay_signature) {
-            // Payment Success
-            const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
-            if (order) {
-                order.paymentStatus = 'paid'; // Updated to match enum 'paid'
-                // order.orderStatus = 'Confirmed'; // removed as we use deliveryStatus
-                order.razorpayPaymentId = razorpay_payment_id;
+            // Payment Success - Update ALL split orders
+            const updateResult = await Order.updateMany(
+                { razorpayOrderId: razorpay_order_id },
+                {
+                    $set: {
+                        state: 'PAID',
+                        paymentStatus: 'paid',
+                        razorpayPaymentId: razorpay_payment_id
+                    },
+                    $push: {
+                        statusHistory: {
+                            status: 'Payment Verified',
+                            updatedBy: req.user._id,
+                            comment: 'Razorpay signature valid'
+                        }
+                    }
+                }
+            );
 
-                order.statusHistory.push({
-                    status: 'Payment Verified',
-                    updatedBy: req.user._id,
-                    comment: 'Razorpay signature valid'
-                });
-
-                await order.save();
+            if (updateResult.matchedCount === 0) {
+                throw new AppError('Order not found for verification', 404);
             }
+
             res.json({ success: true, message: 'Payment verified' });
         } else {
-            res.status(400).json({ success: false, message: 'Invalid signature' });
+            throw new AppError('Invalid payment signature', 400);
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Verification failed' });
+        next(error);
     }
 };
 
@@ -315,12 +366,42 @@ exports.getMyOrders = async (req, res) => {
     }
 };
 
+// @desc    Get single order by ID
+// @route   GET /api/marketplace/orders/:id
+// @access  Private
+exports.getOrderById = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('seller', 'firstName lastName email vendorProfile.businessName phone')
+            .populate('items.listing', 'productRef productType images unit pricePerUnit')
+            .populate('buyer', 'firstName lastName email');
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Authorization: User must be the buyer or the seller
+        const isBuyer = order.buyer._id.toString() === req.user._id.toString();
+        const isSeller = order.seller._id.toString() === req.user._id.toString();
+        const isAdmin = req.user.role === 'admin';
+
+        if (!isBuyer && !isSeller && !isAdmin) {
+            return res.status(403).json({ message: 'Not authorized to view this order' });
+        }
+
+        res.json(order);
+    } catch (error) {
+        console.error('Get Order By ID Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // @desc    Create new marketplace product
 // @route   POST /api/marketplace/products
 // @access  Private (Farmer/Vendor)
 exports.createProduct = async (req, res) => {
     try {
-        const { productType, productRef, quantity, unit, pricePerUnit, location, description, images } = req.body;
+        const { category, productType, productRef, quantity, unit, pricePerUnit, location, description, images } = req.body;
 
         // Role Validation
         const isVendor = req.user.roles.includes('vendor') || req.user.activeRole === 'vendor';
@@ -334,11 +415,39 @@ exports.createProduct = async (req, res) => {
             return res.status(403).json({ message: 'Vendor account pending approval' });
         }
 
-        const newProduct = new MarketplaceListing({
+        // Determine if productRef is a CropCycle ID or a product name
+        let cropCycleRef = null;
+        let productName = productRef;
+
+        // Check if productRef is a valid MongoDB ObjectId
+        if (productRef && mongoose.Types.ObjectId.isValid(productRef) && productRef.length === 24) {
+            // It's likely a CropCycle ID
+            const sourceCycle = await require('../models/CropCycle').findById(productRef);
+            if (sourceCycle) {
+                cropCycleRef = productRef;
+
+                // Check Ownership
+                const farm = await require('../models/Farm').findById(sourceCycle.farm);
+                if (!farm || farm.user.toString() !== req.user._id.toString()) {
+                    throw new AppError('You can only list crops from your own farms', 403);
+                }
+
+                // Check Quantity
+                if (sourceCycle.marketableQuantity < quantity) {
+                    throw new AppError(`Insufficient marketable inventory. Available: ${sourceCycle.marketableQuantity}`, 400);
+                }
+            }
+        }
+
+
+        // Build product object - only include productRef if it's a valid CropCycle reference
+        const productData = {
             seller: req.user._id,
+            category: category || 'inputs',
             productType,
-            productRef, // { name: '...', category: '...' }
+            name: productName,
             quantity,
+            originalQuantity: quantity,
             unit,
             pricePerUnit,
             location: location || (req.user.vendorProfile?.pickupAddress ?
@@ -346,10 +455,18 @@ exports.createProduct = async (req, res) => {
             description,
             images,
             status: 'active'
-        });
+        };
+
+        // Only add productRef if it's a valid CropCycle reference
+        if (cropCycleRef) {
+            productData.productRef = cropCycleRef;
+        }
+
+        const newProduct = new MarketplaceListing(productData);
 
         await newProduct.save();
         res.status(201).json({ success: true, product: newProduct });
+
 
     } catch (error) {
         console.error('Create product error:', error);
@@ -760,5 +877,168 @@ exports.getVendorPayments = async (req, res) => {
     } catch (error) {
         console.error('Fetch Payments Error:', error);
         res.status(500).json({ message: 'Server error fetching payments' });
+    }
+};
+
+// @desc    Get Order Invoice PDF
+// @route   GET /api/marketplace/orders/:id/invoice
+// @access  Private (Buyer/Seller/Admin)
+exports.getOrderInvoice = async (req, res, next) => {
+    try {
+        const invoiceService = require('../services/invoiceService');
+
+        const order = await Order.findById(req.params.id)
+            .populate('buyer', 'firstName lastName email')
+            .populate('seller', 'firstName lastName vendorProfile.businessName')
+            .populate('items.listing', 'productRef productType images');
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Authorization check
+        const isBuyer = order.buyer._id.toString() === req.user._id.toString();
+        const isSeller = order.seller._id.toString() === req.user._id.toString();
+        const isAdmin = req.user.roles?.includes('admin');
+
+        if (!isBuyer && !isSeller && !isAdmin) {
+            return res.status(403).json({ message: 'Not authorized to view this invoice' });
+        }
+
+        // Generate PDF
+        const pdfBuffer = await invoiceService.generateInvoicePDF(order);
+
+        // Set headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderNumber || order._id}.pdf`);
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error('Generate Invoice Error:', error);
+        next(error);
+    }
+};
+
+// @desc    Cancel Order
+// @route   POST /api/marketplace/orders/:id/cancel
+// @access  Private (Buyer/Admin)
+exports.cancelOrder = async (req, res, next) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { reason } = req.body;
+        const orderId = req.params.id;
+
+        // Find order WITHOUT session first to ensure we get the full document
+        const order = await Order.findById(orderId);
+        if (!order) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Authorization check - only buyer or admin can cancel
+        const isBuyer = order.buyer.toString() === req.user._id.toString();
+        const isAdmin = req.user.roles?.includes('admin');
+
+        if (!isBuyer && !isAdmin) {
+            await session.abortTransaction();
+            return res.status(403).json({ message: 'Not authorized to cancel this order' });
+        }
+
+        // Check if order can be cancelled (only pending or payment_pending orders)
+        const cancellableStates = ['CREATED', 'PAYMENT_PENDING', 'CONFIRMED', 'PAID'];
+        const legacyCancellableStates = ['pending'];
+        
+        console.log('[CANCEL ORDER] Order state:', order.state);
+        console.log('[CANCEL ORDER] Order deliveryStatus:', order.deliveryStatus);
+        console.log('[CANCEL ORDER] Cancellable states:', cancellableStates);
+        
+        const isStateCancellable = cancellableStates.includes(order.state);
+        const isLegacyStateCancellable = legacyCancellableStates.includes(order.deliveryStatus);
+        
+        console.log('[CANCEL ORDER] isStateCancellable:', isStateCancellable);
+        console.log('[CANCEL ORDER] isLegacyStateCancellable:', isLegacyStateCancellable);
+        
+        if (!isStateCancellable && !isLegacyStateCancellable) {
+            await session.abortTransaction();
+            console.log('[CANCEL ORDER] Order cannot be cancelled');
+            return res.status(400).json({ 
+                message: `Cannot cancel order in ${order.state || order.deliveryStatus} state. Orders can only be cancelled before they are dispatched.` 
+            });
+        }
+
+        // Restore stock for all items
+        for (const item of order.items) {
+            const product = await MarketplaceListing.findById(item.listing).session(session);
+            if (product) {
+                product.quantity += item.quantity;
+                if (product.status === 'sold') {
+                    product.status = 'active';
+                }
+                await product.save({ session });
+            }
+        }
+
+        // Update order status using updateOne with session
+        const updateResult = await Order.updateOne(
+            { _id: orderId },
+            {
+                $set: {
+                    state: 'CANCELLED',
+                    deliveryStatus: 'cancelled',
+                    paymentStatus: order.paymentStatus === 'paid' ? 'refunded' : order.paymentStatus
+                },
+                $push: {
+                    statusHistory: {
+                        status: 'CANCELLED',
+                        updatedBy: req.user._id,
+                        timestamp: new Date(),
+                        comment: reason || 'Order cancelled by buyer'
+                    }
+                }
+            },
+            { session }
+        );
+
+        if (updateResult.modifiedCount === 0) {
+            await session.abortTransaction();
+            return res.status(400).json({ message: 'Failed to cancel order' });
+        }
+
+        await session.commitTransaction();
+
+        // Send notification to seller
+        try {
+            await Notification.create({
+                recipient: order.seller,
+                type: 'order_cancelled',
+                title: 'Order Cancelled',
+                message: `Order ${order.orderNumber} has been cancelled by the buyer.`,
+                relatedOrder: order._id,
+                read: false
+            });
+        } catch (notifError) {
+            console.error('Notification error:', notifError);
+        }
+
+        res.json({
+            success: true,
+            message: 'Order cancelled successfully',
+            order: {
+                _id: order._id,
+                orderNumber: order.orderNumber,
+                state: 'CANCELLED',
+                deliveryStatus: 'cancelled',
+                paymentStatus: order.paymentStatus === 'paid' ? 'refunded' : order.paymentStatus
+            }
+        });
+
+    } catch (error) {
+        await session.abortTransaction();
+        console.error('Cancel Order Error:', error);
+        next(error);
+    } finally {
+        session.endSession();
     }
 };

@@ -1,20 +1,29 @@
-import React from 'react';
-import { Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
-import { useCart } from '../../context/CartContext';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
+import { useCart } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 const CartPage = () => {
     const { items, removeFromCart, updateQuantity, cartTotal } = useCart();
     const navigate = useNavigate();
 
-    const handleQuantityChange = (itemId, currentQty, change) => {
+    // Helper to resolve image URL
+    const getImageUrl = (path) => {
+        if (!path) return 'https://via.placeholder.com/150';
+        if (path.startsWith('http') || path.startsWith('data:')) return path;
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+        return `${baseUrl}${path}`;
+    };
+
+    const handleQuantityChange = (itemId, buyType, currentQty, change) => {
         const newQty = currentQty + change;
         if (newQty > 0) {
-            updateQuantity(itemId, newQty);
+            updateQuantity(itemId, buyType, newQty);
         }
     };
 
     if (items.length === 0) {
+
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -42,8 +51,8 @@ const CartPage = () => {
                     {items.map((item) => (
                         <div key={item._id} className="bg-white p-4 rounded-xl border border-gray-200 flex sm:flex-row flex-col gap-4">
                             <img
-                                src={item.images?.[0] || 'https://via.placeholder.com/150'}
-                                alt={item.productRef?.name || 'Product'}
+                                src={getImageUrl(item.images?.[0])}
+                                alt={item.name || item.productRef?.name || 'Product'}
                                 className="w-full sm:w-24 sm:h-24 object-cover rounded-lg bg-gray-100"
                             />
 
@@ -51,7 +60,7 @@ const CartPage = () => {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h3 className="font-semibold text-gray-900">
-                                            {typeof item.productRef === 'object' ? item.productRef.name : item.productRef}
+                                            {item.name || item.productRef?.name || item.productType || 'Product'}
                                         </h3>
                                         <p className="text-sm text-gray-500 capitalize">{item.productType}</p>
                                         <p className="text-sm text-green-600 font-medium mt-1">
@@ -67,18 +76,32 @@ const CartPage = () => {
                                 </div>
 
                                 <div className="flex justify-between items-end mt-4">
-                                    <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-1">
+                                    <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
                                         <button
-                                            onClick={() => handleQuantityChange(item._id, item.quantity, -1)}
-                                            className="p-1 hover:bg-white rounded-md transition-colors disabled:opacity-50"
+                                            onClick={() => handleQuantityChange(item._id, item.buyType, item.quantity, -1)}
+                                            className="p-1.5 hover:bg-white rounded-md transition-colors disabled:opacity-50 shadow-sm"
                                             disabled={item.quantity <= 1}
                                         >
                                             <Minus size={14} />
                                         </button>
-                                        <span className="font-medium text-sm w-8 text-center">{item.quantity}</span>
+                                        <input
+                                            type="number"
+                                            value={item.quantity}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value) || 0;
+                                                const max = item.maxStock || 99;
+                                                if (val > max) return;
+                                                updateQuantity(item._id, item.buyType, Math.max(1, val));
+                                            }}
+                                            className="w-12 text-center bg-transparent font-medium text-sm focus:outline-none"
+                                        />
                                         <button
-                                            onClick={() => handleQuantityChange(item._id, item.quantity, 1)}
-                                            className="p-1 hover:bg-white rounded-md transition-colors"
+                                            onClick={() => {
+                                                const max = item.maxStock || 99;
+                                                if (item.quantity < max) handleQuantityChange(item._id, item.buyType, item.quantity, 1);
+                                            }}
+                                            className="p-1.5 hover:bg-white rounded-md transition-colors disabled:opacity-50 shadow-sm"
+                                            disabled={item.quantity >= (item.maxStock || 99)}
                                         >
                                             <Plus size={14} />
                                         </button>
@@ -114,7 +137,7 @@ const CartPage = () => {
                         </div>
 
                         <button
-                            onClick={() => console.log('Proceed to checkout')}
+                            onClick={() => navigate('/marketplace/checkout')}
                             className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors"
                         >
                             Proceed to Checkout

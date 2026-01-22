@@ -12,6 +12,13 @@ const FarmSchema = new mongoose.Schema({
         required: [true, 'Please add a farm name'],
         trim: true
     },
+    auditLog: [{
+        field: String,
+        oldValue: mongoose.Schema.Types.Mixed,
+        newValue: mongoose.Schema.Types.Mixed,
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        changedAt: { type: Date, default: Date.now }
+    }],
     totalArea: {
         type: Number,
         required: [true, 'Please add total area'],

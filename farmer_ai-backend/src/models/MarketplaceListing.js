@@ -9,6 +9,15 @@ const marketplaceListingSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    // For custom products without a CropCycle ref
+    name: {
+        type: String,
+        required: false
+    },
+    variety: {
+        type: String,
+        required: false
+    },
     seller: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -16,14 +25,27 @@ const marketplaceListingSchema = new mongoose.Schema({
     },
     productType: {
         type: String,
-        enum: ['crop', 'livestock', 'input', 'rent', 'machinery'],
-        required: true
+        required: true,
+        index: true
+    },
+    category: {
+        type: String,
+        enum: ['inputs', 'rentals'],
+        required: true,
+        default: 'inputs',
+        index: true
     },
     productRef: {
-        type: mongoose.Schema.Types.Mixed, // Can be crop_id or SKU JSON
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'CropCycle', // STRICT: Only selling from harvested crops for now
+        required: false
     },
-    quantity: {
+    originalQuantity: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    quantity: { // Current Available
         type: Number,
         required: true,
         min: 0

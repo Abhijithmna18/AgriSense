@@ -53,6 +53,25 @@ const UserSchema = new mongoose.Schema({
         minlength: 6,
         select: false // Don't return password by default
     },
+    // Admin Oversight Flags
+    flags: {
+        isFlagged: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+        reason: {
+            type: String
+        },
+        flaggedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        flaggedAt: {
+            type: Date
+        },
+        notes: [String] // History of admin notes
+    },
     // Vendor Profile (Specific to users who want to sell)
     vendorProfile: {
         status: {
@@ -176,6 +195,26 @@ const UserSchema = new mongoose.Schema({
             enum: ['metric', 'imperial'],
             default: 'metric'
         }
+    },
+    // Expert Consultation Tracking
+    consultationUsage: {
+        usedCount: {
+            type: Number,
+            default: 0
+        },
+        limit: {
+            type: Number,
+            default: 5
+        },
+        history: [{
+            bookedAt: Date,
+            topic: String,
+            status: {
+                type: String,
+                enum: ['scheduled', 'completed', 'cancelled'],
+                default: 'scheduled'
+            }
+        }]
     },
     createdAt: {
         type: Date,

@@ -1,4 +1,136 @@
 const Farm = require('../models/Farm');
+const CropCycle = require('../models/CropCycle');
+const FarmObservation = require('../models/FarmObservation');
+const ActionLog = require('../models/ActionLog');
+const Loan = require('../models/Loan'); // For financial aggregation
+const AppError = require('../utils/AppError');
+
+// ... existing code ...
+
+// @desc    Get Farm Intelligence (Aggregated Data)
+// @route   GET /api/farms/:id/intelligence
+// @access  Private
+exports.getFarmIntelligence = async (req, res, next) => {
+    try {
+        const farm = await Farm.findById(req.params.id);
+
+        if (!farm) {
+            throw new AppError('Farm not found', 404);
+        }
+
+        if (farm.user.toString() !== req.user.id) {
+            throw new AppError('Not authorized', 403);
+        }
+
+        // Parallel Fetch for Performance
+        const [activeCycles, pastCycles, observations, loans] = await Promise.all([
+            CropCycle.find({ farm: farm._id, status: 'Active' }).sort({ sowingDate: -1 }),
+            CropCycle.find({ farm: farm._id, status: { $ne: 'Active' } }).sort({ expectedHarvestDate: -1 }).limit(5),
+            FarmObservation.find({ farm: farm._id }).sort({ date: -1 }).limit(10),
+            Loan.find({ farmer: req.user.id }).sort({ createdAt: -1 }) // Loans are user-centric generally
+        ]);
+
+        // Construct Intelligence Object
+        const intelligence = {
+            farmProfile: farm,
+            cropCycles: {
+                active: activeCycles,
+                history: pastCycles
+            },
+            observations: observations,
+            financials: {
+                activeLoans: loans.filter(l => l.status === 'active' || l.status === 'approved'),
+                loanHistory: loans.filter(l => l.status === 'closed')
+            }
+        };
+
+        res.status(200).json({
+            success: true,
+            data: intelligence
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Add Crop Cycle
+// @route   POST /api/farms/:id/crop-cycles
+// @access  Private
+exports.addCropCycle = async (req, res, next) => {
+    try {
+        const farm = await Farm.findById(req.params.id);
+        if (!farm) throw new AppError('Farm not found', 404);
+        if (farm.user.toString() !== req.user.id) throw new AppError('Not authorized', 403);
+
+        const cycle = await CropCycle.create({
+            farm: req.params.id,
+            ...req.body
+        });
+
+        res.status(201).json({ success: true, data: cycle });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Update Crop Cycle
+// @route   PUT /api/farms/crop-cycles/:id
+// @access  Private
+exports.updateCropCycle = async (req, res, next) => {
+    try {
+        let cycle = await CropCycle.findById(req.params.id).populate('farm');
+        if (!cycle) throw new AppError('Crop Cycle not found', 404);
+        if (cycle.farm.user.toString() !== req.user.id) throw new AppError('Not authorized', 403);
+
+        cycle = await CropCycle.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        res.status(200).json({ success: true, data: cycle });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Add Observation
+// @route   POST /api/farms/:id/observations
+// @access  Private
+exports.addObservation = async (req, res, next) => {
+    try {
+        const farm = await Farm.findById(req.params.id);
+        if (!farm) throw new AppError('Farm not found', 404);
+        if (farm.user.toString() !== req.user.id) throw new AppError('Not authorized', 403);
+
+        const observation = await FarmObservation.create({
+            farm: req.params.id,
+            ...req.body
+        });
+
+        res.status(201).json({ success: true, data: observation });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Log User Action
+// @route   POST /api/farms/:id/actions
+// @access  Private
+exports.logAction = async (req, res, next) => {
+    try {
+        const { entityId, entityType, action, notes } = req.body;
+
+        await ActionLog.create({
+            farm: req.params.id,
+            user: req.user.id,
+            entityId,
+            entityType,
+            action,
+            notes
+        });
+
+        res.status(201).json({ success: true, message: 'Action logged' });
+    } catch (err) {
+        next(err);
+    }
+};
 
 // @desc    Get all farms for logged-in user
 // @route   GET /api/farms
@@ -227,5 +359,34 @@ exports.deleteFarm = async (req, res, next) => {
             message: 'Error deleting farm',
             error: err.message
         });
+    }
+};
+
+// @desc    Record Harvest Data
+// @route   PUT /api/farms/crop-cycles/:id/harvest
+// @access  Private
+exports.recordHarvest = async (req, res, next) => {
+    try {
+        const { harvestedQty, marketableQty, wastageQty, date, yieldActual } = req.body;
+        let cycle = await CropCycle.findById(req.params.id).populate('farm');
+
+        if (!cycle) throw new AppError('Crop Cycle not found', 404);
+        if (cycle.farm.user.toString() !== req.user.id) throw new AppError('Not authorized', 403);
+
+        if (cycle.status === 'Completed') throw new AppError('Harvest already recorded and cycle closed', 400);
+
+        // Update fields
+        cycle.harvestedQuantity = harvestedQty || 0;
+        cycle.marketableQuantity = marketableQty || 0;
+        cycle.wastageQuantity = wastageQty || 0;
+        cycle.yieldActual = yieldActual || harvestedQty || 0;
+        cycle.actualHarvestDate = date || new Date();
+        cycle.status = 'Completed'; // Close the cycle
+
+        await cycle.save();
+
+        res.status(200).json({ success: true, message: 'Harvest recorded successfully', data: cycle });
+    } catch (err) {
+        next(err);
     }
 };

@@ -7,6 +7,12 @@ const transactionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    transactionId: {
+        type: String,
+        required: true,
+        unique: true,
+        default: () => `TXN-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+    },
     type: {
         type: String,
         enum: ['credit', 'debit'],
@@ -25,6 +31,22 @@ const transactionSchema = new mongoose.Schema({
             'marketplace_purchase',
             'farm_expense',
             'government_subsidy',
+            'Logistics', // simplified from Logistics & Transport
+            'Packaging',
+            'Marketing',
+            'Platform Fees', // Added from bug report
+            'Payment Gateway Charges',
+            'Salaries / Agents',
+            'Storage / Warehousing',
+            // Farmer Categories
+            'Seeds & Saplings',
+            'Fertilizers',
+            'Pesticides',
+            'Labor',
+            'Machinery & Fuel',
+            'Irrigation',
+            'Land Lease',
+            'Miscellaneous',
             'other'
         ],
         required: true

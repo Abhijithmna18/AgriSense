@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Search, Filter, Calendar, ChevronDown, Download, Eye,
-    Package, Truck, CheckCircle, XCircle, AlertCircle, RefreshCw
+    Package, Truck, CheckCircle, XCircle, AlertCircle, RefreshCw, Star
 } from 'lucide-react';
 import Sidebar from '../components/dashboard/Sidebar';
 import TopBar from '../components/dashboard/TopBar';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/authApi';
+import ReviewModal from '../components/marketplace/ReviewModal';
 
 const BuyerOrdersPage = () => {
     const { user, logout } = useAuth();
@@ -17,6 +18,8 @@ const BuyerOrdersPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     // Fetch Orders
     useEffect(() => {
@@ -61,6 +64,27 @@ const BuyerOrdersPage = () => {
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    const handleReviewClick = (product) => {
+        setSelectedProduct(product);
+        setReviewModalOpen(true);
+    };
+
+    const handleSubmitReview = async ({ rating, comment }) => {
+        try {
+            await api.post('/api/marketplace/reviews', {
+                productId: selectedProduct._id,
+                rating,
+                comment
+            });
+            alert('Review submitted successfully!');
+            setReviewModalOpen(false);
+            setSelectedProduct(null);
+        } catch (error) {
+            console.error('Failed to submit review', error);
+            alert(error.response?.data?.message || 'Failed to submit review');
+        }
     };
 
     const getStatusBadge = (status) => {
@@ -172,9 +196,20 @@ const BuyerOrdersPage = () => {
                                                     <td className="p-4 text-sm font-bold text-gray-800">₹{order.totalAmount}</td>
                                                     <td className="p-4">{getStatusBadge(order.deliveryStatus)}</td>
                                                     <td className="p-4 text-right">
-                                                        <button className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-blue-50">
-                                                            <Eye size={18} />
-                                                        </button>
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-blue-50">
+                                                                <Eye size={18} />
+                                                            </button>
+                                                            {order.deliveryStatus === 'delivered' && (
+                                                                <button
+                                                                    onClick={() => handleReviewClick(order.items[0])}
+                                                                    className="text-gray-400 hover:text-yellow-600 transition-colors p-1 rounded-full hover:bg-yellow-50"
+                                                                    title="Write a review"
+                                                                >
+                                                                    <Star size={18} />
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
@@ -199,6 +234,17 @@ const BuyerOrdersPage = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Review Modal */}
+            <ReviewModal
+                isOpen={reviewModalOpen}
+                onClose={() => {
+                    setReviewModalOpen(false);
+                    setSelectedProduct(null);
+                }}
+                product={selectedProduct}
+                onSubmit={handleSubmitReview}
+            />
         </div>
     );
 };

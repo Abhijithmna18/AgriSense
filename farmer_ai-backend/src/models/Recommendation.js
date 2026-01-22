@@ -14,6 +14,10 @@ const RecommendationSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    confidenceScore: {
+        type: Number,
+        default: 0.8
+    },
     // Snapshot of inputs for historical reference/re-run
     inputs: {
         location: {
@@ -22,6 +26,7 @@ const RecommendationSchema = new mongoose.Schema({
             lng: Number
         },
         soil: {
+            type: { type: String }, // e.g., 'Red', 'Black'
             n: Number,
             p: Number,
             k: Number,
@@ -29,7 +34,15 @@ const RecommendationSchema = new mongoose.Schema({
             organic_c: Number,
             texture: String
         },
+        irrigation: {
+            type: { type: String }, // 'Drip', 'Flood', etc.
+            source: String
+        },
         season: String,
+        cropHistory: [{
+            cropName: String,
+            date: Date
+        }],
         constraints: {
             maxWaterUse: String,
             minProfitPerHa: Number

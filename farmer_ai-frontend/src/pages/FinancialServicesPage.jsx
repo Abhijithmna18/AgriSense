@@ -1,155 +1,178 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import FinancialSnapshot from '../components/finance/FinancialSnapshot';
-import EligibilityChecker from '../components/finance/EligibilityChecker';
-import LoanApplicationModal from '../components/finance/LoanApplicationModal';
-import FinanceHistory from '../components/finance/FinanceHistory';
-import { getFinancialSnapshot, checkEligibility, applyForLoan, getLoans, getTransactions } from '../api/financeApi';
-import { toast } from 'react-hot-toast';
+import { ArrowLeft, Calendar } from 'lucide-react';
+import FinancialSidebar from '../components/finance/FinancialSidebar';
+import FinancialOverview from '../components/finance/sections/FinancialOverview';
+import FinancialModuleExecution from '../components/finance/FinancialModuleExecution';
+import MarginAnalysis from '../components/finance/buyer/MarginAnalysis';
+import { getFinancialSnapshot, checkEligibility, getLoans, getTransactions, getFinancialInsight } from '../api/financeApi';
+import { useAuth } from '../context/AuthContext';
+import { getFinanceConfig } from '../components/finance/config/financeConfig';
 
 const FinancialServicesPage = () => {
-    // State
+    const { activeRole } = useAuth();
+    const config = getFinanceConfig(activeRole);
+
+    // Default to the first navigation item (usually 'overview')
+    const [activeSection, setActiveSection] = useState(config.navigation[0].id);
+
+    // Reset active section when role/config changes
+    useEffect(() => {
+        setActiveSection(config.navigation[0].id);
+    }, [activeRole]);
+
+    // Global Data State
     const [snapshotData, setSnapshotData] = useState(null);
     const [loans, setLoans] = useState([]);
     const [transactions, setTransactions] = useState([]);
     const [eligibilityData, setEligibilityData] = useState(null);
+    const [aiInsight, setAiInsight] = useState(null);
 
-    // Loading states
-    const [loadingSnapshot, setLoadingSnapshot] = useState(true);
-    const [checkingEligibility, setCheckingEligibility] = useState(false);
+    // Loading State
+    const [loading, setLoading] = useState(true);
 
-    // UI states
-    const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
-
-    // Initial Data Fetch
+    // Fetch Global Data
     useEffect(() => {
-        fetchDashboardData();
+        const fetchAllData = async () => {
+            setLoading(true);
+            try {
+                const [snapshot, loansData, txData, eligibility, insight] = await Promise.all([
+                    getFinancialSnapshot(),
+                    getLoans(),
+                    getTransactions(),
+                    checkEligibility(),
+                    getFinancialInsight()
+                ]);
+
+                setSnapshotData(snapshot);
+                setLoans(loansData);
+                setTransactions(txData);
+                setEligibilityData(eligibility);
+                setAiInsight(insight.insight);
+            } catch (error) {
+                console.error("Failed to load financial context", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAllData();
     }, []);
 
-    const fetchDashboardData = async () => {
-        setLoadingSnapshot(true);
-        try {
-            const [snapshot, loansData, txData] = await Promise.all([
-                getFinancialSnapshot(),
-                getLoans(),
-                getTransactions()
-            ]);
-            setSnapshotData(snapshot);
-            setLoans(loansData);
-            setTransactions(txData);
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to load financial data");
-        } finally {
-            setLoadingSnapshot(false);
-        }
-    };
+    // Health Score Calculation (Global)
+    const healthScore = snapshotData ? Math.min(100, Math.max(0, 75 + (snapshotData.financialRisk === 'Low' ? 15 : -10))) : 0;
 
-    const handleCheckEligibility = async () => {
-        setCheckingEligibility(true);
-        try {
-            const data = await checkEligibility();
-            setEligibilityData(data);
-        } catch (error) {
-            toast.error("Failed to check eligibility");
-        } finally {
-            setCheckingEligibility(false);
-        }
-    };
+    // Get current section label
+    const currentSectionLabel = config.navigation.find(n => n.id === activeSection)?.label || 'Finance';
 
-    const handleLoanSubmit = async (loanData) => {
-        try {
-            const response = await applyForLoan(loanData);
-            toast.success("Loan application submitted successfully!");
-            setIsLoanModalOpen(false);
-            // Refresh data
-            fetchDashboardData();
-        } catch (error) {
-            toast.error("Failed to submit application");
+    // Content Renderer
+    const renderContent = () => {
+        const dataContext = {
+            snapshotData,
+            loans,
+            transactions,
+            eligibilityData
+        };
+
+        if (activeSection === 'overview') {
+            return (
+                <FinancialOverview
+                    snapshotData={snapshotData}
+                    loans={loans}
+                    transactions={transactions}
+                    eligibilityData={eligibilityData}
+                    aiInsight={aiInsight}
+                    loading={loading}
+                    kpiConfig={config.overview.kpiCards}
+                    aiPanelConfig={config.overview.aiPanel}
+                />
+            );
         }
+
+        if (activeSection === 'margin_analysis' && activeRole === 'buyer') {
+            return (
+                <MarginAnalysis
+                    dataContext={dataContext}
+                    config={config.marginAnalysis}
+                />
+            );
+        }
+
+        // For all other sections delegate to the Execution Engine
+        return (
+            <FinancialModuleExecution
+                moduleId={activeSection}
+                moduleName={currentSectionLabel}
+                dataContext={dataContext}
+                config={config} // Pass full config to execution engine
+            />
+        );
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-20 pb-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between">
-                    <div>
-                        <nav className="text-sm font-medium text-gray-500 mb-1">
-                            <Link to="/dashboard" className="hover:text-gray-900">Dashboard</Link> &gt; <span className="text-gray-900">Financial Services</span>
-                        </nav>
-                        <h1 className="text-3xl font-extrabold text-gray-900">Financial Services</h1>
-                        <p className="text-gray-500 mt-1">Manage cashflow, loans, and check eligibility.</p>
-                    </div>
-                    <div className="mt-4 md:mt-0">
-                        {/* Actions if needed */}
-                    </div>
-                </div>
-
-                {/* Main Content Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                    {/* Left Column: Snapshot & History (2/3 width) */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <FinancialSnapshot
-                            data={snapshotData}
-                            loading={loadingSnapshot}
-                        />
-
-                        <FinanceHistory
-                            loans={loans}
-                            transactions={transactions}
-                        />
-                    </div>
-
-                    {/* Right Column: Key Actions (1/3 width) */}
-                    <div className="space-y-8">
-
-                        {/* Eligibility & Loan Card */}
-                        <EligibilityChecker
-                            onCheck={handleCheckEligibility}
-                            result={eligibilityData}
-                            loading={checkingEligibility}
-                        />
-
-                        {/* If eligible, show Apply button CTA specifically if they haven't clicked check yet but might know, 
-                            OR if they checked and are eligible. 
-                            Actually, the EligibilityChecker handles the result view, but we need a way to open the modal.
-                        */}
-                        {eligibilityData?.isEligible && (
-                            <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl shadow-lg p-6 text-white text-center">
-                                <h3 className="text-xl font-bold mb-2">Pre-approved for Microloan</h3>
-                                <p className="text-green-100 text-sm mb-6">Based on your score, you can avail up to ₹{eligibilityData.maxLoanAmount.toLocaleString()} instantly.</p>
-                                <button
-                                    onClick={() => setIsLoanModalOpen(true)}
-                                    className="bg-white text-green-700 font-bold py-3 px-8 rounded-full shadow-md hover:bg-gray-100 transition-colors w-full"
-                                >
-                                    Apply Now
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Helper / Tips */}
-                        <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
-                            <h4 className="font-bold text-blue-800 mb-2">Financial Tips</h4>
-                            <ul className="text-sm text-blue-700 space-y-2 list-disc list-inside">
-                                <li>Maintain a healthy cashflow balance.</li>
-                                <li>Repay EMIs on time to boost your score.</li>
-                                <li>Record all farm expenses accurately.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+        <div className="min-h-screen bg-[#F8FAFC] font-sans pt-20 pb-12">
+            {/* Background Decoration */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-50/50 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
             </div>
 
-            {/* Modals */}
-            <LoanApplicationModal
-                isOpen={isLoanModalOpen}
-                onClose={() => setIsLoanModalOpen(false)}
-                eligibilityData={eligibilityData}
-                onSubmit={handleLoanSubmit}
-            />
+            <div className="relative max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12">
+
+                {/* 1. Global Navigation Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+                    <div>
+                        <Link to="/dashboard" className="inline-flex items-center text-slate-400 hover:text-indigo-600 transition-colors group mb-3 text-xs font-bold uppercase tracking-wider">
+                            <ArrowLeft size={14} className="mr-2 group-hover:-translate-x-1 transition-transform" />
+                            Return to Dashboard
+                        </Link>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-sm font-semibold text-indigo-500 uppercase tracking-widest">Financial Suite</span>
+                            <h1 className="text-4xl font-black text-slate-900 tracking-tight">{currentSectionLabel}</h1>
+                        </div>
+                    </div>
+
+                    {/* Global Context: Date & Health Badge */}
+                    <div className="flex items-center gap-4">
+                        <button className="hidden sm:flex items-center gap-2.5 bg-white/80 backdrop-blur px-5 py-2.5 rounded-xl border border-slate-200/60 shadow-sm text-sm font-semibold text-slate-600 hover:bg-white hover:shadow-md transition-all">
+                            <Calendar size={18} className="text-indigo-500" />
+                            <span>This Season</span>
+                        </button>
+
+                        {!loading && (
+                            <div className="group bg-white/80 backdrop-blur pl-4 pr-5 py-2 rounded-2xl border border-slate-200/60 flex items-center gap-3 shadow-sm hover:shadow-md transition-all cursor-default">
+                                <div className="relative w-10 h-10 flex items-center justify-center">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle cx="20" cy="20" r="16" stroke="#E2E8F0" strokeWidth="4" fill="none" />
+                                        <circle cx="20" cy="20" r="16" stroke={healthScore > 70 ? "#10B981" : "#F59E0B"} strokeWidth="4" fill="none" strokeDasharray="100" strokeDashoffset={100 - (100 * healthScore) / 100} strokeLinecap="round" />
+                                    </svg>
+                                    <span className="absolute text-[11px] font-black text-slate-700">{healthScore}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none mb-0.5">Health Score</span>
+                                    <span className={`text-sm font-bold leading-tight ${healthScore > 70 ? "text-emerald-600" : "text-amber-500"}`}>
+                                        {healthScore > 80 ? "Excellent" : "Good"}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex gap-10">
+                    {/* 2. Left Sidebar */}
+                    <FinancialSidebar
+                        activeSection={activeSection}
+                        onNavigate={setActiveSection}
+                        navigationItems={config.navigation}
+                    />
+
+                    {/* 3. Main Content Area */}
+                    <main className="flex-1 min-w-0">
+                        {renderContent()}
+                    </main>
+                </div>
+            </div>
         </div>
     );
 };

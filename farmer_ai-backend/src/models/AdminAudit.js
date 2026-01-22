@@ -1,39 +1,46 @@
 const mongoose = require('mongoose');
 
-const adminAuditSchema = new mongoose.Schema({
-    adminId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
+const AdminAuditSchema = new mongoose.Schema({
     action: {
         type: String,
+        required: true,
+        // enum validation removed to prevent crashes on new actions
+    },
+    performedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Admin ID
         required: true
     },
-    entity: {
-        type: String, // e.g., 'User', 'Farm', 'Impersonation'
+    targetType: {
+        type: String, // 'User', 'Order', 'Farm', 'Listing'
         required: true
     },
-    entityId: {
-        type: String
+    targetId: {
+        type: mongoose.Schema.Types.ObjectId, // The ID of the item being modified
+        required: true
     },
-    details: {
-        type: Object // Flexible field for extra context
+    reason: {
+        type: String,
+        required: false
     },
     changes: {
-        before: { type: Object },
-        after: { type: Object }
+        before: mongoose.Schema.Types.Mixed,
+        after: mongoose.Schema.Types.Mixed
     },
-    ip: {
-        type: String
-    },
-    userAgent: {
-        type: String
+    metadata: {
+        ipAddress: String,
+        userAgent: String
     },
     timestamp: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        index: true,
+        expires: 31536000 // Auto-delete after 1 year (compliance)
     }
 });
 
-module.exports = mongoose.model('AdminAudit', adminAuditSchema);
+// Index for quick filtering by target or admin
+AdminAuditSchema.index({ targetId: 1, targetType: 1 });
+AdminAuditSchema.index({ performedBy: 1 });
+
+module.exports = mongoose.model('AdminAudit', AdminAuditSchema);

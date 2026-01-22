@@ -11,7 +11,10 @@ import {
     Building,
     Activity,
     MessageSquare,
-    Package
+    Package,
+    BookOpen,
+    Leaf,
+    Bookmark
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import recommendationIcon from '../../assets/recommendations_custom.png';
@@ -31,18 +34,16 @@ const Sidebar = ({ onLogout }) => {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['farmer', 'buyer', 'admin'] },
 
         // Farmer Specific
-        { icon: BarChart2, label: 'Analytics', path: '/analytics', roles: ['farmer', 'admin'] },
-        { icon: TrendingUp, label: 'Forecasting', path: '/forecasting', roles: ['farmer', 'admin'] },
-        { icon: BrainCircuit, label: 'AI Models', path: '/ai-models', roles: ['farmer', 'admin'] },
         { icon: Activity, label: 'Farm Monitoring', path: '/monitoring', roles: ['farmer', 'admin'] },
+        { icon: BookOpen, label: 'Crop Intelligence', path: '/crop-knowledge', roles: ['farmer', 'admin'] },
         { icon: null, img: recommendationIcon, label: 'Recommendations', path: '/recommendations', roles: ['farmer', 'admin'] },
 
         // Buyer Specific (New)
         { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace', roles: ['farmer', 'buyer', 'admin'] },
         { icon: Package, label: 'Orders', path: '/orders', roles: ['buyer'] },
-        { icon: MessageSquare, label: 'Negotiations', path: '/negotiations', roles: ['buyer'] }, // Using MessageSquare as placeholder if Handshake not avail
-        { icon: LinkIcon, label: 'Saved Suppliers', path: '/saved-suppliers', roles: ['buyer'] }, // Using Link as placeholder
-        { icon: BarChart2, label: 'Market Analytics', path: '/market-analytics', roles: ['buyer'] },
+        { icon: MessageSquare, label: 'Negotiations', path: '/negotiations', roles: ['buyer'] },
+        { icon: Bookmark, label: 'Saved Suppliers', path: '/marketplace/saved-suppliers', roles: ['buyer'] },
+        // { icon: BarChart2, label: 'Market Analytics', path: '/market-analytics', roles: ['buyer'] }, // Removed
 
         // Shared
         {
@@ -54,11 +55,9 @@ const Sidebar = ({ onLogout }) => {
                 { label: 'My Bookings', path: '/my-bookings' }
             ]
         },
-        // Blockchain removed for buyer
-        { icon: LinkIcon, label: 'Blockchain', path: '/blockchain', roles: ['farmer', 'admin'] },
 
         { icon: MessageSquare, label: 'Feedback', path: '/feedback', badge: 'New', roles: ['farmer', 'buyer', 'admin'] },
-        { icon: Settings, label: 'Settings', path: '/settings', roles: ['farmer', 'buyer', 'admin'] },
+        { icon: Settings, label: 'Settings', path: '/profile-settings', roles: ['farmer', 'buyer', 'admin'] },
     ];
 
     const navItems = allNavItems.filter(item => !item.roles || item.roles.includes(activeRole || 'farmer'));

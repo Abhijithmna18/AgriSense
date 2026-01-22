@@ -107,12 +107,27 @@ exports.updateUser = async (req, res) => {
         if (user) {
             user.firstName = req.body.firstName || user.firstName;
             user.lastName = req.body.lastName || user.lastName;
-            user.email = req.body.email || user.email;
             user.phone = req.body.phone || user.phone;
             user.profilePhotoUrl = req.body.profilePhotoUrl || user.profilePhotoUrl;
 
-            if (req.body.password) {
-                user.password = req.body.password;
+            // Handle Preferences
+            if (req.body.preferences) {
+                user.preferences = {
+                    ...user.preferences,
+                    ...req.body.preferences
+                };
+            }
+
+            // Handle Addresses - Simplified: Replace 0th or Add New
+            if (req.body.addresses && Array.isArray(req.body.addresses) && req.body.addresses.length > 0) {
+                const newAddr = req.body.addresses[0];
+                if (user.addresses.length > 0) {
+                    // Update the first address (Primary)
+                    user.addresses[0] = { ...user.addresses[0], ...newAddr };
+                } else {
+                    // Add new if empty
+                    user.addresses.push(newAddr);
+                }
             }
 
             const updatedUser = await user.save();
@@ -122,8 +137,12 @@ exports.updateUser = async (req, res) => {
                 firstName: updatedUser.firstName,
                 lastName: updatedUser.lastName,
                 email: updatedUser.email,
+                phone: updatedUser.phone,
                 roles: updatedUser.roles,
                 activeRole: updatedUser.activeRole,
+                addresses: updatedUser.addresses,
+                preferences: updatedUser.preferences,
+                profilePhotoUrl: updatedUser.profilePhotoUrl,
                 token: generateToken(updatedUser._id),
             });
         } else {
@@ -201,5 +220,33 @@ exports.getAddresses = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error fetching addresses' });
+    }
+};
+
+// @desc    Change user password
+// @route   PUT /api/users/change-password
+// @access  Private
+exports.changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await User.findById(req.user.id).select('+password');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check current password
+        if (!(await user.matchPassword(currentPassword))) {
+            return res.status(401).json({ message: 'Invalid current password' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };

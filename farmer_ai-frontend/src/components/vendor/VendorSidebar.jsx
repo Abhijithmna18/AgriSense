@@ -12,7 +12,8 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Store
+    Store,
+    MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -29,6 +30,7 @@ const VendorSidebar = ({ isCollapsed, toggleSidebar }) => {
         { path: '/vendor/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/vendor/products', icon: Package, label: 'My Products' },
         { path: '/vendor/orders', icon: ShoppingCart, label: 'Order History' },
+        { path: '/vendor/negotiations', icon: MessageSquare, label: 'Negotiations' },
         { path: '/vendor/reviews', icon: Star, label: 'Product Reviews' },
         { path: '/vendor/analytics', icon: BarChart3, label: 'Sales Analytics' },
         { path: '/vendor/payments', icon: Wallet, label: 'Payment History' },

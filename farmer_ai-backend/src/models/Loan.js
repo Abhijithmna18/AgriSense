@@ -14,7 +14,7 @@ const loanSchema = new mongoose.Schema({
     purpose: {
         type: String,
         required: true,
-        enum: ['Seeds & Fertilizers', 'Equipment', 'Labor', 'Irrigation Infrastructure', 'Other']
+        enum: ['Seeds & Fertilizers', 'Equipment', 'Farm Equipment', 'Labor', 'Labor Payments', 'Irrigation Infrastructure', 'Irrigation Setup', 'Other']
     },
     tenureMonths: {
         type: Number,

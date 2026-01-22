@@ -33,6 +33,11 @@ export const recommendationsApi = {
         return await api.get(`/history?limit=${limit}`);
     },
 
+    // Get farm-specific recommendations
+    getFarmRecommendations: async (farmId) => {
+        return await api.get(`/farms/${farmId}/ai-recommendations`);
+    },
+
     // Save/Update status
     saveRecommendation: async (id, status, note) => {
         return await api.post(`/${id}/save`, { status, note });

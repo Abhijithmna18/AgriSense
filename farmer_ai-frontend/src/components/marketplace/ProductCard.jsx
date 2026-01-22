@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext';
 const ProductCard = ({ product }) => {
     const { addToCart } = useCart();
     const [rentalDays, setRentalDays] = useState(1);
+    const [buyQuantity, setBuyQuantity] = useState(1);
     const [showRentalConfig, setShowRentalConfig] = useState(false);
 
     // Helper to format currency
@@ -59,7 +60,9 @@ const ProductCard = ({ product }) => {
             price: product.pricePerUnit || product.price,
             // For compatibility with cart
             type: product.type || 'buy',
-            buyType: product.type || 'buy'
+            type: product.type || 'buy',
+            buyType: product.type || 'buy',
+            maxStock: product.quantity // Persist stock limit
         };
 
         if (product.type === 'rent') {
@@ -67,7 +70,7 @@ const ProductCard = ({ product }) => {
             addToCart(normalizedProduct, 'rent', { rentalDays });
             setShowRentalConfig(false);
         } else {
-            addToCart(normalizedProduct, 'buy');
+            addToCart(normalizedProduct, 'buy', { quantity: buyQuantity });
         }
     };
 
@@ -77,12 +80,30 @@ const ProductCard = ({ product }) => {
     const description = getDescription();
     const price = product.pricePerUnit || product.price || 0;
 
+    // Helper to resolve image URL
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http') || path.startsWith('data:')) return path;
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+        const fullUrl = `${baseUrl}${path}`;
+        console.log('[ProductCard] Image URL:', { path, baseUrl, fullUrl });
+        return fullUrl;
+    };
+
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all overflow-hidden flex flex-col h-full">
             {/* Image Area */}
             <div className="h-48 bg-gray-100 relative group">
                 {product.images && product.images[0] ? (
-                    <img src={product.images[0]} alt={productName} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                    <img
+                        src={getImageUrl(product.images[0])}
+                        alt={productName}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&q=80&w=600'; // Fallback
+                        }}
+                    />
                 ) : (
                     <img
                         src={(() => {
@@ -140,11 +161,59 @@ const ProductCard = ({ product }) => {
                         <p className="text-xs text-gray-500 line-clamp-2 mb-3">{description}</p>
                     )}
 
-                    <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 w-fit px-2 py-1 rounded mb-3">
+                    <div className={`flex items-center gap-2 text-xs w-fit px-2 py-1 rounded mb-3 ${product.quantity === 0 ? 'bg-red-50 text-red-600 font-bold' :
+                        product.quantity < 20 ? 'bg-yellow-50 text-yellow-700 font-semibold' :
+                            'text-green-600 bg-green-50'
+                        }`}>
                         <CheckCircle size={12} />
-                        <span>In Stock: {product.quantity} {product.unit}</span>
+                        <span>
+                            {product.quantity === 0 ? 'Out of Stock' :
+                                product.quantity < 20 ? `Low Stock: Only ${product.quantity} ${product.unit} left` :
+                                    `In Stock: ${product.quantity} ${product.unit}`}
+                        </span>
                     </div>
                 </div>
+
+                {/* Quantity Selector for Buy Products */}
+                {product.type !== 'rent' && (
+                    <div className="mb-3">
+                        <label className="text-xs font-medium text-gray-600 block mb-1">
+                            Quantity ({product.unit})
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setBuyQuantity(Math.max(1, buyQuantity - 1))}
+                                disabled={buyQuantity <= 1}
+                                className="w-8 h-8 rounded border bg-white flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                -
+                            </button>
+                            <input
+                                type="number"
+                                value={buyQuantity}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value) || 0;
+                                    if (val > product.quantity) return; // Prevent exceeding stock
+                                    setBuyQuantity(Math.max(0, val));
+                                }}
+                                onBlur={() => {
+                                    if (buyQuantity < 1) setBuyQuantity(1);
+                                    if (buyQuantity > product.quantity) setBuyQuantity(product.quantity);
+                                }}
+                                className="flex-1 h-8 text-center border rounded font-bold focus:outline-none focus:border-green-500"
+                                min="1"
+                                max={product.quantity}
+                            />
+                            <button
+                                onClick={() => setBuyQuantity(Math.min(product.quantity, buyQuantity + 1))}
+                                disabled={buyQuantity >= product.quantity}
+                                className="w-8 h-8 rounded border bg-white flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Price Section */}
                 <div className="mt-auto pt-4 border-t border-gray-100">
@@ -164,6 +233,13 @@ const ProductCard = ({ product }) => {
                                 <p className="text-sm font-semibold text-gray-600">{formatPrice(product.deposit)}</p>
                             </div>
                         )}
+                        {/* Total calculator for buy */}
+                        {product.type !== 'rent' && buyQuantity > 1 && (
+                            <div className="text-right">
+                                <p className="text-xs text-gray-400">Total</p>
+                                <p className="text-sm font-bold text-green-600">{formatPrice(price * buyQuantity)}</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Rental Configuration (Conditional) */}
@@ -171,9 +247,9 @@ const ProductCard = ({ product }) => {
                         <div className="mb-3 bg-gray-50 p-3 rounded-lg animate-fade-in">
                             <label className="text-xs font-medium text-gray-600 block mb-1">Duration (Days)</label>
                             <div className="flex items-center gap-2">
-                                <button onClick={() => setRentalDays(Math.max(1, rentalDays - 1))} className="w-8 h-8 rounded border bg-white">-</button>
+                                <button onClick={() => setRentalDays(Math.max(1, rentalDays - 1))} className="w-8 h-8 rounded border bg-white flex items-center justify-center hover:bg-gray-50">-</button>
                                 <span className="flex-1 text-center font-bold">{rentalDays}</span>
-                                <button onClick={() => setRentalDays(rentalDays + 1)} className="w-8 h-8 rounded border bg-white">+</button>
+                                <button onClick={() => setRentalDays(rentalDays + 1)} className="w-8 h-8 rounded border bg-white flex items-center justify-center hover:bg-gray-50">+</button>
                             </div>
                         </div>
                     )}
@@ -198,9 +274,11 @@ const ProductCard = ({ product }) => {
                     ) : (
                         <button
                             onClick={handleAddToCart}
-                            className="w-full py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                            disabled={product.quantity === 0}
+                            className="w-full py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <ShoppingCart size={16} /> Add to Cart
+                            <ShoppingCart size={16} />
+                            {product.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
                         </button>
                     )}
                 </div>

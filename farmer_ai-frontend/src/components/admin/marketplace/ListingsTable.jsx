@@ -160,10 +160,14 @@ const ListingsTable = () => {
                                             </span>
                                         </td>
                                         <td className="p-4 text-sm max-w-xs truncate">
-                                            {/* Ideally parse productRef if it's JSON */}
-                                            {typeof item.productRef === 'object' ?
-                                                (item.productRef.name || item.productRef.variety || JSON.stringify(item.productRef))
-                                                : item.location}
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-gray-900">
+                                                    {item.name || item.productRef?.name || item.productType}
+                                                </span>
+                                                <span className="text-xs text-gray-500">
+                                                    {item.variety || item.productRef?.variety || ''}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td className="p-4 font-medium">₹{item.pricePerUnit} / {item.unit}</td>
                                         <td className="p-4">

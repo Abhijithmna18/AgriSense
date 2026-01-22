@@ -45,6 +45,11 @@ const AdminWarehousePage = () => {
                 }
             };
 
+            // Remove manager field if it's empty (backend will use authenticated user)
+            if (!payload.manager || payload.manager === '') {
+                delete payload.manager;
+            }
+
             if (editingId) {
                 await updateWarehouse(editingId, payload);
             } else {
@@ -57,7 +62,7 @@ const AdminWarehousePage = () => {
             await loadWarehouses();
         } catch (error) {
             console.error('Save failed', error);
-            alert('Failed to save: ' + (error.message || 'Unknown error'));
+            alert('Failed to save: ' + (error.response?.data?.message || error.message || 'Unknown error'));
         }
     };
 
@@ -139,13 +144,17 @@ const AdminWarehousePage = () => {
         }));
     };
 
-    // Helper to get full image URL
-    // Ideally this should be a utility, but placing here for now.
-    const getImageUrl = (path) => {
-        if (!path) return '';
-        if (path.startsWith('http')) return path;
-        const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        return `${BASE_URL}${path} `;
+    // Helper to get full image URL, skipping placeholders
+    const getImageUrl = (images) => {
+        if (!images || !Array.isArray(images) || images.length === 0) return '';
+
+        // Find first non-placeholder image (skip placehold.co URLs)
+        const realImage = images.find(img => img && !img.includes('placehold.co'));
+        if (!realImage) return '';
+
+        if (realImage.startsWith('http')) return realImage;
+        const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+        return `${BASE_URL}${realImage}`;
     };
 
     return (
@@ -179,9 +188,10 @@ const AdminWarehousePage = () => {
                         <div className="h-40 w-full bg-gray-100 rounded-lg mb-4 overflow-hidden relative">
                             {w.images && w.images.length > 0 ? (
                                 <img
-                                    src={getImageUrl(w.images[0])}
+                                    src={getImageUrl(w.images)}
                                     alt={w.name}
                                     className="w-full h-full object-cover"
+                                    onClick={() => alert(`Image URL: ${getImageUrl(w.images)}`)}
                                     onError={(e) => {
                                         e.target.onerror = null;
                                         e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E"
@@ -245,7 +255,7 @@ const AdminWarehousePage = () => {
                                 <div className="flex flex-wrap gap-2 mb-2">
                                     {formData.images.map((img, index) => (
                                         <div key={index} className="relative w-20 h-20 rounded border overflow-hidden group">
-                                            <img src={getImageUrl(img)} alt="Preview" className="w-full h-full object-cover" />
+                                            <img src={getImageUrl([img])} alt="Preview" className="w-full h-full object-cover" />
                                             <button
                                                 type="button"
                                                 onClick={() => removeImage(index)}

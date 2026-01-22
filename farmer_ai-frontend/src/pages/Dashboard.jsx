@@ -15,7 +15,8 @@ import {
     Calendar,
     ArrowRight,
     IndianRupee,
-    Store
+    Store,
+    Leaf
 } from 'lucide-react';
 
 // Components
@@ -27,6 +28,7 @@ import FarmManagementCard from '../components/dashboard/FarmManagementCard';
 import BuyerOverview from '../components/dashboard/buyer/BuyerOverview';
 import SmartSourcingPanel from '../components/dashboard/buyer/SmartSourcingPanel';
 // import ActiveNegotiations from '../components/dashboard/buyer/ActiveNegotiations';
+import ActiveNegotiations from '../components/dashboard/buyer/ActiveNegotiations';
 import OrdersFulfillment from '../components/dashboard/buyer/OrdersFulfillment';
 import SavedSuppliersWidget from '../components/dashboard/buyer/SavedSuppliersWidget';
 import MarketInsightsWidget from '../components/dashboard/buyer/MarketInsightsWidget';
@@ -282,6 +284,35 @@ const Dashboard = ({ expectedRole }) => {
                                             </>
                                         )}
 
+                                        {/* Plant Doctor Card - Farmer Only */}
+                                        {activeRole === 'farmer' && (
+                                            <div className="admin-card group hover:border-emerald-400 transition-all">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                                                            <Leaf className="text-emerald-600" size={24} />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-bold text-[var(--admin-text-primary)]">Plant Doctor</h3>
+                                                            <p className="text-sm text-[var(--admin-text-secondary)]">AI-powered disease identification</p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => navigate('/plant-doctor')}
+                                                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+                                                    >
+                                                        Diagnose Now
+                                                    </button>
+                                                </div>
+                                                <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex items-start gap-3">
+                                                    <AlertCircle size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                                                    <p className="text-xs text-emerald-800 leading-relaxed">
+                                                        Take a photo of any crop issue to get instant diagnosis and treatment recommendations.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Farm Management Card - Farmer Only */}
                                         {activeRole === 'farmer' && <FarmManagementCard />}
 
@@ -305,6 +336,7 @@ const Dashboard = ({ expectedRole }) => {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                     <OrdersFulfillment />
                                                     <SavedSuppliersWidget />
+                                                    <ActiveNegotiations />
                                                 </div>
                                             </div>
                                         )}

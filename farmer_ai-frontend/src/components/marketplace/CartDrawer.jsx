@@ -79,15 +79,27 @@ const CartDrawer = () => {
                                     )}
 
                                     <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-2 py-1">
+                                        <div className="flex items-center gap-1 bg-gray-50 rounded-lg px-2 py-1">
                                             <button
                                                 onClick={() => updateQuantity(item._id, item.buyType, Math.max(1, item.quantity - 1))}
-                                                className="text-gray-500 hover:text-gray-800 font-bold"
+                                                className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-800 font-bold bg-white rounded shadow-sm disabled:opacity-50"
+                                                disabled={item.quantity <= 1}
                                             >-</button>
-                                            <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
+                                            <input
+                                                type="number"
+                                                value={item.quantity}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value) || 0;
+                                                    const max = item.maxStock || 99;
+                                                    if (val > max) return;
+                                                    updateQuantity(item._id, item.buyType, Math.max(1, val));
+                                                }}
+                                                className="w-10 text-center bg-transparent text-sm font-medium focus:outline-none"
+                                            />
                                             <button
-                                                onClick={() => updateQuantity(item._id, item.buyType, item.quantity + 1)}
-                                                className="text-gray-500 hover:text-gray-800 font-bold"
+                                                onClick={() => updateQuantity(item._id, item.buyType, Math.min(item.maxStock || 99, item.quantity + 1))}
+                                                className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-800 font-bold bg-white rounded shadow-sm disabled:opacity-50"
+                                                disabled={item.quantity >= (item.maxStock || 99)}
                                             >+</button>
                                         </div>
                                         <p className="font-bold text-gray-800">

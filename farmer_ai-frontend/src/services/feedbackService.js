@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create a configured axios instance (assuming standard setup, or just use global axios if preferred)
 // Using standard axios with baseURL for now, can be refactored to use a shared api client
-const API_URL = 'http://localhost:5000/api/feedback'; // Adjust based on env
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5002') + '/api/feedback';
 
 const getAuthHeader = () => {
     const token = localStorage.getItem('auth_token'); // Assuming standard token storage

@@ -31,3 +31,13 @@ export const getTransactions = async () => {
     const response = await axios.get(`${API_URL}/transactions`, getAuthHeader());
     return response.data;
 };
+
+export const getFinancialInsight = async () => {
+    const response = await axios.post(`${API_URL}/ai-insight`, {}, getAuthHeader());
+    return response.data;
+};
+
+export const addTransaction = async (transactionData) => {
+    const response = await axios.post(`${API_URL}/transactions`, transactionData, getAuthHeader());
+    return response.data;
+};

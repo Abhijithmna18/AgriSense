@@ -92,12 +92,105 @@ router.put('/users/:id/suspend', async (req, res) => {
             await logAdminAction(req, suspend ? 'SUSPEND_USER' : 'ACTIVATE_USER', 'User', user._id, { before, after });
         } catch (logError) {
             console.error('Failed to log admin action:', logError.message);
-            // Continue even if logging fails
         }
 
         res.json({ message: `User ${suspend ? 'suspended' : 'activated'}`, user });
     } catch (error) {
         console.error('Suspend user error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// POST /api/admin/users/:id/flag
+router.post('/users/:id/flag', async (req, res) => {
+    try {
+        const { isFlagged, reason, notes } = req.body;
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const before = { flags: user.flags };
+
+        user.flags = {
+            isFlagged: isFlagged,
+            reason: reason || user.flags.reason,
+            flaggedBy: req.user._id,
+            flaggedAt: Date.now(),
+            notes: notes || user.flags.notes
+        };
+
+        await user.save();
+
+        await logAdminAction(req, isFlagged ? 'FLAG_USER' : 'UNFLAG_USER', 'User', user._id, { before, after: { flags: user.flags } });
+
+        res.json({ success: true, user });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// GET /api/admin/orders
+router.get('/orders', async (req, res) => {
+    try {
+        const { status, page = 1, limit = 20 } = req.query;
+        const query = {};
+        if (status) query.deliveryStatus = status;
+
+        const orders = await require('../models/Order').find(query)
+            .populate('buyer', 'firstName lastName email')
+            .populate('seller', 'firstName lastName email')
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const count = await require('../models/Order').countDocuments(query);
+
+        res.json({
+            orders,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// POST /api/admin/orders/:id/override
+router.post('/orders/:id/override', async (req, res) => {
+    try {
+        const { action, reason } = req.body; // action: 'hold' | 'release' | 'cancel'
+        const order = await require('../models/Order').findById(req.params.id);
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        const before = { adminOverride: order.adminOverride, status: order.deliveryStatus };
+
+        if (action === 'hold') {
+            order.adminOverride = {
+                isHeld: true,
+                reason,
+                heldBy: req.user._id,
+                heldAt: Date.now()
+            };
+        } else if (action === 'release') {
+            order.adminOverride = {
+                isHeld: false,
+                reason: reason || 'Released by Admin',
+                heldBy: req.user._id,
+                heldAt: Date.now()
+            };
+        } else if (action === 'cancel') {
+            order.deliveryStatus = 'cancelled';
+            order.statusHistory.push({
+                status: 'cancelled',
+                updatedBy: req.user._id,
+                comment: `Admin Override: ${reason}`
+            });
+        }
+
+        await order.save();
+        await logAdminAction(req, `ORDER_OVERRIDE_${action.toUpperCase()}`, 'Order', order._id, { before, after: { adminOverride: order.adminOverride, status: order.deliveryStatus } });
+
+        res.json({ success: true, order });
+    } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
@@ -156,11 +249,12 @@ router.get('/audit-logs', async (req, res) => {
     try {
         const { limit = 50 } = req.query;
         const logs = await AdminAudit.find()
-            .populate('adminId', 'name email')
+            .populate('performedBy', 'firstName lastName email')
             .sort({ timestamp: -1 })
             .limit(parseInt(limit));
         res.json(logs);
     } catch (error) {
+        console.error('Fetch Audit Logs Error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });

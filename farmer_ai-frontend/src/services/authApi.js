@@ -50,7 +50,8 @@ export const authAPI = {
     logout: () => api.post('/api/auth/logout'),
     getMe: () => api.get('/api/users/me'),
     updateProfile: (data) => api.put('/api/users/profile', data),
-    changePassword: (data) => api.post('/api/auth/change-password', data),
+    // Security
+    changePassword: (data) => api.put('/api/users/change-password', data),
     enable2FA: () => api.post('/api/auth/2fa/enable'),
     verify2FA: (data) => api.post('/api/auth/2fa/verify', data),
     disable2FA: (data) => api.post('/api/auth/2fa/disable', data),

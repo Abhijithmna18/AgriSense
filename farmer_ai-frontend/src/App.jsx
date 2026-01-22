@@ -59,6 +59,9 @@ import MyBookingsPage from './pages/MyBookingsPage';
 import BookingDetailsPage from './pages/BookingDetailsPage';
 import FarmMonitoringPage from './pages/FarmMonitoringPage';
 import FarmManagement from './pages/FarmManagement';
+import CropKnowledge from './pages/CropKnowledge';
+import PlantIdentificationPage from './pages/PlantIdentificationPage';
+import AiRecommendationsPage from './pages/AiRecommendationsPage';
 
 // Admin Warehouse Pages
 import AdminWarehousePage from './pages/admin/AdminWarehousePage';
@@ -76,6 +79,10 @@ import FooterEditor from './pages/admin/homepage/FooterEditor';
 import VendorDashboard from './pages/VendorDashboard';
 import BuyerOrdersPage from './pages/BuyerOrdersPage';
 import MarketAnalyticsPage from './pages/MarketAnalyticsPage';
+import OrderDetailsPage from './pages/OrderDetailsPage';
+import SavedSuppliersPage from './pages/SavedSuppliersPage';
+import NegotiationPage from './pages/NegotiationPage';
+import NegotiationsListPage from './pages/NegotiationsListPage';
 
 
 // Vendor imports
@@ -86,6 +93,7 @@ import VendorAnalytics from './pages/vendor/VendorAnalytics';
 import VendorPayments from './pages/vendor/VendorPayments';
 import VendorNotifications from './pages/vendor/VendorNotifications';
 import VendorProfile from './pages/vendor/VendorProfile';
+import VendorNegotiations from './pages/vendor/VendorNegotiations';
 // VendorDashboard is reused as "My Products" for now
 import MyProducts from './pages/VendorDashboard';
 
@@ -119,6 +127,7 @@ function App() {
                   <Route path="dashboard" element={<VendorAnalytics />} />
                   <Route path="products" element={<MyProducts />} />
                   <Route path="orders" element={<VendorOrders />} />
+                  <Route path="negotiations" element={<VendorNegotiations />} />
                   <Route path="reviews" element={<VendorReviews />} />
                   <Route path="analytics" element={<VendorAnalytics />} />
                   <Route path="payments" element={<VendorPayments />} />
@@ -136,6 +145,7 @@ function App() {
                 <Route path="/recommendations" element={<PrivateRoute><Recommendations /></PrivateRoute>} />
                 <Route path="/profile-settings" element={<PrivateRoute><ProfileSettings /></PrivateRoute>} />
                 <Route path="/farms/new" element={<PrivateRoute><AddFarmPage /></PrivateRoute>} />
+                <Route path="/farmer/farms/:farmId/ai-recommendations" element={<PrivateRoute><AiRecommendationsPage /></PrivateRoute>} />
 
                 {/* Marketplace - Valid for both, logic inside */}
                 <Route path="/marketplace" element={<PrivateRoute><MarketplaceLayout /></PrivateRoute>}>
@@ -143,9 +153,13 @@ function App() {
                   <Route path="cart" element={<CartPage />} />
                   <Route path="checkout" element={<CheckoutPage />} />
                   <Route path="orders" element={<FarmerOrdersPage />} />
-                  {/* Add order details route if needed later */}
-                  <Route path="orders/:id" element={<div className="p-8">Order Details Coming Soon</div>} />
+                  <Route path="orders/:id" element={<OrderDetailsPage />} />
+                  <Route path="saved-suppliers" element={<SavedSuppliersPage />} />
                 </Route>
+                
+                {/* Negotiation Routes */}
+                <Route path="/negotiations" element={<PrivateRoute><NegotiationsListPage /></PrivateRoute>} />
+                <Route path="/negotiations/:negotiationId" element={<PrivateRoute><NegotiationPage /></PrivateRoute>} />
                 <Route path="/market-analytics" element={<PrivateRoute><MarketAnalyticsPage /></PrivateRoute>} />
                 <Route path="/financial-services" element={<PrivateRoute><FinancialServicesPage /></PrivateRoute>} />
 
@@ -166,6 +180,8 @@ function App() {
                 {/* Farm Management */}
                 <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
                 <Route path="/farm-management" element={<PrivateRoute><FarmManagement /></PrivateRoute>} />
+                <Route path="/crop-knowledge" element={<PrivateRoute><CropKnowledge /></PrivateRoute>} />
+                <Route path="/plant-doctor" element={<PrivateRoute><PlantIdentificationPage /></PrivateRoute>} />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>

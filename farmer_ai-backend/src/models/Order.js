@@ -48,6 +48,24 @@ const orderSchema = new mongoose.Schema({
         type: Object, // Could be detailed structure
         required: true
     },
+    orderGroupId: {
+        type: String,
+        required: true,
+        index: true
+    },
+    idempotencyKey: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true
+    },
+    state: {
+        type: String,
+        enum: ['CREATED', 'PAYMENT_PENDING', 'PAID', 'CONFIRMED', 'DISPATCHED', 'DELIVERED', 'CANCELLED', 'FAILED', 'RETURNED'],
+        default: 'CREATED',
+        index: true
+    },
+    // Legacy fields - kept for backward compatibility during migration
     deliveryStatus: {
         type: String,
         enum: ['pending', 'shipped', 'delivered', 'cancelled'],
@@ -70,7 +88,14 @@ const orderSchema = new mongoose.Schema({
         updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         timestamp: { type: Date, default: Date.now },
         comment: String
-    }]
+    }],
+    // Admin Override Controls
+    adminOverride: {
+        isHeld: { type: Boolean, default: false },
+        reason: String,
+        heldBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        heldAt: Date
+    }
 }, {
     timestamps: true
 });

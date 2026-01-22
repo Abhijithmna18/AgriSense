@@ -70,3 +70,48 @@ exports.sendPaymentSuccessEmail = async (booking, farmer, invoicePath) => {
 
     await sendEmail(farmer.email, subject, html, attachments);
 };
+
+/**
+ * Send marketplace order invoice email with PDF attachment
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.customerName - Customer name
+ * @param {string} options.orderNumber - Order number
+ * @param {Buffer} options.pdfBuffer - Invoice PDF buffer
+ * @returns {Promise<void>}
+ */
+exports.sendInvoiceEmail = async ({ to, customerName, orderNumber, pdfBuffer }) => {
+    try {
+        const subject = `Invoice for Order #${orderNumber}`;
+        const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #16a34a;">Thank you for your order!</h2>
+                <p>Dear ${customerName},</p>
+                <p>Thank you for shopping with AgriSense. Your order has been confirmed.</p>
+                <p><strong>Order Number:</strong> ${orderNumber}</p>
+                <p>Please find your invoice attached to this email.</p>
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+                <p style="color: #6b7280; font-size: 14px;">
+                    If you have any questions, please contact us at support@agrisense.com
+                </p>
+                <p style="color: #6b7280; font-size: 12px;">
+                    This is an automated email. Please do not reply to this message.
+                </p>
+            </div>
+        `;
+
+        const attachments = [
+            {
+                filename: `invoice-${orderNumber}.pdf`,
+                content: pdfBuffer,
+                contentType: 'application/pdf'
+            }
+        ];
+
+        await sendEmail(to, subject, html, attachments);
+        console.log(`Invoice email sent to ${to} for order ${orderNumber}`);
+    } catch (error) {
+        // Log error but don't throw - we don't want email failure to block order creation
+        console.error('Failed to send invoice email:', error);
+    }
+};

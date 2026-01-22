@@ -20,17 +20,19 @@ const logAdminAction = async (req, action, entity, entityId, changes = {}, detai
         }
 
         await AdminAudit.create({
-            adminId,
-            action,
-            entity,
-            entityId,
+            performedBy: adminId,
+            action, // ensure this matches enum or update schema
+            targetType: entity,
+            targetId: entityId,
+            reason: details.reason || action, // Fallback for required field
             changes,
-            details,
-            ip,
-            userAgent
+            metadata: {
+                ip,
+                userAgent
+            }
         });
     } catch (error) {
-        console.error('AdminAudit Error:', error);
+        console.error('AdminAudit Error:', error.message);
         // Don't crash the request if audit fails, but log it
     }
 };

@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/authApi';
 
 const Marketplace = () => {
-    const [activeTab, setActiveTab] = useState('inputs'); // 'inputs' | 'rentals'
+    // Removed activeTab state - only showing 'inputs' category now
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const { toggleCart, items } = useCart();
@@ -31,8 +31,13 @@ const Marketplace = () => {
                     console.warn('No products returned from API');
                 }
 
-                // Show all products (no filtering for now to debug)
-                setProducts(data || []);
+                // Filter products by 'inputs' category only
+                const filteredProducts = data.filter(product => {
+                    return product.category === 'inputs';
+                });
+
+                console.log(`Filtered ${filteredProducts.length} products for category: inputs`);
+                setProducts(filteredProducts || []);
 
             } catch (err) {
                 console.error("Failed to fetch products", err);
@@ -43,7 +48,7 @@ const Marketplace = () => {
             }
         };
         fetchProducts();
-    }, [activeTab]);
+    }, []); // Removed activeTab dependency
 
     return (
         <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 min-h-screen">
@@ -77,24 +82,13 @@ const Marketplace = () => {
                 </button>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-4 border-b border-gray-200">
-                <button
-                    onClick={() => setActiveTab('inputs')}
-                    className={`pb-3 px-1 flex items-center gap-2 font-medium transition-colors border-b-2 ${activeTab === 'inputs' ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                >
+            {/* Tabs - Removed Tools & Rentals */}
+            {/* Only showing Farming Inputs now */}
+            <div className="border-b border-gray-200 mb-6">
+                <div className="pb-3 px-1 flex items-center gap-2 font-medium border-b-2 border-green-600 text-green-700">
                     <Sprout size={18} />
                     Farming Inputs
-                </button>
-                <button
-                    onClick={() => setActiveTab('rentals')}
-                    className={`pb-3 px-1 flex items-center gap-2 font-medium transition-colors border-b-2 ${activeTab === 'rentals' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                >
-                    <Tractor size={18} />
-                    Tools & Rentals
-                </button>
+                </div>
             </div>
 
             {/* Filters Bar */}
@@ -103,7 +97,7 @@ const Marketplace = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
                         type="text"
-                        placeholder={activeTab === 'inputs' ? "Search seeds, fertilizers..." : "Search tractors, harvesters..."}
+                        placeholder="Search seeds, fertilizers, pesticides..."
                         className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
                     />
                 </div>

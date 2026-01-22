@@ -7,10 +7,8 @@ const getBaseUrl = () => {
 };
 
 const adminApi = axios.create({
-    baseURL: getBaseUrl(),
-    headers: {
-        'Content-Type': 'application/json'
-    }
+    baseURL: getBaseUrl()
+    // Don't set Content-Type here - let axios auto-detect for FormData
 });
 
 // Interceptor to add Auth Token and X-Actor ID
@@ -30,6 +28,11 @@ adminApi.interceptors.request.use((config) => {
     } else if (authToken) {
         // Fallback to auth_token if userInfo doesn't exist
         config.headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    // Set Content-Type for JSON requests, but let axios auto-detect for FormData
+    if (!(config.data instanceof FormData)) {
+        config.headers['Content-Type'] = 'application/json';
     }
 
     return config;

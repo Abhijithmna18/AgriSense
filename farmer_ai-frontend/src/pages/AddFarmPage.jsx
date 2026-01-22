@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -58,6 +58,21 @@ const AddFarmPage = () => {
     });
 
     const totalSteps = 5;
+
+    // Block Spacebar
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
 
     // Helper to calculate readiness score for UI preview
     const calculateReadiness = () => {

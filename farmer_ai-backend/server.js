@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const connectDB = require('./src/config/db');
 const errorHandler = require('./src/middleware/errorHandler');
+const AppError = require('./src/utils/AppError');
 
 // Load env vars
 dotenv.config();
@@ -68,6 +69,11 @@ app.use('/api/admin/marketplace', require('./src/routes/adminMarketplaceRoutes')
 app.use('/api/notifications', require('./src/routes/notificationRoutes'));
 app.use('/api/finance', require('./src/routes/financeRoutes'));
 app.use('/api/admin/finance', require('./src/routes/adminFinanceRoutes'));
+app.use('/api/crop-intelligence', require('./src/routes/cropIntelligenceRoutes'));
+app.use('/api/consultations', require('./src/routes/consultationRoutes'));
+app.use('/api/ai', require('./src/routes/plantIdentificationRoutes'));
+app.use('/api/negotiations', require('./src/routes/negotiations'));
+app.use('/api/reviews', require('./src/routes/reviewRoutes'));
 
 
 // Make uploads folder static
@@ -87,6 +93,11 @@ app.get('/healthz', (req, res) => {
 
 app.get('/', (req, res) => {
     res.send('Farmer AI Backend is running...');
+});
+
+// Handle unhandled routes
+app.all(/(.*)/, (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
 // Error Handler Middleware (must be last)

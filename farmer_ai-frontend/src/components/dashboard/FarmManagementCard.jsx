@@ -40,7 +40,7 @@ const FarmManagementCard = () => {
     const handleViewRecommendations = () => {
         if (farms.length > 0) {
             // Navigate with first farm's ID as default
-            navigate(`/recommendations?farmId=${farms[0]._id}`);
+            navigate(`/farmer/farms/${farms[0]._id}/ai-recommendations`);
         }
     };
 
@@ -168,7 +168,7 @@ const FarmManagementCard = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className="p-4 bg-[var(--admin-bg-hover)] rounded-xl border border-[var(--admin-border)] hover:border-[var(--admin-accent)] transition-all cursor-pointer"
-                        onClick={() => navigate(`/recommendations?farmId=${farm._id}`)}
+                        onClick={() => navigate(`/farmer/farms/${farm._id}/ai-recommendations`)}
                     >
                         <h4 className="font-bold text-[var(--admin-text-primary)] mb-2 flex items-center gap-2">
                             <MapPin size={16} className="text-[var(--admin-accent)]" />

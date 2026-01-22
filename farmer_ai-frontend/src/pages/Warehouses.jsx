@@ -64,6 +64,19 @@ const Warehouses = () => {
         navigate('/login');
     };
 
+    // Helper to resolve image URL, skipping placeholders
+    const getImageUrl = (images) => {
+        if (!images || !Array.isArray(images) || images.length === 0) return null;
+
+        // Find first non-placeholder image (skip placehold.co URLs)
+        const realImage = images.find(img => img && !img.includes('placehold.co'));
+        if (!realImage) return null;
+
+        if (realImage.startsWith('http') || realImage.startsWith('data:')) return realImage;
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+        return `${baseUrl}${realImage}`;
+    };
+
     const getStorageIcon = (condition) => {
         switch (condition) {
             case 'refrigerated': return '❄️';
@@ -219,7 +232,7 @@ const Warehouses = () => {
                                     <div className="h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/20 dark:to-teal-900/20">
                                         {warehouse.images && warehouse.images.length > 0 ? (
                                             <img
-                                                src={warehouse.images[0].startsWith('http') ? warehouse.images[0] : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${warehouse.images[0]}`}
+                                                src={getImageUrl(warehouse.images)}
                                                 alt={warehouse.name}
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {

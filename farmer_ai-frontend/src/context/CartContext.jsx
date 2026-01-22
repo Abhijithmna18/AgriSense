@@ -22,6 +22,12 @@ const cartReducer = (state, action) => {
                 items: state.items.filter(item => !(item._id === action.payload._id && item.buyType === action.payload.buyType))
             };
 
+        case 'REMOVE_ITEMS':
+            return {
+                ...state,
+                items: state.items.filter(item => !action.payload.includes(item._id))
+            };
+
         case 'UPDATE_QUANTITY':
             return {
                 ...state,
@@ -79,6 +85,10 @@ export const CartProvider = ({ children }) => {
         dispatch({ type: 'REMOVE_ITEM', payload: { _id: id, buyType } });
     };
 
+    const removeItems = (itemIds) => {
+        dispatch({ type: 'REMOVE_ITEMS', payload: itemIds });
+    };
+
     const updateQuantity = (id, buyType, quantity) => {
         dispatch({ type: 'UPDATE_QUANTITY', payload: { id, buyType, quantity } });
     };
@@ -100,6 +110,7 @@ export const CartProvider = ({ children }) => {
             cartTotal,
             addToCart,
             removeFromCart,
+            removeItems,
             updateQuantity,
             clearCart,
             toggleCart
