@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { X, Calendar, DollarSign, Sprout } from 'lucide-react';
+import { X, Calendar, DollarSign, Sprout, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useFarmIntelligence } from '../../context/FarmIntelligenceContext';
+import { analyzeCropViability } from '../../services/decisionSupportApi';
+import toast from 'react-hot-toast';
 
 const AddCropCycleModal = ({ isOpen, onClose }) => {
-    const { addCropCycle, loading } = useFarmIntelligence();
+    const { addCropCycle, loading, selectedFarm } = useFarmIntelligence();
+    const [analyzing, setAnalyzing] = useState(false);
+    const [analysisResult, setAnalysisResult] = useState(null);
     const [formData, setFormData] = useState({
         cropName: '',
         sowingDate: '',
@@ -15,11 +19,63 @@ const AddCropCycleModal = ({ isOpen, onClose }) => {
 
     if (!isOpen) return null;
 
+    const handleAnalyze = async () => {
+        if (!formData.cropName || !formData.sowingDate) {
+            toast.error("Please enter Crop Name and Sowing Date first.");
+            return;
+        }
+
+        setAnalyzing(true);
+        setAnalysisResult(null);
+
+        try {
+            // Construct payload from available context
+            const payload = {
+                farmDetails: {
+                    location: selectedFarm?.location?.district || "Unknown Region",
+                    soil: selectedFarm?.soilType || "Generic Soil",
+                    area_acres: selectedFarm?.totalArea || 0
+                },
+                cropDetails: {
+                    crop_id: formData.cropName,
+                    season: "Current" // Could derive from date
+                },
+                constraints: {
+                    budget: formData.estimatedCost || 50000
+                }
+            };
+
+            const result = await analyzeCropViability(payload);
+            setAnalysisResult(result);
+
+            // Auto-fill cost if available and zero
+            if (!formData.estimatedCost && result.cost_estimation?.total_cost) {
+                setFormData(prev => ({ ...prev, estimatedCost: result.cost_estimation.total_cost }));
+                toast.success("Cost estimate auto-filled!");
+            }
+
+        } catch (error) {
+            toast.error("Analysis unavailable (AI Engine offline)");
+            console.warn("Analysis failed", error);
+        } finally {
+            setAnalyzing(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Block high risk if critical (optional rule, just showing warning for now)
+        if (analysisResult?.summary?.decision === 'NOT_RECOMMENDED') {
+            if (!window.confirm("AI recommends AGAINST this crop cycle. Are you sure you want to proceed?")) {
+                return;
+            }
+        }
+
         const success = await addCropCycle({
             ...formData,
-            estimatedCost: Number(formData.estimatedCost) || 0
+            estimatedCost: Number(formData.estimatedCost) || 0,
+            aiAnalysis: analysisResult // Save analysis with the cycle if backend supports it
         });
         if (success) {
             setFormData({
@@ -30,6 +86,7 @@ const AddCropCycleModal = ({ isOpen, onClose }) => {
                 estimatedCost: '',
                 status: 'Active'
             });
+            setAnalysisResult(null);
             onClose();
         }
     };
@@ -106,6 +163,49 @@ const AddCropCycleModal = ({ isOpen, onClose }) => {
                                 onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
                             />
                         </div>
+                    </div>
+
+                    {/* AI Analysis Section */}
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mt-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-blue-700 uppercase flex items-center gap-1">
+                                <Activity size={14} /> AI Risk & Profit Engine
+                            </span>
+                            <button
+                                type="button"
+                                onClick={handleAnalyze}
+                                disabled={analyzing}
+                                className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                {analyzing ? 'Checking...' : 'Check Viability'}
+                            </button>
+                        </div>
+
+                        {analysisResult && (
+                            <div className="space-y-2 text-sm animate-in fade-in">
+                                <div className="flex justify-between border-b border-blue-200 pb-1">
+                                    <span className="text-gray-600">Decision:</span>
+                                    <span className={`font-bold ${analysisResult.summary.decision === 'RECOMMENDED' ? 'text-green-600' :
+                                            analysisResult.summary.decision === 'NOT_RECOMMENDED' ? 'text-red-600' : 'text-amber-600'
+                                        }`}>
+                                        {analysisResult.summary.decision.replace('_', ' ')}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Est. Profit:</span>
+                                    <span className="font-mono font-medium text-gray-800">₹{analysisResult.profitability?.expected_profit}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Risk Score:</span>
+                                    <span className="font-mono font-medium text-gray-800">{analysisResult.risk_analysis?.overall_risk_score}/1.0</span>
+                                </div>
+                                {analysisResult.recommendations?.length > 0 && (
+                                    <div className="mt-2 text-xs text-slate-600 bg-white p-2 rounded">
+                                        💡 {analysisResult.recommendations[0]}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="pt-4 flex gap-3">

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    ArrowLeft, 
-    Clock, 
-    CheckCircle, 
-    XCircle, 
+import {
+    ArrowLeft,
+    Clock,
+    CheckCircle,
+    XCircle,
     AlertTriangle,
     MessageSquare,
     FileText,
@@ -34,14 +34,14 @@ const NegotiationPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
-    
+
     // State Management
     const [negotiation, setNegotiation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [showOfferForm, setShowOfferForm] = useState(false);
     const [showMessageForm, setShowMessageForm] = useState(null);
-    
+
     // Form States
     const [offerForm, setOfferForm] = useState({
         price: '',
@@ -52,7 +52,7 @@ const NegotiationPage = () => {
         customization: '',
         message: ''
     });
-    
+
     const [messageForm, setMessageForm] = useState({
         message: '',
         attachments: []
@@ -68,7 +68,7 @@ const NegotiationPage = () => {
             setLoading(true);
             const data = await negotiationAPI.getNegotiation(negotiationId);
             setNegotiation(data);
-            
+
             // Initialize form with latest offer or baseline
             const latestOffer = data.offers?.[0] || data.baseline;
             setOfferForm({
@@ -95,7 +95,7 @@ const NegotiationPage = () => {
 
         try {
             setSubmitting(true);
-            
+
             // Validate offer against business rules
             const validation = validateOffer(offerForm);
             if (!validation.valid) {
@@ -122,20 +122,20 @@ const NegotiationPage = () => {
 
     const handleAcceptOffer = async (offerId) => {
         if (submitting) return;
-        
+
         try {
             setSubmitting(true);
             await negotiationAPI.acceptOffer(negotiationId, offerId);
             toast.success('Offer accepted! Redirecting to checkout...');
-            
+
             // Redirect to checkout with locked terms
             setTimeout(() => {
-                navigate('/marketplace/checkout', { 
-                    state: { 
-                        negotiationId, 
+                navigate('/marketplace/checkout', {
+                    state: {
+                        negotiationId,
                         offerId,
-                        lockedTerms: true 
-                    } 
+                        lockedTerms: true
+                    }
                 });
             }, 1500);
         } catch (error) {
@@ -148,7 +148,7 @@ const NegotiationPage = () => {
 
     const handleRejectOffer = async (offerId, reason) => {
         if (submitting) return;
-        
+
         try {
             setSubmitting(true);
             await negotiationAPI.rejectOffer(negotiationId, offerId, reason);
@@ -188,25 +188,25 @@ const NegotiationPage = () => {
     const validateOffer = (offer) => {
         const baseline = negotiation.baseline;
         const priceChange = ((offer.price - baseline.price) / baseline.price) * 100;
-        
+
         // Configurable thresholds
         const MAX_PRICE_REDUCTION = -50; // 50% max reduction
         const MAX_QUANTITY_INCREASE = 500; // 500% max increase
-        
+
         if (priceChange < MAX_PRICE_REDUCTION) {
-            return { 
-                valid: false, 
-                message: `Price reduction cannot exceed ${Math.abs(MAX_PRICE_REDUCTION)}%` 
+            return {
+                valid: false,
+                message: `Price reduction cannot exceed ${Math.abs(MAX_PRICE_REDUCTION)}%`
             };
         }
-        
+
         if (offer.quantity > baseline.quantity * (MAX_QUANTITY_INCREASE / 100 + 1)) {
-            return { 
-                valid: false, 
-                message: `Quantity increase cannot exceed ${MAX_QUANTITY_INCREASE}%` 
+            return {
+                valid: false,
+                message: `Quantity increase cannot exceed ${MAX_QUANTITY_INCREASE}%`
             };
         }
-        
+
         return { valid: true };
     };
 
@@ -274,20 +274,20 @@ const NegotiationPage = () => {
                             </button>
                             <div>
                                 <h1 className="text-xl font-bold text-gray-900">
-                                    Negotiation #{negotiation.id}
+                                    Negotiation #{negotiation._id}
                                 </h1>
                                 <p className="text-sm text-gray-600">
                                     {negotiation.product.name} • {negotiation.vendor.name}
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(negotiation.status)}`}>
                                 {getStatusIcon(negotiation.status)}
                                 <span className="ml-1 capitalize">{negotiation.status}</span>
                             </span>
-                            
+
                             {negotiation.status === 'accepted' && (
                                 <button
                                     onClick={() => negotiationAPI.downloadAgreement(negotiationId)}
@@ -337,7 +337,7 @@ const NegotiationPage = () => {
                                         </div>
                                         <span className="font-medium">${negotiation.baseline.price}</span>
                                     </div>
-                                    
+
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <Hash size={16} className="text-gray-400" />
@@ -345,7 +345,7 @@ const NegotiationPage = () => {
                                         </div>
                                         <span className="font-medium">{negotiation.baseline.moq} units</span>
                                     </div>
-                                    
+
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <Truck size={16} className="text-gray-400" />
@@ -353,7 +353,7 @@ const NegotiationPage = () => {
                                         </div>
                                         <span className="font-medium">{negotiation.baseline.deliveryDays} days</span>
                                     </div>
-                                    
+
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <Shield size={16} className="text-gray-400" />
@@ -389,11 +389,11 @@ const NegotiationPage = () => {
                                     <div>
                                         <h2 className="text-lg font-bold text-gray-900">Negotiation Workspace</h2>
                                         <p className="text-sm text-gray-600">
-                                            Round {negotiation.currentRound} of {negotiation.maxRounds} • 
+                                            Round {negotiation.currentRound} of {negotiation.maxRounds} •
                                             Expires in {negotiation.timeRemaining}
                                         </p>
                                     </div>
-                                    
+
                                     {negotiation.status === 'pending' && (
                                         <button
                                             onClick={() => setShowOfferForm(true)}
@@ -410,13 +410,13 @@ const NegotiationPage = () => {
                             <div className="space-y-4">
                                 {negotiation.offers?.map((offer, index) => (
                                     <OfferCard
-                                        key={offer.id}
+                                        key={offer._id}
                                         offer={offer}
                                         isLatest={index === 0}
                                         baseline={negotiation.baseline}
-                                        onAccept={() => handleAcceptOffer(offer.id)}
-                                        onReject={(reason) => handleRejectOffer(offer.id, reason)}
-                                        onAddMessage={() => setShowMessageForm(offer.id)}
+                                        onAccept={() => handleAcceptOffer(offer._id)}
+                                        onReject={(reason) => handleRejectOffer(offer._id, reason)}
+                                        onAddMessage={() => setShowMessageForm(offer._id)}
                                         canInteract={negotiation.status === 'pending' && offer.status === 'pending'}
                                         submitting={submitting}
                                     />

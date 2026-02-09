@@ -197,7 +197,10 @@ const BuyerOrdersPage = () => {
                                                     <td className="p-4">{getStatusBadge(order.deliveryStatus)}</td>
                                                     <td className="p-4 text-right">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            <button className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-blue-50">
+                                                            <button
+                                                                onClick={() => navigate(`/marketplace/orders/${order._id}`)}
+                                                                className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-blue-50"
+                                                            >
                                                                 <Eye size={18} />
                                                             </button>
                                                             {order.deliveryStatus === 'delivered' && (

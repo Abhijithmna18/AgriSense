@@ -283,7 +283,7 @@ const NegotiationsListPage = () => {
 
                             return (
                                 <motion.div
-                                    key={negotiation.id}
+                                    key={negotiation._id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
@@ -331,7 +331,7 @@ const NegotiationsListPage = () => {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    negotiationAPI.downloadAgreement(negotiation.id);
+                                                                    negotiationAPI.downloadAgreement(negotiation._id);
                                                                 }}
                                                                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                                                 title="Download Agreement"
@@ -435,12 +435,13 @@ const NegotiationsListPage = () => {
                                                         </div>
 
                                                         <button
-                                                            onClick={() => navigate(`/negotiations/${negotiation.id}`)}
+                                                            onClick={() => navigate(`/negotiations/${negotiation._id}`)}
                                                             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                                                         >
                                                             <Eye size={14} />
                                                             View Details
                                                         </button>
+
                                                     </div>
                                                 )}
                                             </div>

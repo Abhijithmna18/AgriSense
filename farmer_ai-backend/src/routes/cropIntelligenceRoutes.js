@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const cropIntelligenceController = require('../controllers/cropIntelligenceController');
 const { protect } = require('../middleware/auth');
+const { getRotationAdvice } = require('../controllers/cropRotationController');
 
-// Route to handle AI queries
-// POST /api/crop-intelligence/query
-router.post('/query', protect, cropIntelligenceController.handleQuery);
+router.use(protect);
+
+router.post('/rotation', getRotationAdvice);
 
 module.exports = router;

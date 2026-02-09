@@ -401,7 +401,42 @@ exports.getOrderById = async (req, res) => {
 // @access  Private (Farmer/Vendor)
 exports.createProduct = async (req, res) => {
     try {
-        const { category, productType, productRef, quantity, unit, pricePerUnit, location, description, images } = req.body;
+        const { category, productType, productRef, quantity, unit, pricePerUnit, location, description } = req.body;
+
+        // Robust Image Handling
+        let images = [];
+
+        // 1. Handle req.body.images (URLs or existing strings)
+        if (req.body.images) {
+            if (Array.isArray(req.body.images)) {
+                // Filter out non-string garbage like objects that might have slipped in
+                images = req.body.images.filter(img => typeof img === 'string' && img.trim() !== '' && !img.includes('[object Object]'));
+            } else if (typeof req.body.images === 'string') {
+                // Check if it's a stringified array (common with FormData bugs)
+                if (req.body.images.trim().startsWith('[') && req.body.images.trim().endsWith(']')) {
+                    try {
+                        const parsed = JSON.parse(req.body.images);
+                        if (Array.isArray(parsed)) {
+                            // Extract paths if objects, or keep strings
+                            images = parsed.map(p => typeof p === 'string' ? p : p.url || p.path || '').filter(s => s);
+                        }
+                    } catch (e) {
+                        // Not JSON, just a plain string?
+                        images = [req.body.images];
+                    }
+                } else {
+                    images = [req.body.images];
+                }
+            }
+        }
+
+        // 2. Append New Files
+        if (req.files && req.files.length > 0) {
+            const uploadedImages = req.files.map(file => `uploads/${file.filename}`);
+            images = [...images, ...uploadedImages];
+        }
+
+        console.log('Product Creation - Final Images:', images);
 
         // Role Validation
         const isVendor = req.user.roles.includes('vendor') || req.user.activeRole === 'vendor';
@@ -479,7 +514,8 @@ exports.createProduct = async (req, res) => {
 // @access  Private (Owner)
 exports.updateProduct = async (req, res) => {
     try {
-        const { quantity, pricePerUnit, description, status, images } = req.body;
+        const { quantity, pricePerUnit, description, status } = req.body;
+        let images = req.body.images; // Can be undefined, string, or array
 
         let product = await MarketplaceListing.findById(req.params.id);
 
@@ -496,7 +532,30 @@ exports.updateProduct = async (req, res) => {
         product.pricePerUnit = pricePerUnit !== undefined ? pricePerUnit : product.pricePerUnit;
         product.description = description || product.description;
         product.status = status || product.status;
-        if (images) product.images = images;
+
+        // Handle Images
+        if (req.files && req.files.length > 0) {
+            const uploadedImages = req.files.map(file => `uploads/${file.filename}`);
+
+            // Normalize existing images to array
+            let existingImages = [];
+            if (images) {
+                if (Array.isArray(images)) existingImages = images;
+                else if (typeof images === 'string') existingImages = [images];
+            } else {
+                // If no new image strings sent, keep old ones? 
+                // Usually simpler: if images provided in body, replace. If files provided, append.
+                // But typically form sends CURRENT images + NEW files. 
+                // Let's assume if 'images' is in body, it represents the kept images.
+                if (req.body.images !== undefined) existingImages = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+                else existingImages = product.images; // Keep existing if not touched
+            }
+
+            product.images = [...existingImages, ...uploadedImages];
+        } else if (images !== undefined) {
+            // Only text updates to images (e.g. deleting or reordering, or just URL update)
+            product.images = Array.isArray(images) ? images : [images];
+        }
 
         await product.save();
         res.json({ success: true, product });
@@ -949,22 +1008,22 @@ exports.cancelOrder = async (req, res, next) => {
         // Check if order can be cancelled (only pending or payment_pending orders)
         const cancellableStates = ['CREATED', 'PAYMENT_PENDING', 'CONFIRMED', 'PAID'];
         const legacyCancellableStates = ['pending'];
-        
+
         console.log('[CANCEL ORDER] Order state:', order.state);
         console.log('[CANCEL ORDER] Order deliveryStatus:', order.deliveryStatus);
         console.log('[CANCEL ORDER] Cancellable states:', cancellableStates);
-        
+
         const isStateCancellable = cancellableStates.includes(order.state);
         const isLegacyStateCancellable = legacyCancellableStates.includes(order.deliveryStatus);
-        
+
         console.log('[CANCEL ORDER] isStateCancellable:', isStateCancellable);
         console.log('[CANCEL ORDER] isLegacyStateCancellable:', isLegacyStateCancellable);
-        
+
         if (!isStateCancellable && !isLegacyStateCancellable) {
             await session.abortTransaction();
             console.log('[CANCEL ORDER] Order cannot be cancelled');
-            return res.status(400).json({ 
-                message: `Cannot cancel order in ${order.state || order.deliveryStatus} state. Orders can only be cancelled before they are dispatched.` 
+            return res.status(400).json({
+                message: `Cannot cancel order in ${order.state || order.deliveryStatus} state. Orders can only be cancelled before they are dispatched.`
             });
         }
 

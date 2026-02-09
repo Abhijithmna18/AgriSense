@@ -13,7 +13,8 @@ import {
     ChevronLeft,
     ChevronRight,
     Store,
-    MessageSquare
+    MessageSquare,
+    TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -28,6 +29,7 @@ const VendorSidebar = ({ isCollapsed, toggleSidebar }) => {
 
     const navItems = [
         { path: '/vendor/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/vendor/market-trends', icon: TrendingUp, label: 'Market Trends' },
         { path: '/vendor/products', icon: Package, label: 'My Products' },
         { path: '/vendor/orders', icon: ShoppingCart, label: 'Order History' },
         { path: '/vendor/negotiations', icon: MessageSquare, label: 'Negotiations' },

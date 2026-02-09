@@ -22,8 +22,27 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5000',
+    'http://localhost:5001',
+    process.env.CLIENT_URL
+].filter(Boolean);
+
 const corsOptions = {
-    origin: process.env.CLIENT_URL || '*', // Restrict to CLIENT_URL if present
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || !process.env.CLIENT_URL) {
+            callback(null, true);
+        } else {
+            console.log('Blocked by CORS:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
@@ -74,6 +93,9 @@ app.use('/api/consultations', require('./src/routes/consultationRoutes'));
 app.use('/api/ai', require('./src/routes/plantIdentificationRoutes'));
 app.use('/api/negotiations', require('./src/routes/negotiations'));
 app.use('/api/reviews', require('./src/routes/reviewRoutes'));
+app.use('/api/pest-prediction', require('./src/routes/pestPredictionRoutes'));
+app.use('/api/decision-support', require('./src/routes/decisionSupportRoutes'));
+app.use('/api/market-prices', require('./src/routes/marketPriceRoutes'));
 
 
 // Make uploads folder static

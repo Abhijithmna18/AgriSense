@@ -14,8 +14,11 @@ import {
     Package,
     BookOpen,
     Leaf,
-    Bookmark
+    Bookmark,
+    Bug,
+    RefreshCw
 } from 'lucide-react';
+
 import { motion } from 'framer-motion';
 import recommendationIcon from '../../assets/recommendations_custom.png';
 import '../../styles/admin.css';
@@ -36,6 +39,8 @@ const Sidebar = ({ onLogout }) => {
         // Farmer Specific
         { icon: Activity, label: 'Farm Monitoring', path: '/monitoring', roles: ['farmer', 'admin'] },
         { icon: BookOpen, label: 'Crop Intelligence', path: '/crop-knowledge', roles: ['farmer', 'admin'] },
+        { icon: RefreshCw, label: 'Crop Rotation', path: '/crop-rotation', roles: ['farmer', 'admin'] },
+        { icon: Bug, label: 'Pest Prediction', path: '/pest-prediction', roles: ['farmer', 'admin'] },
         { icon: null, img: recommendationIcon, label: 'Recommendations', path: '/recommendations', roles: ['farmer', 'admin'] },
 
         // Buyer Specific (New)

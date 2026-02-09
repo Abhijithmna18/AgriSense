@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Calendar, Info, Truck, CheckCircle, Store, Sprout, MapPin } from 'lucide-react';
+import { ShoppingCart, Calendar, Info, Truck, CheckCircle, Store, Sprout, MapPin, Star } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import ProductReviewsDisplay from './ProductReviewsDisplay';
 
 const ProductCard = ({ product }) => {
     const { addToCart } = useCart();
     const [rentalDays, setRentalDays] = useState(1);
     const [buyQuantity, setBuyQuantity] = useState(1);
     const [showRentalConfig, setShowRentalConfig] = useState(false);
+    const [showReviews, setShowReviews] = useState(false);
 
     // Helper to format currency
     const formatPrice = (price) => `₹${price.toLocaleString()}`;
@@ -133,6 +135,15 @@ const ProductCard = ({ product }) => {
                         <MapPin size={10} /> {product.location}
                     </span>
                 )}
+
+                {/* Review Trigger */}
+                <button
+                    onClick={(e) => { e.stopPropagation(); setShowReviews(true); }}
+                    className="absolute bottom-3 right-3 bg-white/90 backdrop-blur hover:bg-white text-gray-800 px-2 py-1 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1 transition-all"
+                >
+                    <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                    <span>Reviews</span>
+                </button>
             </div>
 
             {/* Content Area */}
@@ -283,6 +294,12 @@ const ProductCard = ({ product }) => {
                     )}
                 </div>
             </div>
+            {/* Reviews Modal */}
+            <ProductReviewsDisplay
+                productId={product._id}
+                isOpen={showReviews}
+                onClose={() => setShowReviews(false)}
+            />
         </div>
     );
 };

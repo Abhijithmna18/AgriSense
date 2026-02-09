@@ -62,6 +62,8 @@ import FarmManagement from './pages/FarmManagement';
 import CropKnowledge from './pages/CropKnowledge';
 import PlantIdentificationPage from './pages/PlantIdentificationPage';
 import AiRecommendationsPage from './pages/AiRecommendationsPage';
+import PestPredictionPage from './pages/PestPredictionPage';
+import CropRotationPage from './pages/CropRotationPage';
 
 // Admin Warehouse Pages
 import AdminWarehousePage from './pages/admin/AdminWarehousePage';
@@ -96,6 +98,7 @@ import VendorProfile from './pages/vendor/VendorProfile';
 import VendorNegotiations from './pages/vendor/VendorNegotiations';
 // VendorDashboard is reused as "My Products" for now
 import MyProducts from './pages/VendorDashboard';
+import VendorMarketTrends from './pages/vendor/VendorMarketTrends';
 
 
 // ... existing imports ...
@@ -125,6 +128,7 @@ function App() {
                 <Route path="/vendor" element={<PrivateRoute><VendorLayout /></PrivateRoute>}>
                   <Route index element={<Navigate to="dashboard" replace />} />
                   <Route path="dashboard" element={<VendorAnalytics />} />
+                  <Route path="market-trends" element={<VendorMarketTrends />} />
                   <Route path="products" element={<MyProducts />} />
                   <Route path="orders" element={<VendorOrders />} />
                   <Route path="negotiations" element={<VendorNegotiations />} />
@@ -146,6 +150,7 @@ function App() {
                 <Route path="/profile-settings" element={<PrivateRoute><ProfileSettings /></PrivateRoute>} />
                 <Route path="/farms/new" element={<PrivateRoute><AddFarmPage /></PrivateRoute>} />
                 <Route path="/farmer/farms/:farmId/ai-recommendations" element={<PrivateRoute><AiRecommendationsPage /></PrivateRoute>} />
+                <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
 
                 {/* Marketplace - Valid for both, logic inside */}
                 <Route path="/marketplace" element={<PrivateRoute><MarketplaceLayout /></PrivateRoute>}>
@@ -156,7 +161,7 @@ function App() {
                   <Route path="orders/:id" element={<OrderDetailsPage />} />
                   <Route path="saved-suppliers" element={<SavedSuppliersPage />} />
                 </Route>
-                
+
                 {/* Negotiation Routes */}
                 <Route path="/negotiations" element={<PrivateRoute><NegotiationsListPage /></PrivateRoute>} />
                 <Route path="/negotiations/:negotiationId" element={<PrivateRoute><NegotiationPage /></PrivateRoute>} />
@@ -182,6 +187,8 @@ function App() {
                 <Route path="/farm-management" element={<PrivateRoute><FarmManagement /></PrivateRoute>} />
                 <Route path="/crop-knowledge" element={<PrivateRoute><CropKnowledge /></PrivateRoute>} />
                 <Route path="/plant-doctor" element={<PrivateRoute><PlantIdentificationPage /></PrivateRoute>} />
+                <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
+                <Route path="/crop-rotation" element={<PrivateRoute><CropRotationPage /></PrivateRoute>} />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>

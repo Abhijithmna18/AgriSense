@@ -50,18 +50,61 @@ const VendorDashboard = () => {
         }
     };
 
-    const handleCreateProduct = async (e) => {
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [imageSource, setImageSource] = useState('url'); // 'url' or 'file'
+    const [imageFile, setImageFile] = useState(null);
+
+    const handleEdit = (product) => {
+        setEditingProduct(product);
+        setFormData({
+            category: product.category || 'inputs',
+            productType: product.productType || '',
+            productRef: product.name || '',
+            quantity: product.quantity || '',
+            unit: product.unit || 'kg',
+            pricePerUnit: product.pricePerUnit || '',
+            description: product.description || '',
+            location: product.location || '',
+            imageUrl: product.images?.[0] || ''
+        });
+        setImageSource('url');
+        setImageFile(null);
+        setIsCreateModalOpen(true);
+    };
+
+    const handleSubmitProduct = async (e) => {
         e.preventDefault();
         try {
-            const payload = {
-                ...formData,
-                images: formData.imageUrl ? [formData.imageUrl] : []
-            };
-            delete payload.imageUrl;
+            const formDataObj = new FormData();
 
-            await api.post('/api/marketplace/products', payload);
+            // Append Text Fields
+            formDataObj.append('category', formData.category);
+            formDataObj.append('productType', formData.productType);
+            formDataObj.append('productRef', formData.productRef);
+            formDataObj.append('quantity', formData.quantity);
+            formDataObj.append('unit', formData.unit);
+            formDataObj.append('pricePerUnit', formData.pricePerUnit);
+            formDataObj.append('description', formData.description);
+            formDataObj.append('location', formData.location);
+
+            // Append Image
+            if (imageSource === 'file' && imageFile) {
+                formDataObj.append('images', imageFile);
+            } else if (imageSource === 'url' && formData.imageUrl) {
+                formDataObj.append('images', formData.imageUrl);
+            }
+
+            if (editingProduct) {
+                await api.put(`/api/marketplace/products/${editingProduct._id}`, formDataObj);
+                alert('Product updated successfully');
+            } else {
+                await api.post('/api/marketplace/products', formDataObj);
+                alert('Product created successfully');
+            }
+
             fetchListings();
             setIsCreateModalOpen(false);
+            setEditingProduct(null);
             setFormData({
                 category: 'inputs',
                 productType: '',
@@ -73,11 +116,16 @@ const VendorDashboard = () => {
                 location: '',
                 imageUrl: ''
             });
+            setImageFile(null);
+            setImageSource('url');
         } catch (error) {
-            console.error('Failed to create product', error);
-            alert('Failed to list product');
+            console.error('Failed to save product', error);
+            const msg = error.response?.data?.message || 'Failed to save product';
+            alert(msg);
         }
     };
+
+    // ... existing handleDelete ...
 
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this listing?')) return;
@@ -92,6 +140,19 @@ const VendorDashboard = () => {
                 alert('Failed to delete product. Please try again.');
             }
         }
+    };
+
+    // Helper to render image source
+    const getProductImageSrc = (product) => {
+        if (product.images && product.images.length > 0) {
+            const img = product.images[0];
+            if (img.startsWith('http') || img.startsWith('data:')) return img;
+            // Clean path to ensure it doesn't double slash if not needed, but simplified:
+            // Backend saves as 'uploads/filename.ext'
+            // We want to access '/uploads/filename.ext' relative to domain
+            return `/${img.startsWith('/') ? img.slice(1) : img}`;
+        }
+        return null;
     };
 
     return (
@@ -124,7 +185,23 @@ const VendorDashboard = () => {
                                 Back to Main Dashboard
                             </button>
                             <button
-                                onClick={() => setIsCreateModalOpen(true)}
+                                onClick={() => {
+                                    setEditingProduct(null);
+                                    setFormData({
+                                        category: 'inputs',
+                                        productType: '',
+                                        productRef: '',
+                                        quantity: '',
+                                        unit: 'kg',
+                                        pricePerUnit: '',
+                                        description: '',
+                                        location: '',
+                                        imageUrl: ''
+                                    });
+                                    setImageSource('url');
+                                    setImageFile(null);
+                                    setIsCreateModalOpen(true);
+                                }}
                                 className="px-6 py-3 bg-green-600 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-green-700 transition shadow-lg shadow-green-200"
                             >
                                 <Plus size={20} />
@@ -218,7 +295,23 @@ const VendorDashboard = () => {
                             <h2 className="text-lg font-bold text-gray-900">My Products</h2>
                             {listings.length > 0 && (
                                 <button
-                                    onClick={() => setIsCreateModalOpen(true)}
+                                    onClick={() => {
+                                        setEditingProduct(null);
+                                        setFormData({
+                                            category: 'inputs',
+                                            productType: '',
+                                            productRef: '',
+                                            quantity: '',
+                                            unit: 'kg',
+                                            pricePerUnit: '',
+                                            description: '',
+                                            location: '',
+                                            imageUrl: ''
+                                        });
+                                        setImageSource('url');
+                                        setImageFile(null);
+                                        setIsCreateModalOpen(true);
+                                    }}
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-green-700 transition text-sm"
                                 >
                                     <Plus size={18} />
@@ -255,7 +348,7 @@ const VendorDashboard = () => {
                                                         {/* Product Image */}
                                                         {item.images && item.images.length > 0 && item.images[0] ? (
                                                             <img
-                                                                src={item.images[0]}
+                                                                src={getProductImageSrc(item) || 'https://placehold.co/48x48?text=No+Img'}
                                                                 alt={item.name || 'Product'}
                                                                 className="w-12 h-12 rounded-lg object-cover border border-gray-200"
                                                                 onError={(e) => {
@@ -287,7 +380,10 @@ const VendorDashboard = () => {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 flex items-center gap-3">
-                                                    <button className="text-blue-600 hover:text-blue-800 p-1">
+                                                    <button
+                                                        onClick={() => handleEdit(item)}
+                                                        className="text-blue-600 hover:text-blue-800 p-1"
+                                                    >
                                                         <Edit size={18} />
                                                     </button>
                                                     <button onClick={() => handleDelete(item._id)} className="text-red-500 hover:text-red-700 p-1">
@@ -304,18 +400,20 @@ const VendorDashboard = () => {
                 </div>
             </div>
 
-            {/* Create Product Modal */}
+            {/* Create/Edit Product Modal */}
             {isCreateModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-6 animate-scale-up max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold">Add New Product</h2>
+                            <h2 className="text-xl font-bold">
+                                {editingProduct ? 'Edit Product' : 'Add New Product'}
+                            </h2>
                             <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <Plus className="rotate-45" size={24} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateProduct} className="space-y-4">
+                        <form onSubmit={handleSubmitProduct} className="space-y-4">
                             {/* Category Selection */}
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Marketplace Category</label>
@@ -435,24 +533,59 @@ const VendorDashboard = () => {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Image URL</label>
-                                <input
-                                    className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
-                                    placeholder="Paste image link here..."
-                                    value={formData.imageUrl}
-                                    onChange={e => {
-                                        // Prevent leading spaces
-                                        const value = e.target.value;
-                                        if (value.length === 0 || value[0] !== ' ') {
-                                            setFormData({ ...formData, imageUrl: value });
-                                        }
-                                    }}
-                                />
+                            <div className="space-y-3">
+                                <label className="text-sm font-medium text-gray-700">Product Image</label>
+
+                                <div className="flex gap-4 mb-2">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="imageSource"
+                                            value="url"
+                                            checked={imageSource === 'url'}
+                                            onChange={() => setImageSource('url')}
+                                            className="text-green-600 focus:ring-green-500"
+                                        />
+                                        <span className="text-sm text-gray-700">Image URL</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="imageSource"
+                                            value="file"
+                                            checked={imageSource === 'file'}
+                                            onChange={() => setImageSource('file')}
+                                            className="text-green-600 focus:ring-green-500"
+                                        />
+                                        <span className="text-sm text-gray-700">Upload from Computer</span>
+                                    </label>
+                                </div>
+
+                                {imageSource === 'url' ? (
+                                    <input
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                        placeholder="Paste image link here..."
+                                        value={formData.imageUrl}
+                                        onChange={e => {
+                                            // Prevent leading spaces
+                                            const value = e.target.value;
+                                            if (value.length === 0 || value[0] !== ' ') {
+                                                setFormData({ ...formData, imageUrl: value });
+                                            }
+                                        }}
+                                    />
+                                ) : (
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={e => setImageFile(e.target.files[0])}
+                                        className="w-full p-2 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500 text-sm"
+                                    />
+                                )}
                             </div>
 
                             <button className="w-full py-3 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 transition shadow-lg shadow-green-200 mt-4">
-                                List Product
+                                {editingProduct ? 'Update Product' : 'List Product'}
                             </button>
                         </form>
                     </div>

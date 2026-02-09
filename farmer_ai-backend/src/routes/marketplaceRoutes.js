@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { getProducts, createOrder, VerifyPayment, getMyOrders, createProduct, updateProduct, deleteProduct, getMyListings, getVendorOrders, updateOrderStatus, getMarketAnalytics, getVendorAnalyticsSpecific, getVendorPayments, getVendorReviews, replyToReview, verifyPayment, getOrderById, getOrderInvoice, cancelOrder } = require('../controllers/marketplaceController');
-const { createReview, getProductReviews, canReviewProduct, getMyReviews } = require('../controllers/reviewController');
 const { saveSupplier, getSavedSuppliers, checkSavedSupplier, removeSavedSupplier } = require('../controllers/savedSuppliersController');
 
 // All routes are protected - accessible to farmers, buyers, and admins
@@ -17,10 +16,45 @@ router.post('/orders/:id/cancel', authorize('farmer', 'buyer', 'admin'), cancelO
 router.get('/orders/:id/invoice', authorize('farmer', 'buyer', 'admin', 'vendor'), getOrderInvoice);
 router.get('/analytics', authorize('farmer', 'buyer', 'admin', 'vendor'), getMarketAnalytics);
 
+
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Ensure uploads directory exists
+const uploadDir = 'uploads/';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+// Configure Multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, `product-${Date.now()}${path.extname(file.originalname)}`);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5000000 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|jpg|png|webp/;
+        const mimetype = filetypes.test(file.mimetype);
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        if (mimetype && extname) {
+            return cb(null, true);
+        }
+        cb(new Error('Images only (jpeg, jpg, png, webp)!'));
+    }
+});
+
 // Product Management (Farmers & Vendors)
-router.post('/products', authorize('farmer', 'vendor', 'admin'), createProduct);
+router.post('/products', authorize('farmer', 'vendor', 'admin'), upload.array('images', 5), createProduct);
 router.get('/my-listings', authorize('farmer', 'vendor', 'admin'), getMyListings);
-router.put('/products/:id', authorize('farmer', 'vendor', 'admin'), updateProduct);
+router.put('/products/:id', authorize('farmer', 'vendor', 'admin'), upload.array('images', 5), updateProduct);
 router.delete('/products/:id', authorize('farmer', 'vendor', 'admin'), deleteProduct);
 
 // Vendor Order Management
@@ -33,13 +67,6 @@ router.get('/vendor/payments', authorize('vendor', 'admin'), getVendorPayments);
 // Reviews (Vendor)
 router.get('/vendor/reviews', authorize('vendor', 'admin'), getVendorReviews);
 router.post('/reviews/:id/reply', authorize('vendor', 'admin'), replyToReview);
-
-// Reviews (Buyer)
-router.post('/reviews', authorize('buyer', 'farmer', 'admin'), createReview);
-router.get('/reviews/product/:productId', getProductReviews); // Public
-router.get('/reviews/can-review/:productId', authorize('buyer', 'farmer', 'admin'), canReviewProduct);
-router.get('/reviews/my-reviews', authorize('buyer', 'farmer', 'admin'), getMyReviews);
-
 
 // Saved Suppliers (Buyer)
 router.post('/saved-suppliers', authorize('buyer', 'farmer', 'admin'), saveSupplier);
