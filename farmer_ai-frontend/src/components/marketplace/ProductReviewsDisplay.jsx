@@ -16,7 +16,7 @@ const ProductReviewsDisplay = ({ productId, isOpen, onClose }) => {
     const fetchReviews = async () => {
         setLoading(true);
         try {
-            const { data } = await api.get(`/api/marketplace/reviews/product/${productId}`);
+            const { data } = await api.get(`/api/reviews/product/${productId}`);
             setReviews(data || []);
 
             // Calculate average

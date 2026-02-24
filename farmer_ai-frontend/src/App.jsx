@@ -63,7 +63,13 @@ import CropKnowledge from './pages/CropKnowledge';
 import PlantIdentificationPage from './pages/PlantIdentificationPage';
 import AiRecommendationsPage from './pages/AiRecommendationsPage';
 import PestPredictionPage from './pages/PestPredictionPage';
+import MicroWeatherPage from './pages/MicroWeatherPage'; // New Feature
 import CropRotationPage from './pages/CropRotationPage';
+import DiseaseMapPage from './pages/DiseaseMapPage';
+import DiseasePredictionPage from './pages/DiseasePredictionPage';
+import SoilTestPage from './pages/SoilTestPage';
+import IrrigationRLPage from './pages/IrrigationRLPage';
+import ProcurePage from './pages/ProcurePage';
 
 // Admin Warehouse Pages
 import AdminWarehousePage from './pages/admin/AdminWarehousePage';
@@ -172,7 +178,7 @@ function App() {
 
                 {/* Coming Soon / Placeholders */}
                 <Route path="/crops/:id" element={<div className="container mt-5"><h2>Crop Detail Page (Coming Soon)</h2></div>} />
-                <Route path="/disease-detection" element={<div className="container mt-5"><h2>Disease Detection Page (Coming Soon)</h2></div>} />
+                <Route path="/disease-detection" element={<PrivateRoute><DiseasePredictionPage /></PrivateRoute>} />
                 <Route path="/advisories" element={<div className="container mt-5"><h2>Advisories Page (Coming Soon)</h2></div>} />
 
                 {/* Warehouse Module */}
@@ -188,7 +194,13 @@ function App() {
                 <Route path="/crop-knowledge" element={<PrivateRoute><CropKnowledge /></PrivateRoute>} />
                 <Route path="/plant-doctor" element={<PrivateRoute><PlantIdentificationPage /></PrivateRoute>} />
                 <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
+                <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
+                <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
                 <Route path="/crop-rotation" element={<PrivateRoute><CropRotationPage /></PrivateRoute>} />
+                <Route path="/disease-map" element={<PrivateRoute><DiseaseMapPage /></PrivateRoute>} />
+                <Route path="/services/soil-test" element={<PrivateRoute><SoilTestPage /></PrivateRoute>} />
+                <Route path="/rl-irrigation" element={<PrivateRoute><IrrigationRLPage /></PrivateRoute>} />
+                <Route path="/procure" element={<PrivateRoute><ProcurePage /></PrivateRoute>} />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>

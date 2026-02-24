@@ -38,10 +38,25 @@ const DiseaseScanSchema = new mongoose.Schema({
         chemical: [String],
         prevention: [String]
     },
+    // Location for Disease Radar
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            index: '2dsphere'
+        }
+    },
     scannedAt: {
         type: Date,
         default: Date.now
     }
 });
+
+// Create geospatial index
+DiseaseScanSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('DiseaseScan', DiseaseScanSchema);

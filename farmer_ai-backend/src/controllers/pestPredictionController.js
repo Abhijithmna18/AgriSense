@@ -2,6 +2,8 @@ const { generateJSON } = require('../utils/llmService');
 const PestPrediction = require('../models/PestPrediction');
 const Farm = require('../models/Farm');
 const CropCycle = require('../models/CropCycle');
+const User = require('../models/User');
+const Notification = require('../models/Notifications');
 
 const PEST_CROP_DATABASE = {
     'rice': ['Brown Planthopper', 'Stem Borer', 'Leaf Folder', 'Rice Blast', 'Hispa', 'Gall Midge'],
@@ -177,6 +179,33 @@ INPUT DATA:
         });
 
         await prediction.save();
+
+        // Broadcast alert to vendors if risk is high or critical
+        if (overallRiskLevel === 'high' || overallRiskLevel === 'critical') {
+            try {
+                // Find all vendors
+                const vendors = await User.find({ roles: 'vendor' });
+                const highestRiskPest = predictionData.pest_risks.reduce((prev, current) =>
+                    (prev.risk_percent > current.risk_percent) ? prev : current
+                );
+
+                const notifications = vendors.map(vendor => ({
+                    recipient: vendor._id,
+                    type: 'outbreak_alert',
+                    title: `🚨 ${overallRiskLevel.toUpperCase()} Risk: ${highestRiskPest.pest_name}`,
+                    message: `A ${overallRiskLevel} risk prediction for ${highestRiskPest.pest_name} affecting ${predictionData.crop} has been detected in ${predictionData.zone || farm.location?.district}. Consider stocking appropriate preventive solutions.`,
+                    data: {}
+                }));
+
+                if (notifications.length > 0) {
+                    await Notification.insertMany(notifications);
+                    console.log(`[PEST ALERT] Broadcasted outbreak alert to ${vendors.length} vendors.`);
+                }
+            } catch (alertError) {
+                console.error('[PEST ALERT ERROR]', alertError);
+                // We don't want to throw and fail the prediction response if alerting fails
+            }
+        }
 
         // Return STRICT JSON format as requested by User
         res.status(201).json({

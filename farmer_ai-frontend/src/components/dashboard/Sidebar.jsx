@@ -16,7 +16,9 @@ import {
     Leaf,
     Bookmark,
     Bug,
-    RefreshCw
+    RefreshCw,
+    CloudRain,
+    Sparkles
 } from 'lucide-react';
 
 import { motion } from 'framer-motion';
@@ -41,9 +43,12 @@ const Sidebar = ({ onLogout }) => {
         { icon: BookOpen, label: 'Crop Intelligence', path: '/crop-knowledge', roles: ['farmer', 'admin'] },
         { icon: RefreshCw, label: 'Crop Rotation', path: '/crop-rotation', roles: ['farmer', 'admin'] },
         { icon: Bug, label: 'Pest Prediction', path: '/pest-prediction', roles: ['farmer', 'admin'] },
+        { icon: Activity, label: 'Disease Detection', path: '/disease-detection', roles: ['farmer', 'admin'] },
+        { icon: CloudRain, label: 'Micro Weather', path: '/weather-intelligence', roles: ['farmer', 'admin'] }, // New Feature
         { icon: null, img: recommendationIcon, label: 'Recommendations', path: '/recommendations', roles: ['farmer', 'admin'] },
 
         // Buyer Specific (New)
+        { icon: Sparkles, label: 'Smart Procure', path: '/procure', roles: ['buyer', 'admin'] },
         { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace', roles: ['farmer', 'buyer', 'admin'] },
         { icon: Package, label: 'Orders', path: '/orders', roles: ['buyer'] },
         { icon: MessageSquare, label: 'Negotiations', path: '/negotiations', roles: ['buyer'] },

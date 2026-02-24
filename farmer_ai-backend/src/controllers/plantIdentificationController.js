@@ -17,11 +17,12 @@ const identifyPlantController = async (req, res, next) => {
         const imagePath = req.file.path;
         const mimeType = req.file.mimetype;
 
+        const { latitude, longitude } = req.body;
+
         // Call the AI service
         const aiResponse = await identifyPlant(imagePath, mimeType);
 
-        // Save to Database
-        const diseaseScan = await DiseaseScan.create({
+        const scanData = {
             user: req.user._id,
             imageUrl: imagePath, // In real app, upload to S3/Cloudinary and store URL. Here using local path.
             status: aiResponse.health_analysis?.severity === 'none' ? 'healthy' : 'detected',
@@ -34,7 +35,18 @@ const identifyPlantController = async (req, res, next) => {
                 chemical: ['Fungicide'],
                 prevention: ['Crop Rotation']
             }
-        });
+        };
+
+        // Add location if provided
+        if (latitude && longitude) {
+            scanData.location = {
+                type: 'Point',
+                coordinates: [parseFloat(longitude), parseFloat(latitude)]
+            };
+        }
+
+        // Save to Database
+        const diseaseScan = await DiseaseScan.create(scanData);
 
         res.status(200).json({
             success: true,

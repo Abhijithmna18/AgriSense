@@ -22,6 +22,11 @@ const VendorDashboard = () => {
         imageUrl: ''
     });
 
+    const [aiSuggestion, setAiSuggestion] = useState(null);
+    const [loadingAi, setLoadingAi] = useState(false);
+    const [loadingDesc, setLoadingDesc] = useState(false);
+    const [loadingVision, setLoadingVision] = useState(false);
+
     const handleLogout = async () => {
         try {
             await logout();
@@ -69,7 +74,87 @@ const VendorDashboard = () => {
         });
         setImageSource('url');
         setImageFile(null);
+        setAiSuggestion(null);
         setIsCreateModalOpen(true);
+    };
+
+    const handleGetAiSuggestion = async () => {
+        if (!formData.category || !formData.productType || !formData.unit) {
+            alert('Please select a Category, Product Type, and Unit first.');
+            return;
+        }
+        setLoadingAi(true);
+        setAiSuggestion(null);
+        try {
+            const { data } = await api.post('/api/marketplace/suggest-price', {
+                category: formData.category,
+                productType: formData.productType,
+                unit: formData.unit
+            });
+            setAiSuggestion(data);
+        } catch (error) {
+            console.error('Failed to get AI suggestion', error);
+            alert('Failed to get AI price suggestion. ' + (error.response?.data?.message || ''));
+        } finally {
+            setLoadingAi(false);
+        }
+    };
+
+    const handleGenerateDescription = async () => {
+        if (!formData.productType) {
+            alert('Please enter a Product Type first so the AI knows what to write about.');
+            return;
+        }
+        setLoadingDesc(true);
+        try {
+            const { data } = await api.post('/api/marketplace/generate-description', {
+                productType: formData.productType,
+                keywords: formData.description // pass any existing text as keywords
+            });
+            setFormData(prev => ({ ...prev, description: data.description }));
+        } catch (error) {
+            console.error('Failed to generate description', error);
+            alert('Failed to generate description. ' + (error.response?.data?.message || ''));
+        } finally {
+            setLoadingDesc(false);
+        }
+    };
+
+    const handleAnalyzeImage = async () => {
+        if (imageSource === 'file' && !imageFile) {
+            alert('Please select an image file to analyze.');
+            return;
+        }
+
+        // We only support file upload for AI analysis due to base64 processing in backend
+        if (imageSource === 'url') {
+            alert('AI Image Analysis is currently only supported for image files uploaded from your computer.');
+            return;
+        }
+
+        setLoadingVision(true);
+        try {
+            const formDataObj = new FormData();
+            formDataObj.append('image', imageFile);
+
+            const { data } = await api.post('/api/marketplace/analyze-image', formDataObj, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            if (data?.success && data?.data) {
+                setFormData(prev => ({
+                    ...prev,
+                    category: data.data.category || prev.category,
+                    productType: data.data.productType || prev.productType,
+                    productRef: data.data.productName || prev.productRef
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to analyze image', error);
+            alert('Failed to auto-fill from image. ' + (error.response?.data?.message || error.message || ''));
+        } finally {
+            setLoadingVision(false);
+        }
     };
 
     const handleSubmitProduct = async (e) => {
@@ -200,6 +285,8 @@ const VendorDashboard = () => {
                                     });
                                     setImageSource('url');
                                     setImageFile(null);
+                                    setAiSuggestion(null);
+                                    setLoadingDesc(false);
                                     setIsCreateModalOpen(true);
                                 }}
                                 className="px-6 py-3 bg-green-600 text-white rounded-xl font-medium flex items-center gap-2 hover:bg-green-700 transition shadow-lg shadow-green-200"
@@ -219,7 +306,7 @@ const VendorDashboard = () => {
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Active Listings</p>
-                                    <p className="text-2xl font-bold mt-1">{listings.length}</p>
+                                    <p className="text-2xl font-bold text-gray-900 mt-1">{listings.length}</p>
                                 </div>
                             </div>
                         </div>
@@ -230,7 +317,7 @@ const VendorDashboard = () => {
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Total Sales</p>
-                                    <p className="text-2xl font-bold mt-1">₹0</p>
+                                    <p className="text-2xl font-bold text-gray-900 mt-1">₹0</p>
                                 </div>
                             </div>
                         </div>
@@ -241,7 +328,7 @@ const VendorDashboard = () => {
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Pending Payouts</p>
-                                    <p className="text-2xl font-bold mt-1">₹0</p>
+                                    <p className="text-2xl font-bold text-gray-900 mt-1">₹0</p>
                                 </div>
                             </div>
                         </div>
@@ -310,6 +397,8 @@ const VendorDashboard = () => {
                                         });
                                         setImageSource('url');
                                         setImageFile(null);
+                                        setAiSuggestion(null);
+                                        setLoadingDesc(false);
                                         setIsCreateModalOpen(true);
                                     }}
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-green-700 transition text-sm"
@@ -405,7 +494,7 @@ const VendorDashboard = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-6 animate-scale-up max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold">
+                            <h2 className="text-xl font-bold text-gray-900">
                                 {editingProduct ? 'Edit Product' : 'Add New Product'}
                             </h2>
                             <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -418,7 +507,7 @@ const VendorDashboard = () => {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Marketplace Category</label>
                                 <select
-                                    className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                    className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500"
                                     value={formData.category}
                                     onChange={e => setFormData({ ...formData, category: e.target.value })}
                                 >
@@ -431,7 +520,7 @@ const VendorDashboard = () => {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-700">Product Type</label>
                                     <input
-                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500"
                                         placeholder="e.g. Seeds, Fertilizer, Equipment"
                                         value={formData.productType}
                                         onChange={e => {
@@ -447,7 +536,7 @@ const VendorDashboard = () => {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-700">Product Name</label>
                                     <input
-                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500"
                                         placeholder="e.g. Urea, Wheat Seeds, Tractor"
                                         value={formData.productRef}
                                         onChange={e => {
@@ -464,10 +553,20 @@ const VendorDashboard = () => {
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Price</label>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-gray-700">Price</label>
+                                        <button
+                                            type="button"
+                                            onClick={handleGetAiSuggestion}
+                                            disabled={loadingAi}
+                                            className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-md font-medium hover:bg-purple-200 transition"
+                                        >
+                                            {loadingAi ? 'Thinking...' : '✨ AI Suggest'}
+                                        </button>
+                                    </div>
                                     <input
                                         type="number"
-                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500"
                                         placeholder="₹"
                                         value={formData.pricePerUnit}
                                         onChange={e => setFormData({ ...formData, pricePerUnit: e.target.value })}
@@ -478,7 +577,7 @@ const VendorDashboard = () => {
                                     <label className="text-sm font-medium text-gray-700">Quantity</label>
                                     <input
                                         type="number"
-                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500"
                                         placeholder="Qty"
                                         value={formData.quantity}
                                         onChange={e => setFormData({ ...formData, quantity: e.target.value })}
@@ -488,7 +587,7 @@ const VendorDashboard = () => {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-700">Unit</label>
                                     <select
-                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500"
                                         value={formData.unit}
                                         onChange={e => setFormData({ ...formData, unit: e.target.value })}
                                     >
@@ -501,11 +600,50 @@ const VendorDashboard = () => {
                                 </div>
                             </div>
 
+                            {aiSuggestion && (
+                                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 space-y-2">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-purple-900 font-medium whitespace-nowrap overflow-hidden text-ellipsis">✨ AI Smart Pricing Overview</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, pricePerUnit: aiSuggestion.suggestedPrice })}
+                                            className="text-xs bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 transition lg:whitespace-nowrap"
+                                        >
+                                            Apply Price
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                        <div className="bg-white p-2 rounded-lg border border-purple-100">
+                                            <div className="text-gray-500 truncate">Suggested</div>
+                                            <div className="font-bold text-green-600">₹{aiSuggestion.suggestedPrice}</div>
+                                        </div>
+                                        <div className="bg-white p-2 rounded-lg border border-purple-100">
+                                            <div className="text-gray-500 truncate">Market Avg</div>
+                                            <div className="font-bold text-gray-800">₹{aiSuggestion.marketAverage}</div>
+                                        </div>
+                                        <div className="bg-white p-2 rounded-lg border border-purple-100">
+                                            <div className="text-gray-500 truncate">Sell Prob.</div>
+                                            <div className="font-bold text-blue-600">{aiSuggestion.sellingProbability}%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Description</label>
+                                <div className="flex justify-between items-center">
+                                    <label className="text-sm font-medium text-gray-700">Description</label>
+                                    <button
+                                        type="button"
+                                        onClick={handleGenerateDescription}
+                                        disabled={loadingDesc}
+                                        className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md font-medium hover:bg-indigo-200 transition flex items-center gap-1"
+                                    >
+                                        ✨ {loadingDesc ? 'Writing...' : 'Auto-Generate'}
+                                    </button>
+                                </div>
                                 <textarea
-                                    className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500 h-24"
-                                    placeholder="Product details..."
+                                    className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500 h-24"
+                                    placeholder="Product details... (Or type some keywords and hit Auto-Generate)"
                                     value={formData.description}
                                     onChange={e => {
                                         // Prevent leading spaces
@@ -520,7 +658,7 @@ const VendorDashboard = () => {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Location (City)</label>
                                 <input
-                                    className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                    className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500"
                                     placeholder="Optional (Default: Profile Address)"
                                     value={formData.location}
                                     onChange={e => {
@@ -563,7 +701,7 @@ const VendorDashboard = () => {
 
                                 {imageSource === 'url' ? (
                                     <input
-                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none text-gray-900 focus:ring-2 focus:ring-green-500"
                                         placeholder="Paste image link here..."
                                         value={formData.imageUrl}
                                         onChange={e => {
@@ -579,8 +717,19 @@ const VendorDashboard = () => {
                                         type="file"
                                         accept="image/*"
                                         onChange={e => setImageFile(e.target.files[0])}
-                                        className="w-full p-2 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500 text-sm"
+                                        className="w-full p-2 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500 text-sm text-gray-900"
                                     />
+                                )}
+
+                                {imageSource === 'file' && imageFile && (
+                                    <button
+                                        type="button"
+                                        onClick={handleAnalyzeImage}
+                                        disabled={loadingVision}
+                                        className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-100 font-medium hover:bg-indigo-100 transition disabled:opacity-50"
+                                    >
+                                        ✨ {loadingVision ? 'Analyzing Image...' : 'Auto-Fill Category & Name from Image'}
+                                    </button>
                                 )}
                             </div>
 

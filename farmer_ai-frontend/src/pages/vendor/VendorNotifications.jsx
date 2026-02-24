@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, ShoppingCart, Star, Wallet, Info } from 'lucide-react';
+import { Bell, Check, ShoppingCart, Star, Wallet, Info, Siren } from 'lucide-react';
 import api from '../../services/authApi';
 
 const VendorNotifications = () => {
@@ -45,6 +45,7 @@ const VendorNotifications = () => {
             case 'order_received': return { icon: ShoppingCart, color: 'bg-blue-100 text-blue-600' };
             case 'payment_received': return { icon: Wallet, color: 'bg-green-100 text-green-600' };
             case 'review_posted': return { icon: Star, color: 'bg-yellow-100 text-yellow-600' };
+            case 'outbreak_alert': return { icon: Siren, color: 'bg-red-100 text-red-600' };
             default: return { icon: Info, color: 'bg-gray-100 text-gray-600' };
         }
     };

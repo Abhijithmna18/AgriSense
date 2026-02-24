@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
-const { getProducts, createOrder, VerifyPayment, getMyOrders, createProduct, updateProduct, deleteProduct, getMyListings, getVendorOrders, updateOrderStatus, getMarketAnalytics, getVendorAnalyticsSpecific, getVendorPayments, getVendorReviews, replyToReview, verifyPayment, getOrderById, getOrderInvoice, cancelOrder } = require('../controllers/marketplaceController');
+const { getProducts, createOrder, VerifyPayment, getMyOrders, createProduct, updateProduct, deleteProduct, getMyListings, getVendorOrders, updateOrderStatus, getMarketAnalytics, getVendorAnalyticsSpecific, getVendorPayments, getVendorReviews, replyToReview, verifyPayment, getOrderById, getOrderInvoice, cancelOrder, analyzeProductImage } = require('../controllers/marketplaceController');
 const { saveSupplier, getSavedSuppliers, checkSavedSupplier, removeSavedSupplier } = require('../controllers/savedSuppliersController');
+const { suggestPrice, generateDescription } = require('../controllers/pricingController');
 
 // All routes are protected - accessible to farmers, buyers, and admins
 router.use(protect);
@@ -56,6 +57,9 @@ router.post('/products', authorize('farmer', 'vendor', 'admin'), upload.array('i
 router.get('/my-listings', authorize('farmer', 'vendor', 'admin'), getMyListings);
 router.put('/products/:id', authorize('farmer', 'vendor', 'admin'), upload.array('images', 5), updateProduct);
 router.delete('/products/:id', authorize('farmer', 'vendor', 'admin'), deleteProduct);
+router.post('/suggest-price', authorize('farmer', 'vendor', 'admin'), suggestPrice);
+router.post('/generate-description', authorize('farmer', 'vendor', 'admin'), generateDescription);
+router.post('/analyze-image', authorize('farmer', 'vendor', 'admin'), upload.single('image'), analyzeProductImage);
 
 // Vendor Order Management
 router.get('/vendor/orders', authorize('vendor', 'admin'), getVendorOrders);

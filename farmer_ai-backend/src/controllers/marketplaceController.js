@@ -1101,3 +1101,57 @@ exports.cancelOrder = async (req, res, next) => {
         session.endSession();
     }
 };
+
+// @desc    Analyze product image using Groq Vision AI
+// @route   POST /api/marketplace/analyze-image
+// @access  Private (Farmer/Vendor)
+exports.analyzeProductImage = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No image file provided' });
+        }
+
+        const fs = require('fs');
+        const { analyzeImageJSON } = require('../utils/llmService');
+
+        // Convert image to Base64
+        const imageBuffer = fs.readFileSync(req.file.path);
+        const base64String = imageBuffer.toString('base64');
+        const mimeType = req.file.mimetype;
+        const base64Image = `data:${mimeType};base64,${base64String}`;
+
+        const systemPrompt = `
+You are an expert agricultural AI. Your task is to analyze the provided image of a product and extract categorization details for an agricultural marketplace.
+
+Identify the following details:
+1. "category": Must be either "inputs" (for seeds, fertilizers, pesticides, crops) or "rentals" (for tractors, tools, equipment).
+2. "productType": A short text categorizing the item (e.g., "Seeds", "Fertilizer", "Tractor", "Harvester", "Pesticide", "Vegetable").
+3. "productName": A concise, common name for the product (e.g., "Wheat Seeds", "Urea Fertilizer", "Mahindra Tractor").
+
+Return ONLY a JSON object with these exactly three keys. Do not include any markdown formatting or extra text.
+Example format:
+{
+  "category": "inputs",
+  "productType": "Seeds",
+  "productName": "Wheat Seeds"
+}
+`;
+
+        const aiResponse = await analyzeImageJSON(systemPrompt, base64Image);
+
+        // Clean up the uploaded file if we don't want to save it permanently just for analysis.
+        // For now, we'll keep it as the user might just submit the same image path.
+        // In the VendorDashboard, if they use the same file, they upload it again on submit, 
+        // so we could technically delete this temporary analysis file. Let's delete it to save space.
+        fs.unlinkSync(req.file.path);
+
+        res.status(200).json({
+            success: true,
+            data: aiResponse
+        });
+
+    } catch (error) {
+        console.error('Image Analysis Error:', error);
+        res.status(500).json({ message: 'Failed to analyze image. ' + (error.message || '') });
+    }
+};

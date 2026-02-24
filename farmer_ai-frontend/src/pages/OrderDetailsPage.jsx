@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../services/authApi';
 import ReviewForm from '../components/ReviewForm';
 import ReviewsList from '../components/ReviewsList';
+import ShipmentIntelligencePanel from '../components/dashboard/buyer/ShipmentIntelligencePanel';
 
 const OrderDetailsPage = () => {
     const { id } = useParams();
@@ -23,7 +24,7 @@ const OrderDetailsPage = () => {
         try {
             const response = await api.get(`/api/marketplace/orders/${id}`);
             setOrder(response.data);
-            
+
             // Check if user has already reviewed this order - only if order exists
             if (response.data) {
                 checkIfReviewed();
@@ -159,14 +160,29 @@ const OrderDetailsPage = () => {
                     <div className="space-y-3">
                         <h3 className="font-semibold text-gray-900">Delivery Address</h3>
                         <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                            <p className="text-sm font-medium text-gray-900">{order.deliveryAddress.label}</p>
-                            <p className="text-sm text-gray-600">{order.deliveryAddress.addressLine}</p>
+                            <p className="text-sm font-medium text-gray-900">{order.deliveryAddress?.label || 'Farm'}</p>
+                            <p className="text-sm text-gray-600">{order.deliveryAddress?.addressLine || 'Shipping Address'}</p>
                             <p className="text-sm text-gray-600">
-                                {order.deliveryAddress.city}, {order.deliveryAddress.state} - {order.deliveryAddress.postalCode}
+                                {order.deliveryAddress?.city}, {order.deliveryAddress?.state} - {order.deliveryAddress?.postalCode}
                             </p>
                         </div>
                     </div>
                 </div>
+
+                {/* AI Logistics Intelligence integration */}
+                {order.items && order.items.length > 0 && (
+                    <div className="mb-8 animate-fade-in">
+                        <ShipmentIntelligencePanel
+                            vendorId={order.seller._id || order.seller}
+                            listingId={order.items[0].listing?._id || order.items[0].listing || 'mock_listing_id'}
+                            cropName={order.items[0].productName}
+                            sourceLat={order.seller.location?.lat || 20.0} // Mock defaults if geo missing
+                            sourceLon={order.seller.location?.lng || 73.0}
+                            destLat={order.deliveryAddress?.location?.lat || 18.5}
+                            destLon={order.deliveryAddress?.location?.lng || 73.8}
+                        />
+                    </div>
+                )}
 
                 {/* Order Items */}
                 <div className="space-y-3 mb-6">

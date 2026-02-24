@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Compass,
     BookOpen,
@@ -32,6 +32,14 @@ const CropIntelligence = () => {
     const [loading, setLoading] = useState(false);
     const [chatHistory, setChatHistory] = useState([]);
     const chatEndRef = useRef(null);
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state) {
+            if (location.state.section) setActiveSection(location.state.section);
+            if (location.state.initialQuery) setQuery(location.state.initialQuery);
+        }
+    }, [location.state]);
 
     // Premium Color Palette & Section Config
     const sections = [

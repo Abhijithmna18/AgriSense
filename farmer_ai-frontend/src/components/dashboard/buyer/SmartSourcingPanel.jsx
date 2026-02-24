@@ -1,7 +1,10 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Minus, Star, MapPin, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { TrendingUp, TrendingDown, Minus, Star, MapPin, ArrowRight, Sparkles } from 'lucide-react';
 
 const SmartSourcingPanel = () => {
+    const navigate = useNavigate();
+
     const opportunities = [
         { crop: 'Organic Wheat', price: '₹320/ton', trend: 'down', trendVal: '-5%', farmers: 12, topRated: 'Farm Alpha' },
         { crop: 'Basmati Rice', price: '₹850/ton', trend: 'stable', trendVal: '0%', farmers: 8, topRated: 'Green Acres' },
@@ -24,7 +27,9 @@ const SmartSourcingPanel = () => {
                     </h3>
                     <p className="text-sm text-gray-500">High-demand opportunities in your region</p>
                 </div>
-                <button className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                <button
+                    onClick={() => navigate('/procure')}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
                     View All <ArrowRight size={16} />
                 </button>
             </div>
@@ -60,8 +65,11 @@ const SmartSourcingPanel = () => {
                 ))}
             </div>
 
-            <button className="w-full mt-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">
-                Find Suppliers
+            <button
+                onClick={() => navigate('/procure')}
+                className="w-full mt-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2">
+                <Sparkles size={18} />
+                Smart Procure Suppliers
             </button>
         </div>
     );

@@ -1,0 +1,62 @@
+{
+    "Tomato_Bacterial_spot": {
+        "recommended_pesticides": [
+            "Copper sprays",
+            "Mancozeb"
+        ],
+        "organic_treatment": [
+            "Neem oil",
+            "Bacillus subtilis-based sprays"
+        ],
+        "dosage": "2-3ml per liter of water",
+        "application_frequency": "Every 7-10 days",
+        "precautions": "Avoid overhead watering; remove and destroy infected plant parts."
+    },
+    "Tomato_Early_blight": {
+        "recommended_pesticides": [
+            "Chlorothalonil",
+            "Mancozeb",
+            "Copper fungicide"
+        ],
+        "organic_treatment": [
+            "Neem oil spray",
+            "Baking soda spray"
+        ],
+        "dosage": "2g per liter water",
+        "application_frequency": "Every 7 days",
+        "precautions": "Avoid spraying during high sun; ensure good air circulation."
+    },
+    "Tomato_Late_blight": {
+        "recommended_pesticides": [
+            "Chlorothalonil",
+            "Mancozeb",
+            "Mefenoxam"
+        ],
+        "organic_treatment": [
+            "Copper-based organically approved sprays"
+        ],
+        "dosage": "2g/ml per liter water",
+        "application_frequency": "Apply preventatively every 7 days",
+        "precautions": "Extremely contagious. Destroy infected plants immediately; do not compost."
+    },
+    "Potato_Late_blight": {
+        "recommended_pesticides": [
+            "Chlorothalonil",
+            "Mancozeb",
+            "Fluazinam"
+        ],
+        "organic_treatment": [
+            "Copper hydroxide"
+        ],
+        "dosage": "2-3g per liter water",
+        "application_frequency": "Apply preventatively under favorable disease conditions",
+        "precautions": "Ensure tubers are well covered with soil; harvest in dry weather."
+    },
+    "Healthy": {
+        "recommended_pesticides": [],
+        "organic_treatment": [],
+        "dosage": "N/A",
+        "application_frequency": "N/A",
+        "precautions": "Maintain regular watering, nutrient schedule, and good field hygiene to stay healthy."
+    }
+}

@@ -106,7 +106,7 @@ export const negotiationAPI = {
             const formData = new FormData();
             formData.append('message', messageData.message);
             formData.append('timestamp', messageData.timestamp);
-            
+
             // Add attachments if any
             if (messageData.attachments && messageData.attachments.length > 0) {
                 messageData.attachments.forEach((attachment, index) => {
@@ -137,7 +137,7 @@ export const negotiationAPI = {
                 page: page.toString(),
                 limit: limit.toString()
             });
-            
+
             if (status) {
                 params.append('status', status);
             }
@@ -157,7 +157,7 @@ export const negotiationAPI = {
                 page: page.toString(),
                 limit: limit.toString()
             });
-            
+
             if (status) {
                 params.append('status', status);
             }
@@ -176,7 +176,7 @@ export const negotiationAPI = {
             const response = await api.get(`/api/negotiations/${negotiationId}/agreement`, {
                 responseType: 'blob'
             });
-            
+
             // Create download link
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
@@ -186,7 +186,7 @@ export const negotiationAPI = {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
-            
+
             return true;
         } catch (error) {
             console.error('Error downloading agreement:', error);
@@ -265,6 +265,38 @@ export const negotiationAPI = {
             return response.data;
         } catch (error) {
             console.error('Error fetching similar negotiations:', error);
+            throw error;
+        }
+    },
+
+    // AI Negotiation Assistant: Suggest replies based on context
+    async suggestReply(negotiationId) {
+        try {
+            const response = await api.post(`/api/negotiations/${negotiationId}/suggest-reply`);
+            return response.data;
+        } catch (error) {
+            console.error('Error getting AI reply suggestion:', error);
+            throw error;
+        }
+    },
+
+    // Auto RFQ via LLM
+    async previewAutoRfq(intent) {
+        try {
+            const response = await api.post('/api/negotiations/auto-rfq/preview', { intent });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting AI procurement preview:', error);
+            throw error;
+        }
+    },
+
+    async confirmAutoRfq(previewData) {
+        try {
+            const response = await api.post('/api/negotiations/auto-rfq/confirm', { previewData });
+            return response.data;
+        } catch (error) {
+            console.error('Error confirming auto RFQs:', error);
             throw error;
         }
     }

@@ -32,6 +32,11 @@ import ActiveNegotiations from '../components/dashboard/buyer/ActiveNegotiations
 import OrdersFulfillment from '../components/dashboard/buyer/OrdersFulfillment';
 import SavedSuppliersWidget from '../components/dashboard/buyer/SavedSuppliersWidget';
 import MarketInsightsWidget from '../components/dashboard/buyer/MarketInsightsWidget';
+import LogisticsAnalyticsWidget from '../components/dashboard/buyer/LogisticsAnalyticsWidget';
+
+// Dashboard Cards
+import MarketInsightCard from '../components/dashboard/cards/MarketInsightCard';
+import DiseaseRadarCard from '../components/dashboard/cards/DiseaseRadarCard';
 
 const Dashboard = ({ expectedRole }) => {
     const navigate = useNavigate();
@@ -39,6 +44,41 @@ const Dashboard = ({ expectedRole }) => {
     const [loading, setLoading] = useState(false); // Local loading state
     const [activeContext, setActiveContext] = useState('overview');
     const [expandedCards, setExpandedCards] = useState({});
+    const [priorityActions, setPriorityActions] = useState([]);
+    const [performanceInsights, setPerformanceInsights] = useState(null);
+
+    useEffect(() => {
+        if (activeRole === 'farmer') {
+            fetchPriorityActions();
+            fetchInsights();
+        }
+    }, [activeRole]);
+
+    const fetchPriorityActions = async () => {
+        try {
+            const { data } = await authAPI.getPriorityActions();
+            if (data.success) {
+                setPriorityActions(data.data);
+                // Auto-expand if there are critical items
+                if (data.data.some(a => a.type === 'critical')) {
+                    setExpandedCards(prev => ({ ...prev, priority: true }));
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch priority actions', error);
+        }
+    };
+
+    const fetchInsights = async () => {
+        try {
+            const { data } = await authAPI.getPerformanceInsights();
+            if (data.success) {
+                setPerformanceInsights(data.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch insights', error);
+        }
+    };
 
     const contexts = [
         { id: 'overview', label: 'Overview', icon: TrendingUp },
@@ -188,6 +228,7 @@ const Dashboard = ({ expectedRole }) => {
                                         {/* Farmer-Specific Overview */}
                                         {activeRole === 'farmer' && (
                                             <>
+
                                                 {/* Priority Card - Collapsible */}
                                                 <div className="admin-card">
                                                     <button
@@ -200,7 +241,9 @@ const Dashboard = ({ expectedRole }) => {
                                                             </div>
                                                             <div className="text-left">
                                                                 <h3 className="font-bold text-[var(--admin-text-primary)]">Priority Actions</h3>
-                                                                <p className="text-sm text-[var(--admin-text-secondary)]">2 items require attention</p>
+                                                                <p className="text-sm text-[var(--admin-text-secondary)]">
+                                                                    {priorityActions.length} items require attention
+                                                                </p>
                                                             </div>
                                                         </div>
                                                         {expandedCards.priority ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
@@ -216,24 +259,32 @@ const Dashboard = ({ expectedRole }) => {
                                                                 className="border-t border-[var(--admin-border)] mt-4 pt-4"
                                                             >
                                                                 <div className="space-y-3">
-                                                                    <div className="flex items-center justify-between p-4 bg-[var(--admin-bg-hover)] rounded-xl">
-                                                                        <div>
-                                                                            <p className="font-medium text-[var(--admin-text-primary)]">Soil Test Pending</p>
-                                                                            <p className="text-sm text-[var(--admin-text-secondary)]">North Field - Due in 3 days</p>
-                                                                        </div>
-                                                                        <button className="px-4 py-2 bg-[var(--admin-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--admin-accent-hover)] transition-colors">
-                                                                            Schedule
-                                                                        </button>
-                                                                    </div>
-                                                                    <div className="flex items-center justify-between p-4 bg-[var(--admin-bg-hover)] rounded-xl">
-                                                                        <div>
-                                                                            <p className="font-medium text-[var(--admin-text-primary)]">Irrigation Review</p>
-                                                                            <p className="text-sm text-[var(--admin-text-secondary)]">System efficiency check needed</p>
-                                                                        </div>
-                                                                        <button className="px-4 py-2 bg-[var(--admin-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--admin-accent-hover)] transition-colors">
-                                                                            Review
-                                                                        </button>
-                                                                    </div>
+                                                                    {priorityActions.length > 0 ? (
+                                                                        priorityActions.map((action, idx) => (
+                                                                            <div key={idx} className="flex items-center justify-between p-4 bg-[var(--admin-bg-hover)] rounded-xl">
+                                                                                <div>
+                                                                                    <p className={`font-medium ${action.type === 'critical' ? 'text-red-700' :
+                                                                                        action.type === 'opportunity' ? 'text-green-700' :
+                                                                                            'text-[var(--admin-text-primary)]'
+                                                                                        }`}>
+                                                                                        {action.title}
+                                                                                    </p>
+                                                                                    <p className="text-sm text-[var(--admin-text-secondary)]">{action.description}</p>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => navigate(action.actionPath)}
+                                                                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${action.type === 'critical' ? 'bg-red-600 hover:bg-red-700 text-white' :
+                                                                                        action.type === 'opportunity' ? 'bg-green-600 hover:bg-green-700 text-white' :
+                                                                                            'bg-[var(--admin-accent)] hover:bg-[var(--admin-accent-hover)] text-white'
+                                                                                        }`}
+                                                                                >
+                                                                                    {action.actionLabel}
+                                                                                </button>
+                                                                            </div>
+                                                                        ))
+                                                                    ) : (
+                                                                        <p className="text-center text-gray-500 py-2">No urgent actions. You're all caught up!</p>
+                                                                    )}
                                                                 </div>
                                                             </motion.div>
                                                         )}
@@ -252,14 +303,16 @@ const Dashboard = ({ expectedRole }) => {
                                                             </div>
                                                             <div className="text-left">
                                                                 <h3 className="font-bold text-[var(--admin-text-primary)]">Performance Insights</h3>
-                                                                <p className="text-sm text-[var(--admin-text-secondary)]">Click to view detailed analysis</p>
+                                                                <p className="text-sm text-[var(--admin-text-secondary)]">
+                                                                    {performanceInsights ? 'Analysis available' : 'Loading insights...'}
+                                                                </p>
                                                             </div>
                                                         </div>
                                                         {expandedCards.insights ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                                                     </button>
 
                                                     <AnimatePresence>
-                                                        {expandedCards.insights && (
+                                                        {expandedCards.insights && performanceInsights && (
                                                             <motion.div
                                                                 initial={{ height: 0, opacity: 0 }}
                                                                 animate={{ height: 'auto', opacity: 1 }}
@@ -269,12 +322,20 @@ const Dashboard = ({ expectedRole }) => {
                                                             >
                                                                 <div className="space-y-4">
                                                                     <div className="p-4 bg-[var(--admin-bg-hover)] rounded-xl border border-[var(--admin-border)]">
-                                                                        <p className="text-sm font-medium text-[var(--admin-text-primary)] mb-2">Yield Trend</p>
-                                                                        <p className="text-xs text-[var(--admin-text-secondary)]">Your average yield has increased by 12% compared to last season</p>
+                                                                        <div className="flex justify-between items-start mb-2">
+                                                                            <p className="text-sm font-medium text-[var(--admin-text-primary)]">Yield Trend</p>
+                                                                            <span className={`text-xs font-bold px-2 py-1 rounded ${performanceInsights.yieldTrend.direction === 'up' ? 'bg-green-100 text-green-700' :
+                                                                                performanceInsights.yieldTrend.direction === 'down' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
+                                                                                }`}>
+                                                                                {performanceInsights.yieldTrend.direction === 'up' ? '↗' : performanceInsights.yieldTrend.direction === 'down' ? '↘' : '→'}
+                                                                                {performanceInsights.yieldTrend.percentage}%
+                                                                            </span>
+                                                                        </div>
+                                                                        <p className="text-xs text-[var(--admin-text-secondary)]">{performanceInsights.yieldTrend.message}</p>
                                                                     </div>
                                                                     <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                                                                         <p className="text-sm font-medium text-blue-900 mb-2">Resource Efficiency</p>
-                                                                        <p className="text-xs text-blue-700">Water usage optimized - 15% reduction while maintaining output</p>
+                                                                        <p className="text-xs text-blue-700">{performanceInsights.resourceEfficiency.message}</p>
                                                                     </div>
                                                                 </div>
                                                             </motion.div>
@@ -282,6 +343,18 @@ const Dashboard = ({ expectedRole }) => {
                                                     </AnimatePresence>
                                                 </div>
                                             </>
+                                        )}
+
+                                        {/* New Insight Cards Grid */}
+                                        {activeRole === 'farmer' && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
+                                                <div className="h-full">
+                                                    <MarketInsightCard />
+                                                </div>
+                                                <div className="h-full">
+                                                    <DiseaseRadarCard />
+                                                </div>
+                                            </div>
                                         )}
 
                                         {/* Plant Doctor Card - Farmer Only */}
@@ -321,6 +394,9 @@ const Dashboard = ({ expectedRole }) => {
                                             <div className="space-y-6 animate-fade-in">
                                                 {/* Section A: KPI Overview */}
                                                 <BuyerOverview />
+
+                                                {/* Section: AI Logistics Intelligence */}
+                                                <LogisticsAnalyticsWidget />
 
                                                 {/* Section B: Smart Sourcing & Market Insights */}
                                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -403,8 +479,8 @@ const Dashboard = ({ expectedRole }) => {
                         </AnimatePresence>
                     </div>
                 </main>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

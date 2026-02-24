@@ -77,8 +77,52 @@ const generateText = async (systemPrompt, userPrompt, model = 'llama-3.3-70b-ver
     }
 };
 
+/**
+ * Analyze an image and return JSON response from LLM
+ * @param {string} systemPrompt - The system instructions
+ * @param {string} base64Image - Base64 encoded image string (must include data URI scheme)
+ * @param {string} model - The vision model to use
+ * @returns {Promise<Object>} Parsed JSON response
+ */
+const analyzeImageJSON = async (systemPrompt, base64Image, model = 'llama-3.2-11b-vision-preview') => {
+    try {
+        const completion = await openai.chat.completions.create({
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        { type: "text", text: systemPrompt + "\n\nIMPORTANT: Output strictly in JSON format." },
+                        { type: "image_url", image_url: { url: base64Image } }
+                    ]
+                }
+            ],
+            model: model,
+            response_format: { type: "json_object" },
+            temperature: 0.1, // Low temperature for deterministic output
+        });
+
+        const content = completion.choices[0]?.message?.content;
+        if (!content) {
+            throw new Error('LLM Vision returned empty response');
+        }
+
+        try {
+            return JSON.parse(content);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            console.error('Raw Content:', content);
+            throw new Error('Failed to parse LLM Vision response as JSON');
+        }
+
+    } catch (error) {
+        console.error('LLM Vision Generation Error:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     openai,
     generateJSON,
-    generateText
+    generateText,
+    analyzeImageJSON
 };

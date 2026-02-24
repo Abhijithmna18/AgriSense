@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Sprout, ArrowRight, Leaf, Droplets, Calendar, Loader2, RefreshCw
 } from 'lucide-react';
@@ -6,6 +7,7 @@ import toast from 'react-hot-toast';
 import api from '../services/authApi';
 
 const CropRotationPage = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         currentCrop: 'Wheat',
         soilType: 'Loamy',
@@ -129,7 +131,7 @@ const CropRotationPage = () => {
                                                     </div>
                                                     <h3 className="text-2xl font-bold text-gray-900">{rec.crop_name}</h3>
                                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${rec.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
-                                                            rec.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                                                        rec.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                                                         }`}>
                                                         {rec.difficulty}
                                                     </span>
@@ -156,7 +158,15 @@ const CropRotationPage = () => {
                                                         {rec.duration} Days
                                                     </span>
                                                 </div>
-                                                <button className="mt-auto px-4 py-2 border-2 border-green-600 text-green-600 rounded-lg font-bold hover:bg-green-50 transition text-sm">
+                                                <button
+                                                    onClick={() => navigate('/crop-knowledge', {
+                                                        state: {
+                                                            section: 'cultivation',
+                                                            initialQuery: `Complete cultivation guide for ${rec.crop_name}`
+                                                        }
+                                                    })}
+                                                    className="mt-auto px-4 py-2 border-2 border-green-600 text-green-600 rounded-lg font-bold hover:bg-green-50 transition text-sm"
+                                                >
                                                     View Guide
                                                 </button>
                                             </div>

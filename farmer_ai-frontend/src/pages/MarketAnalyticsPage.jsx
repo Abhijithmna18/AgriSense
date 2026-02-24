@@ -297,9 +297,10 @@ const MarketAnalyticsPage = () => {
                                 <button onClick={() => navigate('/saved-suppliers')} className="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl font-medium transition-all">
                                     View Suppliers
                                 </button>
-                                <button onClick={() => navigate('/marketplace')} className="px-6 py-3 bg-[var(--admin-accent)] hover:bg-[var(--admin-accent-hover)] text-white rounded-xl font-bold shadow-lg transition-all flex items-center gap-2">
-                                    Buy Now <ArrowRight size={18} />
+                                <button onClick={() => navigate('/procure')} className="px-6 py-3 bg-[var(--admin-accent)] hover:bg-[var(--admin-accent-hover)] text-white rounded-xl font-bold shadow-lg transition-all flex items-center gap-2">
+                                    Start Procurement <ArrowRight size={18} />
                                 </button>
+
                             </div>
                         </div>
 

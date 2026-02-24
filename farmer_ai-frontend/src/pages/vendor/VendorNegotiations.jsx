@@ -14,6 +14,11 @@ const VendorNegotiations = () => {
     const [sendingMessage, setSendingMessage] = useState(false);
     const messagesEndRef = useRef(null);
 
+    // AI Assistant State
+    const [aiAnalysis, setAiAnalysis] = useState(null);
+    const [aiReplies, setAiReplies] = useState([]);
+    const [loadingAi, setLoadingAi] = useState(false);
+
     useEffect(() => {
         fetchVendorNegotiations();
     }, [filterStatus]);
@@ -39,7 +44,32 @@ const VendorNegotiations = () => {
 
     useEffect(() => {
         scrollToBottom();
-    }, [selectedNegotiation?.offers]);
+    }, [selectedNegotiation?.offers, aiAnalysis]);
+
+    // Clear AI suggestions when changing negotiations
+    useEffect(() => {
+        setAiAnalysis(null);
+        setAiReplies([]);
+        setMessageText('');
+    }, [selectedNegotiation?._id]);
+
+    const handleSuggestReply = async () => {
+        if (!selectedNegotiation) return;
+        setLoadingAi(true);
+        setAiAnalysis(null);
+        setAiReplies([]);
+        try {
+            const result = await negotiationAPI.suggestReply(selectedNegotiation._id);
+            setAiAnalysis(result.profitAnalysis);
+            setAiReplies(result.suggestedReplies || []);
+            scrollToBottom();
+        } catch (error) {
+            console.error('Error generating AI reply:', error);
+            alert('Failed to generate AI suggestion. ' + (error.response?.data?.message || ''));
+        } finally {
+            setLoadingAi(false);
+        }
+    };
 
     const handleSendMessage = async () => {
         if (!messageText.trim() || !selectedNegotiation) return;
@@ -128,7 +158,7 @@ const VendorNegotiations = () => {
                 {/* Header */}
                 <div className="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
                     <h1 className="text-xl font-bold text-gray-900 mb-4">Negotiations</h1>
-                    
+
                     {/* Search */}
                     <div className="relative mb-3">
                         <Search size={18} className="absolute left-3 top-3 text-gray-400" />
@@ -147,11 +177,10 @@ const VendorNegotiations = () => {
                             <button
                                 key={status}
                                 onClick={() => setFilterStatus(status)}
-                                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition ${
-                                    filterStatus === status
+                                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition ${filterStatus === status
                                         ? 'bg-blue-600 text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
+                                    }`}
                             >
                                 {status.charAt(0).toUpperCase() + status.slice(1)}
                             </button>
@@ -173,9 +202,8 @@ const VendorNegotiations = () => {
                             <button
                                 key={negotiation._id}
                                 onClick={() => setSelectedNegotiation(negotiation)}
-                                className={`w-full p-4 border-b border-gray-100 hover:bg-gray-50 transition text-left ${
-                                    selectedNegotiation?._id === negotiation._id ? 'bg-blue-50' : ''
-                                }`}
+                                className={`w-full p-4 border-b border-gray-100 hover:bg-gray-50 transition text-left ${selectedNegotiation?._id === negotiation._id ? 'bg-blue-50' : ''
+                                    }`}
                             >
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="flex-1">
@@ -229,20 +257,18 @@ const VendorNegotiations = () => {
                             selectedNegotiation.offers.map((offer, index) => (
                                 <div key={offer._id} className="space-y-3">
                                     {/* Offer Card */}
-                                    <div className={`p-4 rounded-lg border ${
-                                        offer.submittedBy === selectedNegotiation.vendorId
+                                    <div className={`p-4 rounded-lg border ${offer.submittedBy === selectedNegotiation.vendorId
                                             ? 'bg-blue-50 border-blue-200 ml-auto max-w-md'
                                             : 'bg-gray-50 border-gray-200 mr-auto max-w-md'
-                                    }`}>
+                                        }`}>
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-xs font-medium text-gray-600">
                                                 {offer.submittedBy === selectedNegotiation.vendorId ? 'Your Offer' : 'Buyer Offer'}
                                             </span>
-                                            <span className={`text-xs font-medium px-2 py-1 rounded flex items-center gap-1 ${
-                                                offer.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                                                offer.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                                'bg-yellow-100 text-yellow-700'
-                                            }`}>
+                                            <span className={`text-xs font-medium px-2 py-1 rounded flex items-center gap-1 ${offer.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                                                    offer.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                        'bg-yellow-100 text-yellow-700'
+                                                }`}>
                                                 {offer.status === 'accepted' && <CheckCircle2 size={12} />}
                                                 {offer.status === 'rejected' && <XCircle size={12} />}
                                                 {offer.status}
@@ -309,11 +335,10 @@ const VendorNegotiations = () => {
                                     {offer.messages && offer.messages.map(msg => (
                                         <div
                                             key={msg._id}
-                                            className={`p-3 rounded-lg max-w-md ${
-                                                msg.senderRole === 'vendor'
+                                            className={`p-3 rounded-lg max-w-md ${msg.senderRole === 'vendor'
                                                     ? 'bg-blue-100 text-gray-900 ml-auto'
                                                     : 'bg-gray-100 text-gray-900 mr-auto'
-                                            }`}
+                                                }`}
                                         >
                                             <p className="text-sm">{msg.message}</p>
                                             <p className="text-xs text-gray-600 mt-1">
@@ -332,10 +357,45 @@ const VendorNegotiations = () => {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Message Input */}
+                    {/* Message Input with AI Suggestions */}
                     {selectedNegotiation.status === 'active' && (
                         <div className="p-4 border-t border-gray-200 bg-white">
-                            <div className="flex gap-3">
+
+                            {/* AI Suggestions Box */}
+                            {(loadingAi || aiAnalysis || aiReplies.length > 0) && (
+                                <div className="mb-4 bg-indigo-50 border border-indigo-100 rounded-lg p-3">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-indigo-600 font-bold">✨ AI Assistant</span>
+                                        {loadingAi && <span className="text-sm text-indigo-400 animate-pulse">Analyzing...</span>}
+                                    </div>
+                                    {!loadingAi && aiAnalysis && (
+                                        <p className="text-sm text-indigo-800 mb-3">{aiAnalysis}</p>
+                                    )}
+                                    {!loadingAi && aiReplies.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {aiReplies.map((reply, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setMessageText(reply)}
+                                                    className="text-xs bg-white text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-full hover:bg-indigo-600 hover:text-white transition"
+                                                >
+                                                    {reply}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 items-center">
+                                <button
+                                    onClick={handleSuggestReply}
+                                    disabled={loadingAi}
+                                    title="Auto-generate reply"
+                                    className="p-2 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition"
+                                >
+                                    ✨
+                                </button>
                                 <input
                                     type="text"
                                     value={messageText}

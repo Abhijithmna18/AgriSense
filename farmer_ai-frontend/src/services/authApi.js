@@ -54,6 +54,12 @@ export const authAPI = {
     disable2FA: (data) => api.post('/api/auth/2fa/disable', data),
     logoutAll: () => api.post('/api/auth/logout-all'),
     getDashboard: () => api.get('/api/dashboard'),
+    getPriorityActions: () => api.get('/api/dashboard/priority-actions'),
+    getPerformanceInsights: () => api.get('/api/dashboard/insights'),
+    getDiseaseRadar: (params) => api.get('/api/dashboard/radar', { params }),
+    addSoilTest: (data) => api.post('/api/soil-tests', data),
+    getSoilTests: (farmId) => api.get(`/api/soil-tests/${farmId}`),
+    getLatestSoilTest: (farmId) => api.get(`/api/soil-tests/${farmId}/latest`),
     switchRole: (data) => api.post('/api/auth/switch-role', data),
     addRole: (data) => api.post('/api/auth/add-role', data)
 };

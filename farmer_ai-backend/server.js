@@ -72,7 +72,10 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
+const dashboardRoutes = require('./src/routes/dashboardRoutes'); // Import dashboard routes
+
 app.use('/api/auth', require('./src/routes/authRoutes'));
+app.use('/api/dashboard', dashboardRoutes); // New Dashboard Routes
 app.use('/api/users', require('./src/routes/userRoutes'));
 app.use('/api/admin', require('./src/routes/adminRoutes'));
 app.use('/api/crops', require('./src/routes/cropRoutes'));
@@ -95,7 +98,13 @@ app.use('/api/negotiations', require('./src/routes/negotiations'));
 app.use('/api/reviews', require('./src/routes/reviewRoutes'));
 app.use('/api/pest-prediction', require('./src/routes/pestPredictionRoutes'));
 app.use('/api/decision-support', require('./src/routes/decisionSupportRoutes'));
+app.use('/api/logistics', require('./src/routes/logisticsRoutes'));
 app.use('/api/market-prices', require('./src/routes/marketPriceRoutes'));
+app.use('/api/weather', require('./routes/weatherRoutes'));
+app.use('/api/soil-tests', require('./src/routes/soilTestRoutes'));
+app.use('/api/ml', require('./src/routes/diseaseRoutes'));
+app.use('/api/rl', require('./src/routes/rlRoutes'));
+
 
 
 // Make uploads folder static

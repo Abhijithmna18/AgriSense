@@ -73,7 +73,7 @@ const BuyerOrdersPage = () => {
 
     const handleSubmitReview = async ({ rating, comment }) => {
         try {
-            await api.post('/api/marketplace/reviews', {
+            await api.post('/api/reviews', {
                 productId: selectedProduct._id,
                 rating,
                 comment

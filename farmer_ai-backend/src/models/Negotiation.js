@@ -21,7 +21,7 @@ const negotiationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['buyer_initiated', 'vendor_initiated', 'rfq_response'],
+        enum: ['buyer_initiated', 'vendor_initiated', 'rfq_response', 'auto_rfq'],
         default: 'buyer_initiated',
         required: true
     },
@@ -119,22 +119,22 @@ negotiationSchema.index({ expiresAt: 1, status: 1 });
 negotiationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 // Virtual for time remaining
-negotiationSchema.virtual('timeRemaining').get(function() {
+negotiationSchema.virtual('timeRemaining').get(function () {
     const now = new Date();
     const expiry = new Date(this.expiresAt);
     const diff = expiry - now;
-    
+
     if (diff <= 0) return 'Expired';
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (days > 0) return `${days}d ${hours}h`;
     return `${hours}h`;
 });
 
 // Pre-save middleware to handle expiration
-negotiationSchema.pre('save', function() {
+negotiationSchema.pre('save', function () {
     if (this.expiresAt && new Date() > this.expiresAt && this.status === 'pending') {
         this.status = 'expired';
     }

@@ -11,6 +11,8 @@ const User = require('../models/User');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const llmService = require('../utils/llmService');
+const aiProcurementController = require('../controllers/aiProcurementController');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -53,6 +55,16 @@ const BUSINESS_RULES = {
     OFFER_EXPIRY_DAYS: 7,
     AUTO_EXPIRE_HOURS: 24 * 7 // 7 days
 };
+
+// @route   POST /api/negotiations/auto-rfq/preview
+// @desc    Preview Auto-generated Bulk RFQs via AI
+// @access  Private (Buyer)
+router.post('/auto-rfq/preview', auth, aiProcurementController.previewAutoRFQ);
+
+// @route   POST /api/negotiations/auto-rfq/confirm
+// @desc    Confirm and dispatch Auto-generated Bulk RFQs
+// @access  Private (Buyer)
+router.post('/auto-rfq/confirm', auth, aiProcurementController.confirmAutoRFQ);
 
 // @route   POST /api/negotiations
 // @desc    Create new negotiation
@@ -696,6 +708,84 @@ router.get('/stats', auth, async (req, res) => {
     } catch (error) {
         console.error('Error fetching negotiation stats:', error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   POST /api/negotiations/:id/suggest-reply
+// @desc    Generate AI suggested replies and profit analysis for a vendor
+// @access  Private (Vendor)
+router.post('/:id/suggest-reply', [
+    auth,
+    param('id').isMongoId().withMessage('Invalid negotiation ID')
+], async (req, res) => {
+    try {
+        const negotiationId = req.params.id;
+        const vendorId = req.user.id;
+
+        const negotiation = await Negotiation.findById(negotiationId)
+            .populate('productId', 'name pricePerUnit');
+
+        if (!negotiation) {
+            return res.status(404).json({ message: 'Negotiation not found' });
+        }
+
+        if (negotiation.vendorId.toString() !== vendorId && !req.user.roles?.includes('admin')) {
+            return res.status(403).json({ message: 'Only the vendor can request AI suggestions' });
+        }
+
+        // Gather context
+        const offers = await Offer.find({ negotiationId }).sort({ timestamp: 1 }).lean();
+        const messages = await Message.find({ negotiationId }).sort({ timestamp: 1 }).populate('senderId', 'roles').lean();
+
+        const baselinePrice = negotiation.baseline.price;
+        const productName = negotiation.productId?.name || 'Product';
+
+        let conversationHistory = offers.map(o => {
+            const role = o.submittedBy.toString() === vendorId ? 'Vendor' : 'Buyer';
+            return `${role} offered ₹${o.price} for ${o.quantity} units.`;
+        });
+
+        messages.forEach(m => {
+            const role = m.senderId?.roles?.includes('vendor') ? 'Vendor' : 'Buyer';
+            conversationHistory.push(`${role} message: "${m.message}"`);
+        });
+
+        const latestOffer = offers.length > 0 ? offers[offers.length - 1] : null;
+        let currentStatus = 'No offers yet.';
+        if (latestOffer) {
+            const margin = ((latestOffer.price - baselinePrice) / baselinePrice * 100).toFixed(1);
+            currentStatus = `Latest offer is ₹${latestOffer.price}. Baseline price is ₹${baselinePrice}. Margin: ${margin}%.`;
+        }
+
+        const systemPrompt = `You are an expert AI negotiation assistant for an agricultural vendor. 
+Your job is to analyze the ongoing negotiation for ${productName} and suggest the best quick replies for the vendor to send to the buyer.
+Consider the vendor's baseline price vs the buyer's offers to calculate if it's a good deal.
+
+You must reply strictly in the following JSON format:
+{
+  "profitAnalysis": "A short, 1-2 sentence analysis summarizing the profit margin or risk based on the latest offer compared to the baseline price of ₹${baselinePrice}.",
+  "suggestedReplies": [
+    "Accept this offer of ₹X",
+    "Counter with ₹Y because [reason]",
+    "Short message negotiating terms"
+  ]
+}
+Maintain a professional and helpful tone. Provide exactly 2 to 3 suggestedReplies. Maximum 15 words per reply.`;
+
+        const userPrompt = `Context:
+Base Price: ₹${baselinePrice}
+${currentStatus}
+
+Conversation History (Oldest to Newest):
+${conversationHistory.join('\n')}`;
+
+        const aiResponse = await llmService.generateJSON(systemPrompt, userPrompt);
+
+        res.json(aiResponse);
+
+    } catch (error) {
+        console.error('Error generating AI reply suggestion:', error);
+        res.status(500).json({ message: 'Server error generating AI suggestion' });
     }
 });
 

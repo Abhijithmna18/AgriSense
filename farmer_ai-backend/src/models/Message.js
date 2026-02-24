@@ -105,15 +105,15 @@ messageSchema.index({ senderId: 1, timestamp: -1 });
 messageSchema.index({ isRead: 1, timestamp: -1 });
 
 // Pre-save middleware to calculate metadata
-messageSchema.pre('save', function(next) {
+messageSchema.pre('save', async function () {
     if (this.isNew) {
         // Calculate word count
-        this.metadata.wordCount = this.message.trim().split(/\s+/).length;
-        
+        this.metadata.wordCount = this.message ? this.message.trim().split(/\s+/).length : 0;
+
         // Set attachment metadata
         this.metadata.hasAttachments = this.attachments && this.attachments.length > 0;
         this.metadata.attachmentCount = this.attachments ? this.attachments.length : 0;
-        
+
         // Generate URLs for attachments
         if (this.attachments && this.attachments.length > 0) {
             this.attachments.forEach(attachment => {
@@ -124,16 +124,15 @@ messageSchema.pre('save', function(next) {
             });
         }
     }
-    next();
 });
 
 // Virtual for formatted timestamp
-messageSchema.virtual('formattedTimestamp').get(function() {
+messageSchema.virtual('formattedTimestamp').get(function () {
     return this.timestamp.toLocaleString();
 });
 
 // Method to mark message as read
-messageSchema.methods.markAsRead = function(userId) {
+messageSchema.methods.markAsRead = function (userId) {
     this.isRead = true;
     this.readAt = new Date();
     this.readBy = userId;
@@ -141,7 +140,7 @@ messageSchema.methods.markAsRead = function(userId) {
 };
 
 // Static method to get unread count for a negotiation
-messageSchema.statics.getUnreadCount = function(negotiationId, userId) {
+messageSchema.statics.getUnreadCount = function (negotiationId, userId) {
     return this.countDocuments({
         negotiationId,
         senderId: { $ne: userId },
@@ -150,7 +149,7 @@ messageSchema.statics.getUnreadCount = function(negotiationId, userId) {
 };
 
 // Static method to mark all messages as read for a negotiation
-messageSchema.statics.markAllAsRead = function(negotiationId, userId) {
+messageSchema.statics.markAllAsRead = function (negotiationId, userId) {
     return this.updateMany(
         {
             negotiationId,
