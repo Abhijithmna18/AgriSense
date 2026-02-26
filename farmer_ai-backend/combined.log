@@ -587,3 +587,9 @@
 {"level":"warn","message":"404 - Can't find /api/placeholder/80/80 on this server! - /api/placeholder/80/80 - GET - ::1","service":"farmer-ai-backend"}
 {"level":"warn","message":"404 - Can't find /logistics/predict-risk on this server! - /logistics/predict-risk - POST - ::1","service":"farmer-ai-backend"}
 {"level":"warn","message":"404 - Can't find /logistics/predict-risk on this server! - /logistics/predict-risk - POST - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}

@@ -6,7 +6,7 @@ import {
 import toast from 'react-hot-toast';
 import api from '../services/authApi';
 
-const CropRotationPage = () => {
+const CropRotationPage = ({ isEmbedded }) => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         currentCrop: 'Wheat',
@@ -35,21 +35,23 @@ const CropRotationPage = () => {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in">
+        <div className={`p-6 max-w-7xl mx-auto space-y-8 animate-fade-in ${isEmbedded ? 'pt-0' : ''}`}>
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-700 to-green-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
-                <div className="relative z-10">
-                    <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-                        <RefreshCw className="animate-spin-slow" />
-                        Crop Rotation Planner
-                    </h1>
-                    <p className="text-green-100 max-w-2xl text-lg">
-                        Optimize your soil health and yield by scientifically selecting your next crop.
-                        AI analyzes nutrient depletion to suggest the perfect restorative cycle.
-                    </p>
+            {!isEmbedded && (
+                <div className="bg-gradient-to-r from-green-700 to-green-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
+                    <div className="relative z-10">
+                        <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+                            <RefreshCw className="animate-spin-slow" />
+                            Crop Rotation Planner
+                        </h1>
+                        <p className="text-green-100 max-w-2xl text-lg">
+                            Optimize your soil health and yield by scientifically selecting your next crop.
+                            AI analyzes nutrient depletion to suggest the perfect restorative cycle.
+                        </p>
+                    </div>
+                    <Leaf className="absolute right-0 bottom-0 text-green-800 opacity-20 w-64 h-64 -mr-10 -mb-10" />
                 </div>
-                <Leaf className="absolute right-0 bottom-0 text-green-800 opacity-20 w-64 h-64 -mr-10 -mb-10" />
-            </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Input Section */}
@@ -159,15 +161,27 @@ const CropRotationPage = () => {
                                                     </span>
                                                 </div>
                                                 <button
+                                                    onClick={() => navigate('/crop-calendar', {
+                                                        state: {
+                                                            cropName: rec.crop_name,
+                                                            soilType: formData.soilType,
+                                                            season: formData.season
+                                                        }
+                                                    })}
+                                                    className="px-4 py-2 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-lg font-bold hover:bg-blue-600 hover:text-white transition text-sm flex items-center justify-center gap-2"
+                                                >
+                                                    <Calendar size={16} /> Smart Calendar
+                                                </button>
+                                                <button
                                                     onClick={() => navigate('/crop-knowledge', {
                                                         state: {
                                                             section: 'cultivation',
                                                             initialQuery: `Complete cultivation guide for ${rec.crop_name}`
                                                         }
                                                     })}
-                                                    className="mt-auto px-4 py-2 border-2 border-green-600 text-green-600 rounded-lg font-bold hover:bg-green-50 transition text-sm"
+                                                    className="mt-auto px-4 py-2 border-2 border-green-600 text-green-600 rounded-lg font-bold hover:bg-green-50 transition text-sm flex items-center justify-center gap-2"
                                                 >
-                                                    View Guide
+                                                    <Sprout size={16} /> View Guide
                                                 </button>
                                             </div>
                                         </div>

@@ -98,12 +98,15 @@ app.use('/api/negotiations', require('./src/routes/negotiations'));
 app.use('/api/reviews', require('./src/routes/reviewRoutes'));
 app.use('/api/pest-prediction', require('./src/routes/pestPredictionRoutes'));
 app.use('/api/decision-support', require('./src/routes/decisionSupportRoutes'));
+app.use('/api/operations', require('./src/routes/operationRoutes'));
 app.use('/api/logistics', require('./src/routes/logisticsRoutes'));
 app.use('/api/market-prices', require('./src/routes/marketPriceRoutes'));
-app.use('/api/weather', require('./routes/weatherRoutes'));
+app.use('/api/weather', require('./src/routes/weatherRoutes'));
+app.use('/api/advisory', require('./src/routes/advisoryRoutes'));
 app.use('/api/soil-tests', require('./src/routes/soilTestRoutes'));
 app.use('/api/ml', require('./src/routes/diseaseRoutes'));
 app.use('/api/rl', require('./src/routes/rlRoutes'));
+app.use('/api/yield', require('./src/routes/yieldPredictionRoutes'));
 
 
 

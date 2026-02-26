@@ -5,6 +5,7 @@ const FormData = require('form-data');
 const axios = require('axios');
 const fs = require('fs');
 const { protect } = require('../middleware/auth');
+const { checkMLHealth } = require('../controllers/diseaseController');
 
 // Configure Multer for temp image uploads
 const upload = multer({
@@ -36,7 +37,8 @@ router.post('/predict-disease', protect, upload.single('file'), async (req, res)
 
         // Hardcoded to the local FastAPI port (8000) for now. 
         // In production, this should be an environment variable.
-        const fastApiUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000/predict-disease';
+        const mlBaseUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+        const fastApiUrl = `${mlBaseUrl}/predict-disease`;
 
         const response = await axios.post(fastApiUrl, formData, {
             headers: {
@@ -75,5 +77,10 @@ router.post('/predict-disease', protect, upload.single('file'), async (req, res)
         });
     }
 });
+
+// @route   GET /api/ml/health
+// @desc    Check if the Python ML service is running
+// @access  Public
+router.get('/health', checkMLHealth);
 
 module.exports = router;

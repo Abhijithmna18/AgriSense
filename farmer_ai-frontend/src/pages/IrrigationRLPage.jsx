@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
     Droplets, Brain, BarChart3, Award, ArrowLeft,
     Play, RefreshCw, TrendingUp, AlertTriangle, CheckCircle2,
-    Cpu, Zap, Database, FlaskConical
+    Cpu, Zap, Database, FlaskConical, Thermometer, Wind,
+    CloudRain, MapPin, Wifi, WifiOff
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -51,8 +52,8 @@ const AgentBadge = ({ name, active, onClick }) => (
     <button
         onClick={onClick}
         className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${active
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            ? 'bg-indigo-600 text-white shadow-md'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
     >
         {name}
@@ -82,6 +83,8 @@ const IrrigationRLPage = () => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(false);
     const [metricsLoading, setMetricsLoading] = useState(true);
+    const [liveWeather, setLiveWeather] = useState(null);   // live weather from RL response
+    const [farmCoords, setFarmCoords] = useState(null);     // { lat, lon, source }
 
     // Fetch farms for selector
     useEffect(() => {
@@ -119,7 +122,18 @@ const IrrigationRLPage = () => {
         try {
             const res = await rlApi.getRecommendation(selectedFarmId, agent);
             setRecommendation(res.data);
-            toast.success('Recommendation generated!');
+            // Extract live weather + geo from response
+            if (res.data?.weather) {
+                setLiveWeather(res.data.weather);
+                if (res.data.weather.coordinates) {
+                    setFarmCoords({
+                        lat: res.data.weather.coordinates.lat,
+                        lon: res.data.weather.coordinates.lon,
+                        source: res.data.weather.geo_source
+                    });
+                }
+            }
+            toast.success('Recommendation generated with live weather data!');
         } catch {
             toast.error('Could not get recommendation. Ensure RL service is running.');
         } finally {
@@ -176,6 +190,85 @@ const IrrigationRLPage = () => {
                         <StatCard icon={Cpu} label="PPO Avg Reward" value={metrics?.ppo?.final_avg_reward?.toFixed(2) ?? '—'} sub="Last 50 episodes" color="blue" />
                         <StatCard icon={Database} label="Decisions Logged" value={history.length} sub="This farm" color="orange" />
                     </div>
+
+                    {/* Live Weather + Map Panel (shown after first recommendation) */}
+                    {liveWeather && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            {/* Weather Data Card */}
+                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-bold text-lg flex items-center gap-2">
+                                        <CloudRain size={20} /> Live Weather
+                                    </h3>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${liveWeather.source === 'open-meteo'
+                                            ? 'bg-green-400 text-green-900'
+                                            : 'bg-yellow-300 text-yellow-900'
+                                        }`}>
+                                        {liveWeather.source === 'open-meteo' ? '🟢 Live' : '⚠️ Fallback'}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-white/10 rounded-xl p-3">
+                                        <p className="text-xs text-blue-200">Temperature</p>
+                                        <p className="text-2xl font-bold">{liveWeather.temp?.toFixed(1)}°C</p>
+                                    </div>
+                                    <div className="bg-white/10 rounded-xl p-3">
+                                        <p className="text-xs text-blue-200">Humidity</p>
+                                        <p className="text-2xl font-bold">{liveWeather.humidity}%</p>
+                                    </div>
+                                    <div className="bg-white/10 rounded-xl p-3">
+                                        <p className="text-xs text-blue-200">Rainfall</p>
+                                        <p className="text-2xl font-bold">{liveWeather.precipitation_mm?.toFixed(1) ?? 0} mm</p>
+                                    </div>
+                                    <div className="bg-white/10 rounded-xl p-3">
+                                        <p className="text-xs text-blue-200">ET₀ (Evapotrans.)</p>
+                                        <p className="text-2xl font-bold">{liveWeather.et0_mm_day?.toFixed(1)} mm/d</p>
+                                    </div>
+                                </div>
+                                <div className="mt-3 flex items-center gap-2 text-xs text-blue-200">
+                                    <MapPin size={12} />
+                                    <span>
+                                        {liveWeather.address || (liveWeather.coordinates
+                                            ? `${liveWeather.coordinates.lat?.toFixed(4)}°N, ${liveWeather.coordinates.lon?.toFixed(4)}°E`
+                                            : 'Location data unavailable')}
+                                    </span>
+                                    <span className="ml-auto opacity-60">via {liveWeather.geo_source === 'google_maps' ? 'Google Maps' : liveWeather.geo_source}</span>
+                                </div>
+                            </div>
+
+                            {/* Google Maps Static Embed */}
+                            {farmCoords && (
+                                <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 relative">
+                                    <div className="absolute top-3 left-3 z-10 bg-white rounded-full px-3 py-1 text-xs font-semibold text-gray-700 shadow flex items-center gap-1.5">
+                                        <MapPin size={11} className="text-red-500" /> Farm Location
+                                    </div>
+                                    <img
+                                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${farmCoords.lat},${farmCoords.lon}&zoom=13&size=600x280&maptype=satellite&markers=color:red%7Clabel:F%7C${farmCoords.lat},${farmCoords.lon}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}`}
+                                        alt="Farm satellite map"
+                                        className="w-full h-full object-cover"
+                                        style={{ minHeight: '200px' }}
+                                        onError={(e) => {
+                                            // Fallback to OpenStreetMap embed if no maps key
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                    />
+                                    <div className="hidden w-full h-full flex-col items-center justify-center p-6 text-center" style={{ minHeight: '200px' }}>
+                                        <MapPin size={32} className="text-indigo-400 mb-2" />
+                                        <p className="text-sm font-semibold text-gray-700">{farmCoords.lat?.toFixed(4)}°N, {farmCoords.lon?.toFixed(4)}°E</p>
+                                        <p className="text-xs text-gray-400 mt-1">Resolved via {farmCoords.source}</p>
+                                        <a
+                                            href={`https://www.google.com/maps?q=${farmCoords.lat},${farmCoords.lon}`}
+                                            target="_blank" rel="noreferrer"
+                                            className="mt-3 text-xs text-indigo-600 hover:underline font-medium"
+                                        >
+                                            Open in Google Maps →
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Recommendation Panel */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

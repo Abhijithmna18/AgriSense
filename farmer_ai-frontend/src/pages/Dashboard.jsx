@@ -16,7 +16,8 @@ import {
     ArrowRight,
     IndianRupee,
     Store,
-    Leaf
+    Leaf,
+    BarChart3
 } from 'lucide-react';
 
 // Components
@@ -81,8 +82,7 @@ const Dashboard = ({ expectedRole }) => {
     };
 
     const contexts = [
-        { id: 'overview', label: 'Overview', icon: TrendingUp },
-        { id: 'operations', label: 'Operations', icon: Sprout }
+        { id: 'overview', label: 'Overview', icon: TrendingUp }
     ];
 
     // Check for role mismatch
@@ -182,7 +182,7 @@ const Dashboard = ({ expectedRole }) => {
                                     return (
                                         <button
                                             key={context.id}
-                                            onClick={() => setActiveContext(context.id)}
+                                            onClick={() => context.path ? navigate(context.path) : setActiveContext(context.id)}
                                             className={`
                                                 flex items-center gap-2 px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all
                                                 ${isActive
@@ -196,6 +196,13 @@ const Dashboard = ({ expectedRole }) => {
                                         </button>
                                     );
                                 })}
+                                <button
+                                    onClick={() => navigate('/field-operations')}
+                                    className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all bg-[var(--admin-accent)] text-white shadow-lg hover:bg-[var(--admin-accent-hover)]"
+                                >
+                                    <Sprout size={18} />
+                                    Operations
+                                </button>
                                 <button
                                     onClick={() => navigate('/marketplace')}
                                     className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all bg-[var(--admin-accent)] text-white shadow-lg hover:bg-[var(--admin-accent-hover)]"
@@ -229,118 +236,120 @@ const Dashboard = ({ expectedRole }) => {
                                         {activeRole === 'farmer' && (
                                             <>
 
-                                                {/* Priority Card - Collapsible */}
-                                                <div className="admin-card">
-                                                    <button
-                                                        onClick={() => toggleCard('priority')}
-                                                        className="w-full flex items-center justify-between hover:bg-[var(--admin-bg-hover)] transition-colors rounded p-2 -m-2"
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-                                                                <AlertCircle className="text-[var(--admin-danger)]" size={20} />
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                                    {/* Priority Card - Collapsible */}
+                                                    <div className="admin-card h-full">
+                                                        <button
+                                                            onClick={() => toggleCard('priority')}
+                                                            className="w-full flex items-center justify-between hover:bg-[var(--admin-bg-hover)] transition-colors rounded p-2 -m-2"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                                                                    <AlertCircle className="text-[var(--admin-danger)]" size={20} />
+                                                                </div>
+                                                                <div className="text-left">
+                                                                    <h3 className="font-bold text-[var(--admin-text-primary)]">Priority Actions</h3>
+                                                                    <p className="text-sm text-[var(--admin-text-secondary)]">
+                                                                        {priorityActions.length} items require attention
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                            <div className="text-left">
-                                                                <h3 className="font-bold text-[var(--admin-text-primary)]">Priority Actions</h3>
-                                                                <p className="text-sm text-[var(--admin-text-secondary)]">
-                                                                    {priorityActions.length} items require attention
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        {expandedCards.priority ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                                    </button>
+                                                            {expandedCards.priority ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                                                        </button>
 
-                                                    <AnimatePresence>
-                                                        {expandedCards.priority && (
-                                                            <motion.div
-                                                                initial={{ height: 0, opacity: 0 }}
-                                                                animate={{ height: 'auto', opacity: 1 }}
-                                                                exit={{ height: 0, opacity: 0 }}
-                                                                transition={{ duration: 0.2 }}
-                                                                className="border-t border-[var(--admin-border)] mt-4 pt-4"
-                                                            >
-                                                                <div className="space-y-3">
-                                                                    {priorityActions.length > 0 ? (
-                                                                        priorityActions.map((action, idx) => (
-                                                                            <div key={idx} className="flex items-center justify-between p-4 bg-[var(--admin-bg-hover)] rounded-xl">
-                                                                                <div>
-                                                                                    <p className={`font-medium ${action.type === 'critical' ? 'text-red-700' :
-                                                                                        action.type === 'opportunity' ? 'text-green-700' :
-                                                                                            'text-[var(--admin-text-primary)]'
-                                                                                        }`}>
-                                                                                        {action.title}
-                                                                                    </p>
-                                                                                    <p className="text-sm text-[var(--admin-text-secondary)]">{action.description}</p>
+                                                        <AnimatePresence>
+                                                            {expandedCards.priority && (
+                                                                <motion.div
+                                                                    initial={{ height: 0, opacity: 0 }}
+                                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                                    exit={{ height: 0, opacity: 0 }}
+                                                                    transition={{ duration: 0.2 }}
+                                                                    className="border-t border-[var(--admin-border)] mt-4 pt-4"
+                                                                >
+                                                                    <div className="space-y-3">
+                                                                        {priorityActions.length > 0 ? (
+                                                                            priorityActions.map((action, idx) => (
+                                                                                <div key={idx} className="flex items-center justify-between p-4 bg-[var(--admin-bg-hover)] rounded-xl">
+                                                                                    <div>
+                                                                                        <p className={`font-medium ${action.type === 'critical' ? 'text-red-700' :
+                                                                                            action.type === 'opportunity' ? 'text-green-700' :
+                                                                                                'text-[var(--admin-text-primary)]'
+                                                                                            }`}>
+                                                                                            {action.title}
+                                                                                        </p>
+                                                                                        <p className="text-sm text-[var(--admin-text-secondary)]">{action.description}</p>
+                                                                                    </div>
+                                                                                    <button
+                                                                                        onClick={() => navigate(action.actionPath)}
+                                                                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${action.type === 'critical' ? 'bg-red-600 hover:bg-red-700 text-white' :
+                                                                                            action.type === 'opportunity' ? 'bg-green-600 hover:bg-green-700 text-white' :
+                                                                                                'bg-[var(--admin-accent)] hover:bg-[var(--admin-accent-hover)] text-white'
+                                                                                            }`}
+                                                                                    >
+                                                                                        {action.actionLabel}
+                                                                                    </button>
                                                                                 </div>
-                                                                                <button
-                                                                                    onClick={() => navigate(action.actionPath)}
-                                                                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${action.type === 'critical' ? 'bg-red-600 hover:bg-red-700 text-white' :
-                                                                                        action.type === 'opportunity' ? 'bg-green-600 hover:bg-green-700 text-white' :
-                                                                                            'bg-[var(--admin-accent)] hover:bg-[var(--admin-accent-hover)] text-white'
-                                                                                        }`}
-                                                                                >
-                                                                                    {action.actionLabel}
-                                                                                </button>
+                                                                            ))
+                                                                        ) : (
+                                                                            <p className="text-center text-gray-500 py-2">No urgent actions. You're all caught up!</p>
+                                                                        )}
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
+                                                    </div>
+
+                                                    {/* Insight Card - Expandable */}
+                                                    <div className="admin-card h-full">
+                                                        <button
+                                                            onClick={() => toggleCard('insights')}
+                                                            className="w-full flex items-center justify-between hover:bg-[var(--admin-bg-hover)] transition-colors rounded p-2 -m-2"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                                                    <TrendingUp className="text-[var(--admin-accent)]" size={20} />
+                                                                </div>
+                                                                <div className="text-left">
+                                                                    <h3 className="font-bold text-[var(--admin-text-primary)]">Performance Insights</h3>
+                                                                    <p className="text-sm text-[var(--admin-text-secondary)]">
+                                                                        {performanceInsights ? 'Analysis available' : 'Loading insights...'}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            {expandedCards.insights ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                                                        </button>
+
+                                                        <AnimatePresence>
+                                                            {expandedCards.insights && performanceInsights && (
+                                                                <motion.div
+                                                                    initial={{ height: 0, opacity: 0 }}
+                                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                                    exit={{ height: 0, opacity: 0 }}
+                                                                    transition={{ duration: 0.2 }}
+                                                                    className="border-t border-[var(--admin-border)] mt-4 pt-4"
+                                                                >
+                                                                    <div className="space-y-4">
+                                                                        <div className="p-4 bg-[var(--admin-bg-hover)] rounded-xl border border-[var(--admin-border)]">
+                                                                            <div className="flex justify-between items-start mb-2">
+                                                                                <p className="text-sm font-medium text-[var(--admin-text-primary)]">Yield Trend</p>
+                                                                                <span className={`text-xs font-bold px-2 py-1 rounded ${performanceInsights.yieldTrend.direction === 'up' ? 'bg-green-100 text-green-700' :
+                                                                                    performanceInsights.yieldTrend.direction === 'down' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
+                                                                                    }`}>
+                                                                                    {performanceInsights.yieldTrend.direction === 'up' ? '↗' : performanceInsights.yieldTrend.direction === 'down' ? '↘' : '→'}
+                                                                                    {performanceInsights.yieldTrend.percentage}%
+                                                                                </span>
                                                                             </div>
-                                                                        ))
-                                                                    ) : (
-                                                                        <p className="text-center text-gray-500 py-2">No urgent actions. You're all caught up!</p>
-                                                                    )}
-                                                                </div>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                </div>
-
-                                                {/* Insight Card - Expandable */}
-                                                <div className="admin-card">
-                                                    <button
-                                                        onClick={() => toggleCard('insights')}
-                                                        className="w-full flex items-center justify-between hover:bg-[var(--admin-bg-hover)] transition-colors rounded p-2 -m-2"
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                                                                <TrendingUp className="text-[var(--admin-accent)]" size={20} />
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <h3 className="font-bold text-[var(--admin-text-primary)]">Performance Insights</h3>
-                                                                <p className="text-sm text-[var(--admin-text-secondary)]">
-                                                                    {performanceInsights ? 'Analysis available' : 'Loading insights...'}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        {expandedCards.insights ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                                    </button>
-
-                                                    <AnimatePresence>
-                                                        {expandedCards.insights && performanceInsights && (
-                                                            <motion.div
-                                                                initial={{ height: 0, opacity: 0 }}
-                                                                animate={{ height: 'auto', opacity: 1 }}
-                                                                exit={{ height: 0, opacity: 0 }}
-                                                                transition={{ duration: 0.2 }}
-                                                                className="border-t border-[var(--admin-border)] mt-4 pt-4"
-                                                            >
-                                                                <div className="space-y-4">
-                                                                    <div className="p-4 bg-[var(--admin-bg-hover)] rounded-xl border border-[var(--admin-border)]">
-                                                                        <div className="flex justify-between items-start mb-2">
-                                                                            <p className="text-sm font-medium text-[var(--admin-text-primary)]">Yield Trend</p>
-                                                                            <span className={`text-xs font-bold px-2 py-1 rounded ${performanceInsights.yieldTrend.direction === 'up' ? 'bg-green-100 text-green-700' :
-                                                                                performanceInsights.yieldTrend.direction === 'down' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
-                                                                                }`}>
-                                                                                {performanceInsights.yieldTrend.direction === 'up' ? '↗' : performanceInsights.yieldTrend.direction === 'down' ? '↘' : '→'}
-                                                                                {performanceInsights.yieldTrend.percentage}%
-                                                                            </span>
+                                                                            <p className="text-xs text-[var(--admin-text-secondary)]">{performanceInsights.yieldTrend.message}</p>
                                                                         </div>
-                                                                        <p className="text-xs text-[var(--admin-text-secondary)]">{performanceInsights.yieldTrend.message}</p>
+                                                                        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                                                            <p className="text-sm font-medium text-blue-900 mb-2">Resource Efficiency</p>
+                                                                            <p className="text-xs text-blue-700">{performanceInsights.resourceEfficiency.message}</p>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                                                        <p className="text-sm font-medium text-blue-900 mb-2">Resource Efficiency</p>
-                                                                        <p className="text-xs text-blue-700">{performanceInsights.resourceEfficiency.message}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
+                                                    </div>
                                                 </div>
                                             </>
                                         )}
@@ -357,37 +366,50 @@ const Dashboard = ({ expectedRole }) => {
                                             </div>
                                         )}
 
-                                        {/* Plant Doctor Card - Farmer Only */}
+                                        {/* Tools Grid - Farmer Only */}
                                         {activeRole === 'farmer' && (
-                                            <div className="admin-card group hover:border-emerald-400 transition-all">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                                                            <Leaf className="text-emerald-600" size={24} />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+                                                {/* Yield Predictor Card */}
+                                                <div className="admin-card group hover:border-blue-400 transition-all flex flex-col h-full">
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                                                <BarChart3 className="text-blue-600" size={24} />
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="font-bold text-[var(--admin-text-primary)]">
+                                                                    Yield Predictor{' '}
+                                                                    <span className="ml-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">New</span>
+                                                                </h3>
+                                                                <p className="text-sm text-[var(--admin-text-secondary)]">AI harvest forecast</p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <h3 className="font-bold text-[var(--admin-text-primary)]">Plant Doctor</h3>
-                                                            <p className="text-sm text-[var(--admin-text-secondary)]">AI-powered disease identification</p>
-                                                        </div>
+                                                        <button
+                                                            onClick={() => navigate('/yield-prediction')}
+                                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm ml-2"
+                                                        >
+                                                            Predict
+                                                        </button>
                                                     </div>
-                                                    <button
-                                                        onClick={() => navigate('/plant-doctor')}
-                                                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
-                                                    >
-                                                        Diagnose Now
-                                                    </button>
-                                                </div>
-                                                <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex items-start gap-3">
-                                                    <AlertCircle size={16} className="text-emerald-600 mt-0.5 shrink-0" />
-                                                    <p className="text-xs text-emerald-800 leading-relaxed">
-                                                        Take a photo of any crop issue to get instant diagnosis and treatment recommendations.
-                                                    </p>
+                                                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-start gap-3 flex-grow">
+                                                        <AlertCircle size={16} className="text-blue-600 mt-0.5 shrink-0" />
+                                                        <p className="text-xs text-blue-800 leading-relaxed">
+                                                            Enter your farm inputs to predict expected yield and get personalized agronomic advice.
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
 
                                         {/* Farm Management Card - Farmer Only */}
-                                        {activeRole === 'farmer' && <FarmManagementCard />}
+                                        {activeRole === 'farmer' && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                                <div className="h-full">
+                                                    <FarmManagementCard />
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Buyer Specific Overview */}
                                         {activeRole === 'buyer' && (

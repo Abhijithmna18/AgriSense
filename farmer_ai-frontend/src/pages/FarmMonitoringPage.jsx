@@ -11,6 +11,7 @@ import { authAPI } from '../services/authApi';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import TopBar from '../components/dashboard/TopBar';
+import WaterUsageTracker from '../components/dashboard/WaterUsageTracker';
 import '../styles/admin.css';
 
 // --- MOCK DATA ---
@@ -348,6 +349,9 @@ const FarmMonitoringPage = () => {
                         <SensorMetrics data={data} />
                         <TrendCharts data={MOCK_TREND_DATA} />
                         <BottomSection feeds={MOCK_FEEDS} />
+
+                        {/* New Water Usage Tracker */}
+                        <WaterUsageTracker />
                     </div>
                 </div>
             </div>

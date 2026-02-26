@@ -15,7 +15,7 @@ from grad_cam import GradCAM, apply_heatmap_to_image
 
 app = FastAPI(title="Plant Doctor - ML Inference Engine")
 
-# Allow CORS for frontend
+# Allow CORS for frontend / Node.js proxy
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,14 +43,16 @@ transform = transforms.Compose([
                          std=[0.229, 0.224, 0.225])
 ])
 
+
 @app.on_event("startup")
 async def load_resources():
     global model, idx_to_class, medicine_map, grad_cam
-    
+
     # 1. Load Medicine Mapping
     if os.path.exists(MEDICINE_MAP_PATH):
         with open(MEDICINE_MAP_PATH, "r") as f:
             medicine_map = json.load(f)
+        print(f"Loaded {len(medicine_map)} disease treatment records.")
     else:
         print("Warning: disease_medicine_map.json not found!")
 
@@ -60,111 +62,153 @@ async def load_resources():
             data = json.load(f)
             # Keys from JSON are strings, convert back to int
             idx_to_class = {int(k): v for k, v in data.items()}
+        print(f"Loaded {len(idx_to_class)} class labels.")
     else:
-        print("Warning: class_indices.json not found! Using dummy classes.")
-        idx_to_class = {0: "Tomato_Early_blight", 1: "Healthy"}
+        print("Warning: class_indices.json not found. Using dummy classes.")
+        idx_to_class = {0: "Tomato___Early_blight", 1: "Tomato___healthy"}
 
     # 3. Load Model
     num_classes = len(idx_to_class)
     model = DiseaseClassifier(num_classes=num_classes).to(DEVICE)
     if os.path.exists(MODEL_PATH):
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
-        print("Model loaded successfully.")
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE, weights_only=True))
+        print(f"Model loaded successfully on {DEVICE}.")
     else:
         print(f"Warning: {MODEL_PATH} not found. Running with untrained weights.")
-        
+
     model.eval()
-    
+
     # 4. Initialize Grad-CAM targeting the last conv layer of EfficientNet
     target_layer = model.base_model.features[-1]
     grad_cam = GradCAM(model, target_layer)
+    print("Grad-CAM initialized.")
+
+
+def parse_class_name(raw_class: str):
+    """
+    Parse a PlantVillage-style class name into crop and disease.
+    Format: 'Plant___Disease_Name' (triple underscore separator).
+    Examples:
+        'Tomato___Early_blight'     -> ('Tomato', 'Early Blight')
+        'Apple___healthy'           -> ('Apple', 'Healthy')
+        'Tomato___healthy'          -> ('Tomato', 'Healthy')
+        'Cherry_(including_sour)___Powdery_mildew' -> ('Cherry', 'Powdery Mildew')
+    """
+    # Use triple underscore as the primary delimiter
+    if "___" in raw_class:
+        parts = raw_class.split("___", 1)
+        crop_raw = parts[0]
+        disease_raw = parts[1]
+    else:
+        # Fallback: treat the whole thing as a disease with unknown crop
+        return "Unknown", raw_class.replace("_", " ").title()
+
+    # Clean crop name: remove parenthetical parts like "(including_sour)"
+    crop = crop_raw.split("_(")[0].replace("_", " ").strip()
+
+    # Clean disease name: replace underscores with spaces, title case
+    disease = disease_raw.replace("_", " ").strip().title()
+
+    # Normalize "healthy" variants
+    if disease.lower() == "healthy":
+        disease = "Healthy"
+
+    return crop, disease
+
 
 def generate_base64_heatmap(image_tensor, raw_image_pil):
     """
-    Generate a Grad-CAM heatmap, overlay it on the original image, and encode it in base64.
+    Generate a Grad-CAM heatmap, overlay it on the original image, and return it as base64.
     """
-    # Requires requires_grad=True to compute gradients backwards to the target layer
     image_tensor.requires_grad = True
-    
-    # Generates raw map
+
     heatmap = grad_cam.generate_heatmap(image_tensor)
-    
-    # Convert PIL directly to OpenCV BGR format 
+
+    # Convert PIL to OpenCV BGR format
     cv2_img = cv2.cvtColor(np.array(raw_image_pil), cv2.COLOR_RGB2BGR)
-    
+
     # Overlay heatmap
     superimposed = apply_heatmap_to_image(cv2_img, heatmap)
-    
+
     # Encode as Base64 JPEG
     _, buffer = cv2.imencode('.jpg', superimposed)
     b64_string = base64.b64encode(buffer).decode('utf-8')
     return b64_string
 
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for the Node.js proxy to verify service status."""
+    return {
+        "status": "ok",
+        "model_loaded": model is not None,
+        "num_classes": len(idx_to_class),
+        "device": DEVICE
+    }
+
+
 @app.post("/predict-disease")
 async def predict_disease(file: UploadFile = File(...)):
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
-        
-    # Read Image limit 10MB
+
+    # Read and validate file size (10MB limit)
     contents = await file.read()
     if len(contents) > 10 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File size exceeds 10MB limit.")
-        
+
     try:
         image = Image.open(BytesIO(contents)).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Error decoding image file.")
-        
+
     # Preprocess
     input_tensor = transform(image).unsqueeze(0).to(DEVICE)
-    
-    # Inference
+
+    # Inference (no gradient for speed)
     with torch.no_grad():
         outputs = model(input_tensor)
         probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]
-        
+
     confidence_tensor, predicted_idx = torch.max(probabilities, 0)
     confidence = confidence_tensor.item()
-    pred_class_name = idx_to_class.get(predicted_idx.item(), "Unknown")
-    
-    # Severity Logic
+
+    # raw_class exactly matches the key format in class_indices.json and disease_medicine_map.json
+    raw_class = idx_to_class.get(predicted_idx.item(), "Unknown")
+
+    # Severity thresholds
     if confidence > 0.90:
         severity = "High"
     elif 0.70 <= confidence <= 0.90:
         severity = "Medium"
     else:
         severity = "Low"
-        
-    # Mapping
+
+    # Parse crop and disease name using the triple-underscore delimiter
+    crop, disease = parse_class_name(raw_class)
+
+    # Look up treatment — key matches exactly: 'Tomato___Early_blight'
     treatment_plan = medicine_map.get(
-        pred_class_name, 
-        {"message": "No specific treatment mapped for this disease yet."}
+        raw_class,
+        {
+            "medicines": [],
+            "general_advice": f"No specific treatment mapped yet for '{disease}'. Consult your local agricultural extension officer for advice."
+        }
     )
-    
-    # Crop Name vs Disease Name (Basic splitting logic)
-    # E.g., "Tomato_Early_blight" -> Crop: Tomato, Disease: Early Blight
-    parts = pred_class_name.split("_", 1)
-    crop = parts[0] if len(parts) > 1 else "Unknown Crop"
-    disease = parts[1].replace("_", " ") if len(parts) > 1 else pred_class_name
-    
-    if pred_class_name == "Healthy":
-        crop = "Unknown Plant"
-        disease = "Healthy"
-    
-    # Generate Heatmap Explainability
-    # Must re-enable gradient tracking specifically for Grad-cam
+
+    # Generate Grad-CAM heatmap for visual explainability
     input_tensor_for_cam = transform(image).unsqueeze(0).to(DEVICE)
     try:
         heatmap_b64 = generate_base64_heatmap(input_tensor_for_cam, image.resize((224, 224)))
     except Exception as e:
-        print(f"Error generating GradCAM: {e}")
+        print(f"Warning: Grad-CAM generation failed: {e}")
         heatmap_b64 = None
 
     response = {
         "disease_prediction": {
             "crop": crop,
             "disease": disease,
-            "raw_class": pred_class_name,
+            "raw_class": raw_class,
             "confidence": round(confidence, 4),
             "severity_estimation": severity,
             "consult_expert_recommended": confidence < 0.75
@@ -172,9 +216,10 @@ async def predict_disease(file: UploadFile = File(...)):
         "treatment_plan": treatment_plan,
         "visual_explanation": f"data:image/jpeg;base64,{heatmap_b64}" if heatmap_b64 else None
     }
-    
+
     return response
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)

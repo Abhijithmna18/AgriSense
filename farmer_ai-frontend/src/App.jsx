@@ -28,10 +28,14 @@ import ProfileSettings from './pages/ProfileSettings';
 import Recommendations from './pages/Recommendations';
 import AddFarmPage from './pages/AddFarmPage';
 import Marketplace from './pages/Marketplace'; // Marketplace Home
-import MarketplaceLayout from './components/marketplace/MarketplaceLayout';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import FarmerOrdersPage from './pages/FarmerOrdersPage';
-import CheckoutPage from './pages/CheckoutPage'; // New Checkout Page
+import MarketplaceLayout from './components/marketplace/MarketplaceLayout';
+import FarmsPage from './pages/FarmsPage';
+import FarmDetailsPage from './pages/FarmDetailsPage';
+import FieldOperationsPage from './pages/FieldOperationsPage';
+import ProducePage from './pages/ProducePage'; // New Checkout Page
 import FinancialServicesPage from './pages/FinancialServicesPage';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -65,11 +69,15 @@ import AiRecommendationsPage from './pages/AiRecommendationsPage';
 import PestPredictionPage from './pages/PestPredictionPage';
 import MicroWeatherPage from './pages/MicroWeatherPage'; // New Feature
 import CropRotationPage from './pages/CropRotationPage';
+import CropCalendarPage from './pages/CropCalendarPage';
 import DiseaseMapPage from './pages/DiseaseMapPage';
 import DiseasePredictionPage from './pages/DiseasePredictionPage';
 import SoilTestPage from './pages/SoilTestPage';
 import IrrigationRLPage from './pages/IrrigationRLPage';
 import ProcurePage from './pages/ProcurePage';
+import YieldPredictionPage from './pages/YieldPredictionPage';
+import ConsultationPage from './pages/ConsultationPage';
+import SmartFarmingPage from './pages/SmartFarmingPage';
 
 // Admin Warehouse Pages
 import AdminWarehousePage from './pages/admin/AdminWarehousePage';
@@ -179,7 +187,7 @@ function App() {
                 {/* Coming Soon / Placeholders */}
                 <Route path="/crops/:id" element={<div className="container mt-5"><h2>Crop Detail Page (Coming Soon)</h2></div>} />
                 <Route path="/disease-detection" element={<PrivateRoute><DiseasePredictionPage /></PrivateRoute>} />
-                <Route path="/advisories" element={<div className="container mt-5"><h2>Advisories Page (Coming Soon)</h2></div>} />
+                <Route path="/advisories" element={<PrivateRoute><ConsultationPage /></PrivateRoute>} />
 
                 {/* Warehouse Module */}
                 <Route path="/warehouses" element={<Warehouses />} />
@@ -196,11 +204,23 @@ function App() {
                 <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
                 <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
                 <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
+                <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
                 <Route path="/crop-rotation" element={<PrivateRoute><CropRotationPage /></PrivateRoute>} />
-                <Route path="/disease-map" element={<PrivateRoute><DiseaseMapPage /></PrivateRoute>} />
+                <Route path="/farms" element={<PrivateRoute><FarmsPage /></PrivateRoute>} />
+                <Route path="/farms/:id" element={<PrivateRoute><FarmDetailsPage /></PrivateRoute>} />
+                <Route path="/field-operations" element={<PrivateRoute><FieldOperationsPage /></PrivateRoute>} />
+                <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
                 <Route path="/services/soil-test" element={<PrivateRoute><SoilTestPage /></PrivateRoute>} />
                 <Route path="/rl-irrigation" element={<PrivateRoute><IrrigationRLPage /></PrivateRoute>} />
                 <Route path="/procure" element={<PrivateRoute><ProcurePage /></PrivateRoute>} />
+                <Route path="/yield-prediction" element={<PrivateRoute><YieldPredictionPage /></PrivateRoute>} />
+                <Route path="/crop-calendar" element={<PrivateRoute><CropCalendarPage /></PrivateRoute>} />
+                <Route path="/disease-map" element={<PrivateRoute><DiseaseMapPage /></PrivateRoute>} />
+                <Route path="/smart-farming" element={<PrivateRoute><SmartFarmingPage /></PrivateRoute>} />
+                <Route path="/services/soil-test" element={<PrivateRoute><SoilTestPage /></PrivateRoute>} />
+                <Route path="/rl-irrigation" element={<PrivateRoute><IrrigationRLPage /></PrivateRoute>} />
+                <Route path="/procure" element={<PrivateRoute><ProcurePage /></PrivateRoute>} />
+                <Route path="/yield-prediction" element={<PrivateRoute><YieldPredictionPage /></PrivateRoute>} />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard,
     BarChart2,
+    BarChart3,
     TrendingUp,
     BrainCircuit,
     ShoppingBag,
@@ -18,7 +19,8 @@ import {
     Bug,
     RefreshCw,
     CloudRain,
-    Sparkles
+    Sparkles,
+    UserCheck
 } from 'lucide-react';
 
 import { motion } from 'framer-motion';
@@ -41,10 +43,7 @@ const Sidebar = ({ onLogout }) => {
         // Farmer Specific
         { icon: Activity, label: 'Farm Monitoring', path: '/monitoring', roles: ['farmer', 'admin'] },
         { icon: BookOpen, label: 'Crop Intelligence', path: '/crop-knowledge', roles: ['farmer', 'admin'] },
-        { icon: RefreshCw, label: 'Crop Rotation', path: '/crop-rotation', roles: ['farmer', 'admin'] },
-        { icon: Bug, label: 'Pest Prediction', path: '/pest-prediction', roles: ['farmer', 'admin'] },
-        { icon: Activity, label: 'Disease Detection', path: '/disease-detection', roles: ['farmer', 'admin'] },
-        { icon: CloudRain, label: 'Micro Weather', path: '/weather-intelligence', roles: ['farmer', 'admin'] }, // New Feature
+        { icon: Sparkles, label: 'Smart Farming', path: '/smart-farming', roles: ['farmer', 'admin'] },
         { icon: null, img: recommendationIcon, label: 'Recommendations', path: '/recommendations', roles: ['farmer', 'admin'] },
 
         // Buyer Specific (New)

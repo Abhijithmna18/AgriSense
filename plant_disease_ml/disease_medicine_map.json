@@ -1,62 +1,486 @@
 {
-    "Tomato_Bacterial_spot": {
-        "recommended_pesticides": [
-            "Copper sprays",
-            "Mancozeb"
+    "Apple___Apple_scab": {
+        "medicines": [
+            {
+                "name": "Captan 50 WP",
+                "chemical": "Captan",
+                "dosage": "2g per liter of water",
+                "application": "Spray every 7-10 days during wet weather from bud break onwards"
+            },
+            {
+                "name": "Mancozeb 75 WP",
+                "chemical": "Mancozeb",
+                "dosage": "2.5g per liter of water",
+                "application": "Apply as protective spray before infection; repeat every 10-14 days"
+            }
         ],
-        "organic_treatment": [
-            "Neem oil",
-            "Bacillus subtilis-based sprays"
-        ],
-        "dosage": "2-3ml per liter of water",
-        "application_frequency": "Every 7-10 days",
-        "precautions": "Avoid overhead watering; remove and destroy infected plant parts."
+        "general_advice": "Remove and destroy fallen infected leaves. Avoid overhead irrigation. Prune trees to improve air circulation. Apply protectant fungicides early in the season before symptoms appear."
     },
-    "Tomato_Early_blight": {
-        "recommended_pesticides": [
-            "Chlorothalonil",
-            "Mancozeb",
-            "Copper fungicide"
+    "Apple___Black_rot": {
+        "medicines": [
+            {
+                "name": "Thiophanate-methyl 70 WP",
+                "chemical": "Thiophanate-methyl",
+                "dosage": "1.5g per liter of water",
+                "application": "Apply at pink, petal fall, and 10 days after petal fall"
+            },
+            {
+                "name": "Captan 50 WP",
+                "chemical": "Captan",
+                "dosage": "2g per liter of water",
+                "application": "Apply every 10-14 days from pink stage through harvest season"
+            }
         ],
-        "organic_treatment": [
-            "Neem oil spray",
-            "Baking soda spray"
-        ],
-        "dosage": "2g per liter water",
-        "application_frequency": "Every 7 days",
-        "precautions": "Avoid spraying during high sun; ensure good air circulation."
+        "general_advice": "Prune out dead wood and mummified fruit. Sanitize pruning tools with 70% alcohol. Avoid wounding the bark. Remove cankers and cover wounds with wound sealant."
     },
-    "Tomato_Late_blight": {
-        "recommended_pesticides": [
-            "Chlorothalonil",
-            "Mancozeb",
-            "Mefenoxam"
+    "Apple___Cedar_apple_rust": {
+        "medicines": [
+            {
+                "name": "Myclobutanil (Rally 40 WP)",
+                "chemical": "Myclobutanil",
+                "dosage": "0.75g per liter of water",
+                "application": "Apply from pink through 2nd cover spray (every 7-10 days)"
+            },
+            {
+                "name": "Propiconazole (Tilt 250 EC)",
+                "chemical": "Propiconazole",
+                "dosage": "0.5ml per liter of water",
+                "application": "Apply at pink stage and petal fall, repeat every 10 days"
+            }
         ],
-        "organic_treatment": [
-            "Copper-based organically approved sprays"
-        ],
-        "dosage": "2g/ml per liter water",
-        "application_frequency": "Apply preventatively every 7 days",
-        "precautions": "Extremely contagious. Destroy infected plants immediately; do not compost."
+        "general_advice": "Remove nearby juniper or cedar trees (alternate hosts) if possible. Apply preventative fungicide sprays from bud break. Do not plant apple near juniper. Monitor for orange gelatinous spore masses on junipers in spring."
     },
-    "Potato_Late_blight": {
-        "recommended_pesticides": [
-            "Chlorothalonil",
-            "Mancozeb",
-            "Fluazinam"
-        ],
-        "organic_treatment": [
-            "Copper hydroxide"
-        ],
-        "dosage": "2-3g per liter water",
-        "application_frequency": "Apply preventatively under favorable disease conditions",
-        "precautions": "Ensure tubers are well covered with soil; harvest in dry weather."
+    "Apple___healthy": {
+        "medicines": [],
+        "general_advice": "Your apple plant appears healthy! Maintain regular watering schedule, balanced NPK fertilizer, and inspect leaves weekly for any early disease signs. Prune to ensure good air circulation."
     },
-    "Healthy": {
-        "recommended_pesticides": [],
-        "organic_treatment": [],
-        "dosage": "N/A",
-        "application_frequency": "N/A",
-        "precautions": "Maintain regular watering, nutrient schedule, and good field hygiene to stay healthy."
+    "Blueberry___healthy": {
+        "medicines": [],
+        "general_advice": "Your blueberry plant is healthy. Ensure soil pH is between 4.5-5.5 (acidic). Mulch around the base to retain moisture. Inspect regularly for early signs of mummy berry or botrytis."
+    },
+    "Cherry_(including_sour)___Powdery_mildew": {
+        "medicines": [
+            {
+                "name": "Sulfur 80 WG",
+                "chemical": "Elemental Sulfur",
+                "dosage": "3g per liter of water",
+                "application": "Apply preventatively every 7-14 days during dry weather; do not apply when temps exceed 30°C"
+            },
+            {
+                "name": "Potassium Bicarbonate (Milstop)",
+                "chemical": "Potassium Bicarbonate",
+                "dosage": "5g per liter of water",
+                "application": "Apply as organic alternative every 7 days; best used as early intervention"
+            }
+        ],
+        "general_advice": "Avoid over-fertilizing with nitrogen (promotes soft growth). Ensure good air circulation by pruning. Irrigate at the base, not overhead. Choose powdery-mildew-resistant cherry varieties if replanting."
+    },
+    "Cherry_(including_sour)___healthy": {
+        "medicines": [],
+        "general_advice": "Your cherry plant looks healthy. Continue regular care: water deeply but infrequently, fertilize in early spring, and monitor for brown rot especially near fruit maturity."
+    },
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
+        "medicines": [
+            {
+                "name": "Azoxystrobin (Quadris)",
+                "chemical": "Azoxystrobin",
+                "dosage": "1ml per liter of water",
+                "application": "Apply at V6 growth stage or when first symptoms appear; repeat at 14-day intervals"
+            },
+            {
+                "name": "Propiconazole (Tilt)",
+                "chemical": "Propiconazole",
+                "dosage": "0.5ml per liter of water",
+                "application": "Apply at tasseling stage; rotate with other fungicide classes to prevent resistance"
+            }
+        ],
+        "general_advice": "Use certified disease-resistant hybrid seeds. Practice crop rotation (avoid consecutive corn planting). Till crop residue after harvest to reduce fungal inoculum. Ensure proper row spacing for air circulation."
+    },
+    "Corn_(maize)___Common_rust_": {
+        "medicines": [
+            {
+                "name": "Trifloxystrobin + Propiconazole (Stratego YLD)",
+                "chemical": "Trifloxystrobin + Propiconazole",
+                "dosage": "0.75ml per liter of water",
+                "application": "Apply at first sign of rust pustules; repeat after 14 days if conditions are favorable"
+            },
+            {
+                "name": "Mancozeb 75 WP",
+                "chemical": "Mancozeb",
+                "dosage": "2.5g per liter of water",
+                "application": "Apply preventatively when humidity is high; every 7-10 days"
+            }
+        ],
+        "general_advice": "Plant resistant hybrids when available. Scout fields weekly during the growing season. Rust spreads via airborne spores — avoid overhead irrigation. Early fungicide application during warm, humid weather is key."
+    },
+    "Corn_(maize)___Northern_Leaf_Blight": {
+        "medicines": [
+            {
+                "name": "Pyraclostrobin (Headline EC)",
+                "chemical": "Pyraclostrobin",
+                "dosage": "1ml per liter of water",
+                "application": "Apply at VT (tasseling) stage when 50% of plants show lesions on lower leaves"
+            },
+            {
+                "name": "Trifloxystrobin (Flint Extra)",
+                "chemical": "Trifloxystrobin",
+                "dosage": "0.5ml per liter of water",
+                "application": "Apply preventatively at V8 stage in disease-prone areas; repeat if conditions persist"
+            }
+        ],
+        "general_advice": "Use resistant corn hybrids. Rotate crops to reduce stubble inoculum. Deep till after harvest to bury infected residue. Apply fungicide at the VT/R1 growth stages for economic benefit."
+    },
+    "Corn_(maize)___healthy": {
+        "medicines": [],
+        "general_advice": "Your corn plant is healthy. Maintain optimal nitrogen levels and avoid waterlogged soil. Scout weekly for early blight or rust symptoms, especially during humid weather."
+    },
+    "Grape___Black_rot": {
+        "medicines": [
+            {
+                "name": "Myclobutanil (Immunox)",
+                "chemical": "Myclobutanil",
+                "dosage": "1ml per liter of water",
+                "application": "Apply from early shoot growth through berry development (every 7-14 days)"
+            },
+            {
+                "name": "Mancozeb 75 WP",
+                "chemical": "Mancozeb",
+                "dosage": "2g per liter of water",
+                "application": "Apply as protective spray from bud break until veraison (color change)"
+            }
+        ],
+        "general_advice": "Remove and destroy mummified berries that remain on vine or ground. Prune to improve canopy airflow. Avoid leaf wetness by choosing drip irrigation. Apply fungicide from early bud break — early coverage is critical."
+    },
+    "Grape___Esca_(Black_Measles)": {
+        "medicines": [
+            {
+                "name": "Thiophanate-methyl (Topsin-M)",
+                "chemical": "Thiophanate-methyl",
+                "dosage": "1.5g per liter of water",
+                "application": "Apply to pruning wounds immediately after cutting; reapply annually"
+            },
+            {
+                "name": "Tebuconazole (Folicur)",
+                "chemical": "Tebuconazole",
+                "dosage": "1ml per liter of water",
+                "application": "Trunk injection through drilled holes; consult agronomist for dosage by vine trunk diameter"
+            }
+        ],
+        "general_advice": "Esca is a complex wood disease with no fully curative treatment. Protect pruning wounds immediately. Avoid large cuts or use pruning scissors rather than saws. Severely affected vines should be removed and replaced. This disease is often linked to vine stress — improve soil drainage and nutrition."
+    },
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": {
+        "medicines": [
+            {
+                "name": "Copper Oxychloride 50 WP",
+                "chemical": "Copper Oxychloride",
+                "dosage": "3g per liter of water",
+                "application": "Apply at first sign of disease; repeat every 10-14 days during warm, wet weather"
+            },
+            {
+                "name": "Chlorothalonil 75 WP",
+                "chemical": "Chlorothalonil",
+                "dosage": "2g per liter of water",
+                "application": "Apply as protective spray; avoid during fruit near-harvest period"
+            }
+        ],
+        "general_advice": "Ensure adequate vine spacing and canopy management for air circulation. Remove infected leaves and dispose of off-site. Do not compost infected material. Avoid excessive leaf wetness."
+    },
+    "Grape___healthy": {
+        "medicines": [],
+        "general_advice": "Your grapevine is healthy. Continue proper canopy management, annual pruning, and balanced fertilization. Monitor for downy mildew or powdery mildew during humid seasons."
+    },
+    "Orange___Haunglongbing_(Citrus_greening)": {
+        "medicines": [
+            {
+                "name": "Imidacloprid (Admire Pro)",
+                "chemical": "Imidacloprid",
+                "dosage": "1ml per liter of water (systemic drench)",
+                "application": "Soil drench application to eliminate Asian Citrus Psyllid (vector); apply 2x per year"
+            },
+            {
+                "name": "Thiamethoxam (Actara)",
+                "chemical": "Thiamethoxam",
+                "dosage": "0.5g per liter of water",
+                "application": "Foliar spray targeting the psyllid vector; apply in early flush growth periods"
+            }
+        ],
+        "general_advice": "CRITICAL: Citrus Greening (HLB) has NO CURE once a tree is infected. Management focuses on controlling the Asian Citrus Psyllid (ACP) vector. Infected trees should eventually be removed and destroyed to prevent spread. Use certified disease-free nursery stock. Notify your local agricultural department immediately."
+    },
+    "Peach___Bacterial_spot": {
+        "medicines": [
+            {
+                "name": "Copper hydroxide (Kocide 3000)",
+                "chemical": "Copper Hydroxide",
+                "dosage": "2-3g per liter of water",
+                "application": "Apply from bud break (dormant copper spray) and continue every 10-14 days through shuck split"
+            },
+            {
+                "name": "Oxytetracycline (Mycoshield)",
+                "chemical": "Oxytetracycline",
+                "dosage": "1g per liter of water",
+                "application": "Apply during pink bud stage through petal fall every 3-5 days when conditions favor disease"
+            }
+        ],
+        "general_advice": "Plant resistant or tolerant peach varieties. Avoid copper sprays after petal fall to prevent fruit russeting. Thin fruits to reduce overcrowding. Prune out infected twigs and cankers. Apply dormant copper sprays in winter."
+    },
+    "Peach___healthy": {
+        "medicines": [],
+        "general_advice": "Your peach tree is healthy. Maintain good pruning practices, annual thinning, and regular fertilization. Watch for brown rot during humid periods near harvest."
+    },
+    "Pepper,_bell___Bacterial_spot": {
+        "medicines": [
+            {
+                "name": "Copper sulfate + Mancozeb (Fixed Copper)",
+                "chemical": "Copper + Mancozeb",
+                "dosage": "2.5g per liter of water",
+                "application": "Apply from transplanting; repeat every 5-7 days under wet conditions"
+            },
+            {
+                "name": "Bacillus subtilis (Serenade ASO)",
+                "chemical": "Bacillus subtilis (biological)",
+                "dosage": "5ml per liter of water",
+                "application": "Apply weekly as organic preventative; can be tank-mixed with copper"
+            }
+        ],
+        "general_advice": "Use certified disease-free seed and transplants. Avoid overhead irrigation — use drip systems. Rotate crops (avoid pepper/tomato in the same spot for 2+ years). Disinfect tools with 10% bleach solution between plants."
+    },
+    "Pepper,_bell___healthy": {
+        "medicines": [],
+        "general_advice": "Your bell pepper is healthy! Ensure consistent soil moisture, avoid waterlogging, and fertilize with calcium to prevent blossom end rot. Monitor for aphids which can transmit viral diseases."
+    },
+    "Potato___Early_blight": {
+        "medicines": [
+            {
+                "name": "Chlorothalonil 75 WP",
+                "chemical": "Chlorothalonil",
+                "dosage": "2g per liter of water",
+                "application": "Apply at early bloom stage or when first spots appear; repeat every 7-10 days"
+            },
+            {
+                "name": "Mancozeb 75 WP",
+                "chemical": "Mancozeb",
+                "dosage": "2g per liter of water",
+                "application": "Apply preventatively every 7-14 days from early season; alternate with other fungicides"
+            }
+        ],
+        "general_advice": "Practice 3-4 year crop rotation. Plant disease-free certified seed potatoes. Avoid excessive nitrogen fertilization. Remove and destroy infected plant debris after harvest. Apply protective fungicide early — do not wait for symptoms to progress."
+    },
+    "Potato___Late_blight": {
+        "medicines": [
+            {
+                "name": "Metalaxyl + Mancozeb (Ridomil Gold MZ)",
+                "chemical": "Metalaxyl + Mancozeb",
+                "dosage": "2.5g per liter of water",
+                "application": "Apply preventatively every 7-10 days; critical during cool, wet weather"
+            },
+            {
+                "name": "Fluazinam (Shirlan)",
+                "chemical": "Fluazinam",
+                "dosage": "0.5ml per liter of water",
+                "application": "Apply every 5-7 days during high disease pressure; rotate with other fungicides"
+            }
+        ],
+        "general_advice": "HIGHLY CONTAGIOUS — act immediately. Destroy heavily infected plants and do not compost. Ensure tubers are well covered (hilling). Harvest in dry conditions. Monitor weather forecasts for blight warnings (cool, wet nights + warm days). Use blight-resistant potato varieties."
+    },
+    "Potato___healthy": {
+        "medicines": [],
+        "general_advice": "Your potato plant is healthy. Keep soil consistently moist but well-drained. Hill soil around stems as plants grow. Watch for Colorado potato beetle and aphids."
+    },
+    "Raspberry___healthy": {
+        "medicines": [],
+        "general_advice": "Your raspberry plant is healthy. Prune out old canes after fruiting, maintain good air circulation, and keep weeds down. Watch for botrytis (gray mold) during wet periods."
+    },
+    "Soybean___healthy": {
+        "medicines": [],
+        "general_advice": "Your soybean plant is healthy. Monitor for sudden death syndrome (SDS), soybean cyst nematode (SCN), and white mold. Ensure proper inoculation with Bradyrhizobium for nitrogen fixation."
+    },
+    "Squash___Powdery_mildew": {
+        "medicines": [
+            {
+                "name": "Potassium bicarbonate (MilStop)",
+                "chemical": "Potassium Bicarbonate",
+                "dosage": "5g per liter of water",
+                "application": "Apply as organic option at first sign of symptoms; repeat every 7 days"
+            },
+            {
+                "name": "Azoxystrobin (Quadris)",
+                "chemical": "Azoxystrobin",
+                "dosage": "0.5ml per liter of water",
+                "application": "Apply preventatively or at first disease sign; do not exceed 3 applications per season"
+            }
+        ],
+        "general_advice": "Choose resistant squash varieties. Avoid overhead irrigation. Improve air circulation by spacing plants adequately. Remove and dispose of heavily infected leaves. Do not compost affected tissues."
+    },
+    "Strawberry___Leaf_scorch": {
+        "medicines": [
+            {
+                "name": "Captan 50 WP",
+                "chemical": "Captan",
+                "dosage": "2g per liter of water",
+                "application": "Apply from early spring through fruiting; every 10-14 days"
+            },
+            {
+                "name": "Cyprodinil + Fludioxonil (Switch)",
+                "chemical": "Cyprodinil + Fludioxonil",
+                "dosage": "1g per liter of water",
+                "application": "Apply at bloom and again 7-10 days later for best results"
+            }
+        ],
+        "general_advice": "Remove infected leaves and old runners. Avoid overhead irrigation — water at the base. Ensure soil is well-drained. Replace old plantings every 2-3 years. Plant certified disease-free runners."
+    },
+    "Strawberry___healthy": {
+        "medicines": [],
+        "general_advice": "Your strawberry plant is healthy. Mulch around plants to prevent soil splash. Remove runners to encourage fruiting. Monitor for gray mold (botrytis) and two-spotted spider mites."
+    },
+    "Tomato___Bacterial_spot": {
+        "medicines": [
+            {
+                "name": "Copper Oxychloride 50 WP",
+                "chemical": "Copper Oxychloride",
+                "dosage": "2-3g per liter of water",
+                "application": "Apply every 7-10 days from transplanting; most effective as a preventative spray"
+            },
+            {
+                "name": "Bacillus subtilis (Serenade)",
+                "chemical": "Bacillus subtilis (biological)",
+                "dosage": "5ml per liter of water",
+                "application": "Tank-mix with copper for enhanced organic control; apply every 5-7 days"
+            }
+        ],
+        "general_advice": "Avoid overhead irrigation — use drip. Use disease-free seed or hot-water-treated seed. Rotate tomatoes with non-solanaceous crops for 3+ years. Disinfect tools with bleach solution."
+    },
+    "Tomato___Early_blight": {
+        "medicines": [
+            {
+                "name": "Chlorothalonil 75 WP",
+                "chemical": "Chlorothalonil",
+                "dosage": "2g per liter of water",
+                "application": "Apply every 7 days starting from seedling stage; avoid spraying in high sun to prevent phytotoxicity"
+            },
+            {
+                "name": "Mancozeb 75 WP",
+                "chemical": "Mancozeb",
+                "dosage": "2g per liter of water",
+                "application": "Apply preventatively every 7-14 days; alternate with other fungicide groups"
+            }
+        ],
+        "general_advice": "Remove lower infected leaves and destroy them. Ensure good air circulation and avoid overhead watering. Mulch around the base of plants to prevent soil splash. Apply protective fungicide before symptoms worsen."
+    },
+    "Tomato___Late_blight": {
+        "medicines": [
+            {
+                "name": "Metalaxyl + Mancozeb (Ridomil Gold)",
+                "chemical": "Metalaxyl + Mancozeb",
+                "dosage": "2.5g per liter of water",
+                "application": "Apply immediately on diagnosis; repeat every 5-7 days during cool, wet weather"
+            },
+            {
+                "name": "Chlorothalonil 75 WP",
+                "chemical": "Chlorothalonil",
+                "dosage": "2g per liter of water",
+                "application": "Apply preventatively every 7 days; most effective before disease establishes"
+            }
+        ],
+        "general_advice": "EXTREMELY CONTAGIOUS — act immediately. Destroy infected plants off-site; do NOT compost. Avoid working in the field when plants are wet. Do not plant tomatoes near potatoes. Use disease forecasting apps to time applications."
+    },
+    "Tomato___Leaf_Mold": {
+        "medicines": [
+            {
+                "name": "Chlorothalonil 75 WP",
+                "chemical": "Chlorothalonil",
+                "dosage": "2g per liter of water",
+                "application": "Apply at first sign of leaf mold; repeat every 7-10 days during humid conditions"
+            },
+            {
+                "name": "Copper Hydroxide (Kocide)",
+                "chemical": "Copper Hydroxide",
+                "dosage": "2g per liter of water",
+                "application": "Apply preventatively; very effective in greenhouse environments"
+            }
+        ],
+        "general_advice": "Reduce greenhouse humidity below 85% by improving ventilation. Space plants for airflow. Remove infected leaves immediately. Avoid wetting foliage when irrigating. Use resistant tomato varieties."
+    },
+    "Tomato___Septoria_leaf_spot": {
+        "medicines": [
+            {
+                "name": "Chlorothalonil 75 WP",
+                "chemical": "Chlorothalonil",
+                "dosage": "2g per liter of water",
+                "application": "Apply at first sign (small circular spots with dark borders); repeat every 7-10 days"
+            },
+            {
+                "name": "Copper-based fungicide (Bordeaux mixture)",
+                "chemical": "Copper Sulfate + Calcium Hydroxide",
+                "dosage": "3g per liter of water",
+                "application": "Apply as protective spray every 10 days; especially useful as organic-approved option"
+            }
+        ],
+        "general_advice": "Remove infected lower leaves and do not compost. Avoid overhead water. Practice crop rotation. Stake plants to keep leaves off the ground. Mulch the base to prevent soil splash which spreads the disease."
+    },
+    "Tomato___Spider_mites Two-spotted_spider_mite": {
+        "medicines": [
+            {
+                "name": "Abamectin (Agri-mek)",
+                "chemical": "Abamectin",
+                "dosage": "0.5ml per liter of water",
+                "application": "Apply when mite populations first appear; target undersides of leaves; repeat after 7 days"
+            },
+            {
+                "name": "Neem Oil (organic)",
+                "chemical": "Azadirachtin",
+                "dosage": "5ml per liter of water + a few drops of dish soap as emulsifier",
+                "application": "Apply every 5-7 days to leaf undersides; best in early morning or evening to prevent leaf burn"
+            }
+        ],
+        "general_advice": "Spider mites thrive in hot, dry conditions. Increase humidity or use drip irrigation. Knock mites off plants with a strong jet of water. Introduce predatory mites (Phytoseiidae) for biological control. Rotate acaricide classes to prevent resistance."
+    },
+    "Tomato___Target_Spot": {
+        "medicines": [
+            {
+                "name": "Azoxystrobin + Chlorothalonil",
+                "chemical": "Azoxystrobin + Chlorothalonil",
+                "dosage": "1ml + 1.5g per liter of water (tank mix)",
+                "application": "Apply at first sign of lesions; repeat every 7-10 days under wet conditions"
+            },
+            {
+                "name": "Difenoconazole (Score 250 EC)",
+                "chemical": "Difenoconazole",
+                "dosage": "0.5ml per liter of water",
+                "application": "Apply as curative spray immediately after detection; repeat once after 10 days"
+            }
+        ],
+        "general_advice": "Target spot thrives in warm, humid conditions. Improve air circulation by pruning. Remove heavily infected lower leaves. Avoid overhead irrigation. Use disease-free transplants and rotate crops annually."
+    },
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
+        "medicines": [
+            {
+                "name": "Imidacloprid (Confidor 200 SL)",
+                "chemical": "Imidacloprid (targets whitefly vector)",
+                "dosage": "0.3ml per liter of water",
+                "application": "Apply as systemic soil drench or foliar spray targeting whiteflies from transplanting"
+            },
+            {
+                "name": "Thiamethoxam (Actara 25 WG)",
+                "chemical": "Thiamethoxam (targets whitefly vector)",
+                "dosage": "0.25g per liter of water",
+                "application": "Apply foliar spray every 7-10 days to control whitefly population"
+            }
+        ],
+        "general_advice": "TYLCV has NO direct cure — management focuses on eliminating the Bemisia tabaci (silverleaf whitefly) vector. Use yellow sticky traps to monitor whitefly populations. Use reflective mulches to repel whiteflies. Rogue out and destroy infected plants early. Plant resistant/tolerant tomato varieties."
+    },
+    "Tomato___Tomato_mosaic_virus": {
+        "medicines": [
+            {
+                "name": "No direct fungicide/pesticide available",
+                "chemical": "N/A (viral disease)",
+                "dosage": "N/A",
+                "application": "Focus on sanitation and vector (aphid/contact) control with systemic insecticides"
+            }
+        ],
+        "general_advice": "Tomato mosaic virus (ToMV) spreads mechanically via contaminated hands, tools, and soil — NOT by insects. Wash hands thoroughly with soap before handling plants. Disinfect all tools with 1-part bleach to 9-parts water. Do not use tobacco while working (tobacco transmits TMV closely related). Remove and destroy infected plants immediately. Plant certified virus-free seed."
+    },
+    "Tomato___healthy": {
+        "medicines": [],
+        "general_advice": "Your tomato plant is healthy and thriving! Maintain consistent watering at the base, stake plants as they grow, and fertilize with a balanced tomato fertilizer. Inspect leaves weekly for early signs of disease."
     }
 }

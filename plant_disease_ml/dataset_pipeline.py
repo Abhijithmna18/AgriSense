@@ -101,8 +101,10 @@ def build_data_pipeline(data_dir, batch_size=32, target_size=(224, 224)):
     sampler = torch.utils.data.WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
     
     # Dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=sampler, num_workers=4, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True)
+    # NOTE: num_workers=0 is required on Windows to avoid multiprocessing pickling errors.
+    # On Linux/macOS you can safely increase this to 4 for faster data loading.
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=sampler, num_workers=0, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True)
     
     return train_loader, val_loader, test_loader, idx_to_class
