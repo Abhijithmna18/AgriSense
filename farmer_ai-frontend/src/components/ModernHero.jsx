@@ -72,7 +72,7 @@ const ModernHero = ({ config }) => {
                                 Get Started
                                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </button>
-                            <button className="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-full font-semibold text-lg hover:border-fresh-green hover:text-fresh-green transition-colors flex items-center justify-center gap-2 shadow-sm">
+                            <button onClick={() => window.open('https://youtu.be/nziA33FrhoI?si=NO0CgjvwkqymV6FZ', '_blank')} className="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-full font-semibold text-lg hover:border-fresh-green hover:text-fresh-green transition-colors flex items-center justify-center gap-2 shadow-sm">
                                 <Play size={20} className="fill-current" />
                                 Watch Demo
                             </button>

@@ -1,0 +1,115 @@
+/**
+ * Layout Fix for Sidebar and Main Content
+ * Ensures sidebar doesn't overlay content on desktop
+ * and acts as a drawer on mobile
+ */
+
+/* Main container should use flexbox */
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar - Fixed on desktop, hidden on mobile */
+.dashboard-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 16rem; /* 256px / 64 * 4 = 16rem */
+  z-index: 40;
+  flex-shrink: 0;
+}
+
+/* Main content area - Account for sidebar width on desktop */
+.dashboard-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  overflow-y: auto;
+  transition: margin-left 300ms ease-in-out;
+}
+
+/* Desktop: Add left margin to account for fixed sidebar */
+@media (min-width: 768px) {
+  .dashboard-main-content {
+    margin-left: 16rem; /* Same as sidebar width */
+  }
+}
+
+/* Mobile: No margin, sidebar is hidden/drawer */
+@media (max-width: 767px) {
+  .dashboard-main-content {
+    margin-left: 0;
+  }
+  
+  .dashboard-sidebar {
+    transform: translateX(-100%);
+    transition: transform 300ms ease-in-out;
+  }
+  
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  /* Mobile backdrop */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 30;
+    display: none;
+  }
+  
+  .sidebar-backdrop.show {
+    display: block;
+  }
+}
+
+/* Prevent content from being cut off */
+.dashboard-content-wrapper {
+  padding: 1.5rem;
+  padding-top: 5rem; /* Account for top bar */
+  padding-bottom: 3rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .dashboard-content-wrapper {
+    padding: 2rem;
+    padding-top: 5rem;
+  }
+}
+
+/* Ensure scrollbar is visible but styled */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Hide scrollbar for sidebar navigation */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

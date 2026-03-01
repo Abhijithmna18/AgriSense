@@ -24,6 +24,8 @@ import {
 import Sidebar from '../components/dashboard/Sidebar';
 import TopBar from '../components/dashboard/TopBar';
 import FarmManagementCard from '../components/dashboard/FarmManagementCard';
+import WeatherAlertsWidget from '../components/dashboard/WeatherAlertsWidget';
+import api from '../services/authApi';
 
 // Buyer Components
 import BuyerOverview from '../components/dashboard/buyer/BuyerOverview';
@@ -370,8 +372,13 @@ const Dashboard = ({ expectedRole }) => {
                                         {activeRole === 'farmer' && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
+                                                {/* Weather Alerts Card */}
+                                                <div className="h-full min-h-[300px]">
+                                                    <WeatherAlertsWidget />
+                                                </div>
+
                                                 {/* Yield Predictor Card */}
-                                                <div className="admin-card group hover:border-blue-400 transition-all flex flex-col h-full">
+                                                <div className="admin-card group hover:border-blue-400 transition-all flex flex-col h-full min-h-[300px]">
                                                     <div className="flex items-center justify-between mb-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">

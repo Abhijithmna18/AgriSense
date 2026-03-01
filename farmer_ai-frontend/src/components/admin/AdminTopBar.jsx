@@ -35,7 +35,10 @@ const AdminTopBar = ({ title = 'Dashboard' }) => {
                     <span className="hidden sm:inline">Refetch</span>
                 </button>
 
-                <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--admin-accent)] text-[#0D2818] hover:bg-[var(--admin-accent-hover)] transition-colors text-sm font-bold shadow-md">
+                <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--admin-accent)] text-[#0D2818] hover:bg-[var(--admin-accent-hover)] transition-colors text-sm font-bold shadow-md print:hidden"
+                >
                     <FileText size={16} />
                     <span className="hidden sm:inline">Report</span>
                 </button>

@@ -2,6 +2,9 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
 
+// Ensure API_URL doesn't end with /api (we'll add it in each call)
+const BASE_URL = API_URL.replace(/\/api$/, '');
+
 // Get auth token from localStorage
 const getAuthHeader = () => {
     const token = localStorage.getItem('auth_token');
@@ -11,7 +14,7 @@ const getAuthHeader = () => {
 // Get all farms for authenticated user
 export const getFarms = async () => {
     try {
-        const response = await axios.get(`${API_URL}/api/farms`, {
+        const response = await axios.get(`${BASE_URL}/api/farms`, {
             headers: getAuthHeader()
         });
         return response.data;
@@ -24,7 +27,7 @@ export const getFarms = async () => {
 // Get single farm by ID
 export const getFarm = async (farmId) => {
     try {
-        const response = await axios.get(`${API_URL}/api/farms/${farmId}`, {
+        const response = await axios.get(`${BASE_URL}/api/farms/${farmId}`, {
             headers: getAuthHeader()
         });
         return response.data;
@@ -37,7 +40,7 @@ export const getFarm = async (farmId) => {
 // Create new farm
 export const createFarm = async (farmData) => {
     try {
-        const response = await axios.post(`${API_URL}/api/farms`, farmData, {
+        const response = await axios.post(`${BASE_URL}/api/farms`, farmData, {
             headers: getAuthHeader()
         });
         return response.data;
@@ -50,7 +53,7 @@ export const createFarm = async (farmData) => {
 // Update farm
 export const updateFarm = async (farmId, farmData) => {
     try {
-        const response = await axios.put(`${API_URL}/api/farms/${farmId}`, farmData, {
+        const response = await axios.put(`${BASE_URL}/api/farms/${farmId}`, farmData, {
             headers: getAuthHeader()
         });
         return response.data;
@@ -63,7 +66,7 @@ export const updateFarm = async (farmId, farmData) => {
 // Delete farm
 export const deleteFarm = async (farmId) => {
     try {
-        const response = await axios.delete(`${API_URL}/api/farms/${farmId}`, {
+        const response = await axios.delete(`${BASE_URL}/api/farms/${farmId}`, {
             headers: getAuthHeader()
         });
         return response.data;

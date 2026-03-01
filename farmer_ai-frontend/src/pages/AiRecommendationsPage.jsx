@@ -19,6 +19,7 @@ import { recommendationsApi } from '../services/recommendationsApi';
 import Sidebar from '../components/dashboard/Sidebar';
 import TopBar from '../components/dashboard/TopBar';
 import { useAuth } from '../context/AuthContext';
+import WeatherAlertsWidget from '../components/weather/WeatherAlertsWidget';
 
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
     <div className="flex items-center gap-3 mb-6">
@@ -268,6 +269,12 @@ const AiRecommendationsPage = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                         {/* LEFT COLUMN: Context/Inputs */}
                         <div className="lg:col-span-1 space-y-6">
+                            {/* Weather Alerts Widget */}
+                            <WeatherAlertsWidget 
+                                farmId={farmId} 
+                                farmLocation={inputs.location}
+                            />
+                            
                             <div>
                                 <h3 className="text-sm font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-4">
                                     Farm Context Used

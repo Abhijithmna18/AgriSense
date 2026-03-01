@@ -40,6 +40,7 @@ const AdminNav = () => {
         { to: '/admin/roles', icon: Shield, label: 'Roles' },
         { to: '/admin/audit', icon: Activity, label: 'Audit Logs' },
         { to: '/admin/feedback', icon: MessageSquare, label: 'Feedback Manager' },
+        { to: '/admin/community', icon: MessageSquare, label: 'Community Hub' },
         { to: '/admin/settings', icon: Settings, label: 'Settings' },
         // Warehouse Module
         { to: '/admin/warehouses', icon: Building, label: 'Warehouses' },

@@ -1,0 +1,20 @@
+{
+  "topbar": {
+    "dashboard": "டாஷ்போர்டு",
+    "search": "கணினியைத் தேடு...",
+    "refetch": "புதுப்பிக்கவும்",
+    "report": "அறிக்கை",
+    "language": "மொழி"
+  },
+  "sidebar": {
+    "home": "முகப்பு",
+    "community": "சமூகம் மற்றும் நிகழ்வுகள்",
+    "marketplace": "சந்தை முற்றம்",
+    "farm_details": "பண்ணை விவரங்கள்",
+    "disease_radar": "நோய் ரேடார்"
+  },
+  "dashboard": {
+    "welcome": "மீண்டும் வருக",
+    "overview": "கண்ணோட்டம்"
+  }
+}

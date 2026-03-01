@@ -1,0 +1,20 @@
+{
+    "topbar": {
+        "dashboard": "डैशबोर्ड",
+        "search": "सिस्टम खोजें...",
+        "refetch": "रिफ्रेश",
+        "report": "रिपोर्ट",
+        "language": "भाषा"
+    },
+    "sidebar": {
+        "home": "होम",
+        "community": "समुदाय और कार्यक्रम",
+        "marketplace": "बाज़ार",
+        "farm_details": "खेत का विवरण",
+        "disease_radar": "रोग रडार"
+    },
+    "dashboard": {
+        "welcome": "वापसी पर स्वागत है",
+        "overview": "अवलोकन"
+    }
+}

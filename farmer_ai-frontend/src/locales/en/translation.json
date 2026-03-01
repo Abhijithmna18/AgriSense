@@ -1,0 +1,20 @@
+{
+    "topbar": {
+        "dashboard": "Dashboard",
+        "search": "Search system...",
+        "refetch": "Refetch",
+        "report": "Report",
+        "language": "Language"
+    },
+    "sidebar": {
+        "home": "Home",
+        "community": "Community & Events",
+        "marketplace": "Marketplace",
+        "farm_details": "Farm Details",
+        "disease_radar": "Disease Radar"
+    },
+    "dashboard": {
+        "welcome": "Welcome back",
+        "overview": "Overview"
+    }
+}

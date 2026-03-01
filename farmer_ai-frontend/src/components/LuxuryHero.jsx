@@ -73,6 +73,7 @@ export const LuxuryHero = () => {
 
                     {/* Secondary CTA */}
                     <motion.button
+                        onClick={() => window.open('https://youtu.be/nziA33FrhoI?si=NO0CgjvwkqymV6FZ', '_blank')}
                         variants={buttonHover}
                         initial="rest"
                         whileHover="hover"

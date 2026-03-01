@@ -9,6 +9,8 @@ import {
     ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/dashboard/Sidebar';
+import TopBar from '../components/dashboard/TopBar';
 
 // Import the existing pages
 import DiseasePredictionPage from './DiseasePredictionPage';
@@ -19,6 +21,7 @@ import ConsultationPage from './ConsultationPage';
 const SmartFarmingPage = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('disease'); // 'disease', 'pest', 'rotation', 'expert'
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     const tabs = [
         { id: 'disease', label: 'Disease Detection', icon: Activity, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' },
@@ -28,8 +31,14 @@ const SmartFarmingPage = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#F8FAF9] p-4 md:p-8">
-            <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex h-screen overflow-hidden bg-[var(--admin-bg)]">
+            <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+            
+            <div className="flex-1 flex flex-col md:ml-64 overflow-hidden">
+                <TopBar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+                
+                <div className="flex-1 bg-[#F8FAF9] p-4 md:p-8 pt-20 overflow-y-auto">
+                    <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Header & Navigation */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -95,7 +104,8 @@ const SmartFarmingPage = () => {
                         </motion.div>
                     </AnimatePresence>
                 </div>
-
+            </div>
+        </div>
             </div>
         </div>
     );

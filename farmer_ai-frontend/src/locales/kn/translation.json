@@ -1,0 +1,20 @@
+{
+    "topbar": {
+        "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+        "search": "ಸಿಸ್ಟಮ್ ಹುಡುಕಿ...",
+        "refetch": "ರಿಫ್ರೆಶ್",
+        "report": "ವರದಿ",
+        "language": "ಭಾಷೆ"
+    },
+    "sidebar": {
+        "home": "ಮುಖಪುಟ",
+        "community": "ಸಮುದಾಯ ಮತ್ತು ಈವೆಂಟ್‌ಗಳು",
+        "marketplace": "ಮಾರುಕಟ್ಟೆ",
+        "farm_details": "ಕೃಷಿ ವಿವರಗಳು",
+        "disease_radar": "ರೋಗ ರೇಡಾರ್"
+    },
+    "dashboard": {
+        "welcome": "ಮತ್ತೆ ಸ್ವಾಗತ",
+        "overview": "ಅವಲೋಕನ"
+    }
+}

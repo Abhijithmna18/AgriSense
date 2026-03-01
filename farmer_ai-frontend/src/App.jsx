@@ -5,9 +5,15 @@ import { ThemeProvider } from './context/ThemeContext';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import ScrollToTop from './components/ScrollToTop';
 
 // Pages
 import Home from './pages/Home';
+import About from './pages/About';
+import Careers from './pages/Careers';
+import Blog from './pages/Blog';
+import Contact from './pages/Contact';
+import Partners from './pages/Partners';
 import Register from './pages/Register';
 import Verify from './pages/Verify';
 import Login from './pages/Login';
@@ -50,6 +56,7 @@ import MarketplaceAdmin from './pages/admin/MarketplaceAdmin';
 import RecommendationsAdmin from './pages/admin/RecommendationsAdmin';
 import RolesPermissionsAdmin from './pages/admin/RolesPermissionsAdmin';
 import SettingsAdmin from './pages/admin/SettingsAdmin';
+import CommunityAdmin from './pages/admin/CommunityAdmin';
 
 import AdminLoanQueue from './pages/admin/loan/AdminLoanQueue';
 import LoanReviewPage from './pages/admin/loan/LoanReviewPage';
@@ -78,6 +85,10 @@ import ProcurePage from './pages/ProcurePage';
 import YieldPredictionPage from './pages/YieldPredictionPage';
 import ConsultationPage from './pages/ConsultationPage';
 import SmartFarmingPage from './pages/SmartFarmingPage';
+import FertilizerCalculatorPage from './pages/FertilizerCalculatorPage';
+import ForumPage from './pages/ForumPage';
+import QuestionDetail from './pages/QuestionDetail';
+import WeatherAlertsPage from './pages/WeatherAlertsPage';
 
 // Admin Warehouse Pages
 import AdminWarehousePage from './pages/admin/AdminWarehousePage';
@@ -125,9 +136,15 @@ function App() {
         <AuthProvider>
           <CartProvider>
             <Router>
+              <ScrollToTop />
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/careers" element={<Careers />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/partners" element={<Partners />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/verify-email" element={<Verify />} />
                 <Route path="/login" element={<Login />} />
@@ -166,6 +183,10 @@ function App() {
                 <Route path="/farmer/farms/:farmId/ai-recommendations" element={<PrivateRoute><AiRecommendationsPage /></PrivateRoute>} />
                 <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
 
+                {/* Community & Events */}
+                <Route path="/community" element={<PrivateRoute><ForumPage /></PrivateRoute>} />
+                <Route path="/community/question/:id" element={<PrivateRoute><QuestionDetail /></PrivateRoute>} />
+
                 {/* Marketplace - Valid for both, logic inside */}
                 <Route path="/marketplace" element={<PrivateRoute><MarketplaceLayout /></PrivateRoute>}>
                   <Route index element={<Marketplace />} />
@@ -198,6 +219,7 @@ function App() {
 
                 {/* Farm Management */}
                 <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
+                <Route path="/weather-alerts" element={<PrivateRoute><WeatherAlertsPage /></PrivateRoute>} />
                 <Route path="/farm-management" element={<PrivateRoute><FarmManagement /></PrivateRoute>} />
                 <Route path="/crop-knowledge" element={<PrivateRoute><CropKnowledge /></PrivateRoute>} />
                 <Route path="/plant-doctor" element={<PrivateRoute><PlantIdentificationPage /></PrivateRoute>} />
@@ -217,6 +239,7 @@ function App() {
                 <Route path="/crop-calendar" element={<PrivateRoute><CropCalendarPage /></PrivateRoute>} />
                 <Route path="/disease-map" element={<PrivateRoute><DiseaseMapPage /></PrivateRoute>} />
                 <Route path="/smart-farming" element={<PrivateRoute><SmartFarmingPage /></PrivateRoute>} />
+                <Route path="/fertilizer-calculator" element={<PrivateRoute><FertilizerCalculatorPage /></PrivateRoute>} />
                 <Route path="/services/soil-test" element={<PrivateRoute><SoilTestPage /></PrivateRoute>} />
                 <Route path="/rl-irrigation" element={<PrivateRoute><IrrigationRLPage /></PrivateRoute>} />
                 <Route path="/procure" element={<PrivateRoute><ProcurePage /></PrivateRoute>} />
@@ -232,6 +255,7 @@ function App() {
                   <Route path="marketplace" element={<MarketplaceAdmin />} />
                   <Route path="recommendations" element={<RecommendationsAdmin />} />
                   <Route path="feature-flags" element={<FeatureFlagsAdmin />} />
+                  <Route path="community" element={<CommunityAdmin />} />
                   <Route path="roles" element={<RolesPermissionsAdmin />} />
                   <Route path="audit" element={<AuditLogsAdmin />} />
                   <Route path="settings" element={<SettingsAdmin />} />

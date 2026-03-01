@@ -20,11 +20,12 @@ import {
     RefreshCw,
     CloudRain,
     Sparkles,
-    UserCheck
+    UserCheck,
+    Calculator,
+    Lightbulb
 } from 'lucide-react';
 
 import { motion } from 'framer-motion';
-import recommendationIcon from '../../assets/recommendations_custom.png';
 import '../../styles/admin.css';
 
 import { useAuth } from '../../context/AuthContext';
@@ -42,9 +43,11 @@ const Sidebar = ({ onLogout }) => {
 
         // Farmer Specific
         { icon: Activity, label: 'Farm Monitoring', path: '/monitoring', roles: ['farmer', 'admin'] },
+        { icon: CloudRain, label: 'Weather Alerts', path: '/weather-alerts', roles: ['farmer', 'admin'] },
         { icon: BookOpen, label: 'Crop Intelligence', path: '/crop-knowledge', roles: ['farmer', 'admin'] },
         { icon: Sparkles, label: 'Smart Farming', path: '/smart-farming', roles: ['farmer', 'admin'] },
-        { icon: null, img: recommendationIcon, label: 'Recommendations', path: '/recommendations', roles: ['farmer', 'admin'] },
+        { icon: Calculator, label: 'Fertilizer Calculator', path: '/fertilizer-calculator', roles: ['farmer', 'admin'] },
+        { icon: Lightbulb, label: 'Recommendations', path: '/recommendations', roles: ['farmer', 'admin'] },
 
         // Buyer Specific (New)
         { icon: Sparkles, label: 'Smart Procure', path: '/procure', roles: ['buyer', 'admin'] },
@@ -55,6 +58,7 @@ const Sidebar = ({ onLogout }) => {
         // { icon: BarChart2, label: 'Market Analytics', path: '/market-analytics', roles: ['buyer'] }, // Removed
 
         // Shared
+        { icon: MessageSquare, label: 'Community & Events', path: '/community', roles: ['farmer', 'buyer', 'admin'] },
         {
             icon: Building,
             label: 'Warehouses',
@@ -65,7 +69,7 @@ const Sidebar = ({ onLogout }) => {
             ]
         },
 
-        { icon: MessageSquare, label: 'Feedback', path: '/feedback', badge: 'New', roles: ['farmer', 'buyer', 'admin'] },
+        { icon: MessageSquare, label: 'Feedback', path: '/feedback', roles: ['farmer', 'buyer', 'admin'] },
         { icon: Settings, label: 'Settings', path: '/profile-settings', roles: ['farmer', 'buyer', 'admin'] },
     ];
 
@@ -151,19 +155,16 @@ const Sidebar = ({ onLogout }) => {
                             >
                                 {({ isActive }) => (
                                     <>
-                                        {item.img ? (
-                                            <img
-                                                src={item.img}
-                                                alt={item.label}
-                                                className={`w-6 h-6 object-contain transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-70 group-hover:opacity-100 grayscale'}`}
-                                            />
-                                        ) : (
-                                            <item.icon
-                                                size={20}
-                                                className={`transition-colors duration-300 ${isActive ? 'text-[var(--admin-accent)]' : 'group-hover:text-[var(--admin-accent)]'}`}
-                                            />
-                                        )}
+                                        <item.icon
+                                            size={20}
+                                            className={`transition-colors duration-300 ${isActive ? 'text-[var(--admin-accent)]' : 'group-hover:text-[var(--admin-accent)]'}`}
+                                        />
                                         <span className="font-medium tracking-wide truncate">{item.label}</span>
+                                        {item.badge && (
+                                            <span className="ml-auto px-2 py-0.5 text-xs font-semibold bg-green-500 text-white rounded-full">
+                                                {item.badge}
+                                            </span>
+                                        )}
                                     </>
                                 )}
                             </NavLink>

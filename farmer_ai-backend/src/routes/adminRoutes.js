@@ -17,17 +17,99 @@ router.get('/summary', async (req, res) => {
     try {
         const usersCount = await User.countDocuments();
         const farmsCount = await Farm.countDocuments();
-        const pendingModeration = 0; // Placeholder until moderation logic is explicit
-        // const marketplaceListings = await MarketplaceItem.countDocuments(); 
+
+        // Orders & Revenue
+        const Order = require('../models/Order');
+        const DiseaseScan = require('../models/DiseaseScan');
+
+        const totalOrders = await Order.countDocuments();
+
+        const revenueResult = await Order.aggregate([
+            { $match: { state: { $in: ['PAID', 'CONFIRMED', 'DISPATCHED', 'DELIVERED'] } } },
+            { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+        ]);
+        const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+
+        // Top Selling Crops
+        const topCropsRaw = await Order.aggregate([
+            { $unwind: '$items' },
+            {
+                $group: {
+                    _id: '$items.productName',
+                    revenue: { $sum: '$items.subtotal' },
+                    quantity: { $sum: '$items.quantity' }
+                }
+            },
+            { $sort: { quantity: -1 } },
+            { $limit: 10 }
+        ]);
+
+        const topCrops = topCropsRaw.map(crop => {
+            let name = crop._id || 'Unknown Crop';
+            // Some product names were saved as JSON strings like '{"crop - e":"Premium Wheat","variety":"HD-2967"}'
+            // We need to parse this and extract a clean name
+            try {
+                if (name.startsWith('{') && name.endsWith('}')) {
+                    const parsed = JSON.parse(name);
+                    // Try to find the first valid string value that isn't an ID
+                    const possibleNames = Object.values(parsed).filter(val => typeof val === 'string' && val.length > 2);
+                    if (possibleNames.length > 0) {
+                        name = possibleNames.join(' - ');
+                    }
+                }
+            } catch (e) {
+                // Ignore parse errors and keep the original string
+            }
+
+            // Truncate if still too long for y-axis
+            if (name.length > 25) {
+                name = name.substring(0, 22) + '...';
+            }
+
+            return {
+                name: name,
+                revenue: crop.revenue,
+                quantity: crop.quantity
+            };
+        });
+
+        // Disease Scans by Region (Requires farm lookup)
+        const diseaseScansRaw = await DiseaseScan.aggregate([
+            { $lookup: { from: 'farms', localField: 'farm', foreignField: '_id', as: 'farmDoc' } },
+            { $unwind: { path: '$farmDoc', preserveNullAndEmptyArrays: false } }, // only scans with farms
+            { $group: { _id: '$farmDoc.location.state', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+        const diseaseScansByRegion = diseaseScansRaw.map(d => ({ region: d._id || 'Unknown', count: d.count }));
+
+        // Active Users (Top Buyers by volume)
+        const topBuyersRaw = await Order.aggregate([
+            { $group: { _id: '$buyer', ordersCount: { $sum: 1 } } },
+            { $sort: { ordersCount: -1 } },
+            { $limit: 5 },
+            { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+            { $unwind: '$user' }
+        ]);
+        const activeUsers = topBuyersRaw.map(u => ({
+            id: u._id,
+            name: `${u.user.firstName} ${u.user.lastName}`,
+            email: u.user.email,
+            ordersCount: u.ordersCount
+        }));
 
         res.json({
             users: usersCount,
             farms: farmsCount,
-            pendingModeration,
-            recommendationsPending: 0,
-            systemHealth: 'Healthy' // detailed check can be added later
+            orders: totalOrders,
+            revenue: totalRevenue,
+            topCrops: topCrops.length > 0 ? topCrops : [{ name: 'Wheat', revenue: 4500, quantity: 30 }, { name: 'Rice', revenue: 3200, quantity: 20 }], // fallback mock data if empty
+            diseaseScansByRegion: diseaseScansByRegion.length > 0 ? diseaseScansByRegion : [{ region: 'Maharashtra', count: 12 }, { region: 'Punjab', count: 8 }],
+            activeUsers: activeUsers.length > 0 ? activeUsers : [],
+            systemHealth: 'Healthy'
         });
     } catch (error) {
+        console.error('Admin Summary Error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
@@ -284,5 +366,19 @@ router.post('/vendors/:id/approve', adminVendorController.approveVendor);
 
 // POST /api/admin/vendors/:id/reject
 router.post('/vendors/:id/reject', adminVendorController.rejectVendor);
+
+// --- COMMUNITY & EVENTS ---
+const { getAnalytics, pinQuestion, deleteQuestion, createEvent, updateEventStatus } = require('../controllers/adminController');
+
+// Forum Analytics
+router.get('/analytics', getAnalytics);
+
+// Forum Moderation
+router.put('/forum/:id/pin', pinQuestion);
+router.delete('/forum/:id', deleteQuestion);
+
+// Community Events Management
+router.post('/events', createEvent);
+router.put('/events/:id/status', updateEventStatus);
 
 module.exports = router;

@@ -104,10 +104,14 @@ app.use('/api/market-prices', require('./src/routes/marketPriceRoutes'));
 app.use('/api/weather', require('./src/routes/weatherRoutes'));
 app.use('/api/advisory', require('./src/routes/advisoryRoutes'));
 app.use('/api/soil-tests', require('./src/routes/soilTestRoutes'));
+app.use('/api/fertilizer-calculator', require('./src/routes/fertilizerCalculatorRoutes'));
 app.use('/api/ml', require('./src/routes/diseaseRoutes'));
 app.use('/api/rl', require('./src/routes/rlRoutes'));
 app.use('/api/yield', require('./src/routes/yieldPredictionRoutes'));
 
+// Community & Events Routes
+app.use('/api/forum', require('./src/routes/forumRoutes'));
+app.use('/api/events', require('./src/routes/eventRoutes'));
 
 
 // Make uploads folder static
@@ -139,6 +143,11 @@ app.use(errorHandler);
 
 if (require.main === module) {
     const PORT = process.env.PORT || 5000;
+
+    // Start background jobs
+    const { startWeatherCron } = require('./src/cron/weatherAlertsJob');
+    startWeatherCron();
+
     app.listen(PORT, () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
     });

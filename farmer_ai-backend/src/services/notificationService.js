@@ -107,6 +107,99 @@ exports.sendOutbreakAlert = (userId, disease, region) =>
     );
 
 /**
+ * Send a weather-based farming alert to a user with cooldown check.
+ * @param {string} userId - User ID
+ * @param {string} message - Alert message
+ * @param {string} type - Alert severity (danger, warning, info, success)
+ * @param {string} alertType - Specific alert type (frost, heavy_rain, etc.)
+ * @param {Object} weatherData - Weather data snapshot
+ * @param {Object} location - Location data
+ * @param {string} farmId - Optional farm ID
+ * @returns {Object} - { sent: boolean, notification: Object, reason: string }
+ */
+exports.sendWeatherAlert = async (userId, message, type = 'warning', alertType = null, weatherData = {}, location = {}, farmId = null) => {
+    const WeatherAlert = require('../models/WeatherAlert');
+    
+    // Default cooldown periods (in hours) for each alert type
+    const COOLDOWN_PERIODS = {
+        frost: 12,              // 12 hours
+        heavy_rain: 6,          // 6 hours
+        drought_risk: 24,       // 24 hours
+        extreme_heat: 12,       // 12 hours
+        strong_wind: 6,         // 6 hours
+        high_humidity: 24,      // 24 hours
+        high_uv: 24,            // 24 hours
+        favorable: 24           // 24 hours
+    };
+    
+    const cooldownHours = COOLDOWN_PERIODS[alertType] || 12;
+    const cooldownMs = cooldownHours * 60 * 60 * 1000;
+    
+    // Check if similar alert was sent recently (cooldown check)
+    if (alertType) {
+        const recentAlert = await WeatherAlert.findOne({
+            user: userId,
+            alertType,
+            sentAt: { $gte: new Date(Date.now() - cooldownMs) }
+        }).sort({ sentAt: -1 });
+        
+        if (recentAlert) {
+            const minutesAgo = Math.floor((Date.now() - recentAlert.sentAt.getTime()) / 60000);
+            console.log(`[NotificationService] Skipping ${alertType} alert for user ${userId} - sent ${minutesAgo} minutes ago (cooldown: ${cooldownHours}h)`);
+            return { 
+                sent: false, 
+                notification: null, 
+                reason: `Alert sent ${minutesAgo} minutes ago. Cooldown: ${cooldownHours} hours.` 
+            };
+        }
+    }
+    
+    // Create notification
+    const iconMap = {
+        danger: '🔴 Critical Weather Alert',
+        warning: '🟠 Weather Warning',
+        info: 'ℹ️ Weather Update',
+        success: '✅ Farm Conditions Good'
+    };
+    
+    const notification = await exports.createNotification(
+        userId,
+        'weather_alert',
+        iconMap[type] || 'Weather Alert',
+        message
+    );
+    
+    // Track alert in WeatherAlert model
+    if (notification && alertType) {
+        try {
+            await WeatherAlert.create({
+                user: userId,
+                farm: farmId || null,
+                alertType,
+                severity: type,
+                message,
+                weatherData: {
+                    temperature: weatherData.temp,
+                    rainfall: weatherData.rain_1h || weatherData.rain_mm,
+                    humidity: weatherData.humidity,
+                    windSpeed: weatherData.wind_speed,
+                    uvIndex: weatherData.uv_index
+                },
+                location: {
+                    city: location.city,
+                    coordinates: location.coordinates
+                },
+                expiresAt: new Date(Date.now() + cooldownMs)
+            });
+        } catch (error) {
+            console.error('[NotificationService] Failed to track weather alert:', error.message);
+        }
+    }
+    
+    return { sent: true, notification, reason: 'Alert sent successfully' };
+};
+
+/**
  * Bulk-send alerts to multiple users.
  */
 exports.broadcastAlert = async (userIds, title, message) => {
