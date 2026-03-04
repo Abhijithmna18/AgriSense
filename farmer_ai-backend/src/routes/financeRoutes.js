@@ -7,7 +7,8 @@ const {
     applyForLoan,
     getLoans,
     getTransactions,
-    addTransaction
+    addTransaction,
+    getProfitabilityAnalysis
 } = require('../controllers/financeController');
 const { getFinancialInsights } = require('../controllers/financeAIController');
 
@@ -17,6 +18,7 @@ router.post('/apply', protect, applyForLoan);
 router.get('/loans', protect, getLoans);
 router.get('/transactions', protect, getTransactions);
 router.post('/transactions', protect, addTransaction);
+router.get('/profitability/:cropCycleId', protect, getProfitabilityAnalysis);
 router.post('/ai-insight', protect, getFinancialInsights);
 
 module.exports = router;

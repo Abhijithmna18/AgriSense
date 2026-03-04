@@ -7,6 +7,16 @@ const transactionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    farm: { // Link transaction to a specific farm entity
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Farm',
+        index: true
+    },
+    cropCycle: { // Link transaction to a specific harvest for ROI
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'CropCycle',
+        index: true
+    },
     transactionId: {
         type: String,
         required: true,

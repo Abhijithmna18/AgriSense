@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './context/ThemeContext';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
+import { FarmProvider } from './context/FarmContext';
 import { CartProvider } from './context/CartContext';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -43,6 +44,7 @@ import FarmDetailsPage from './pages/FarmDetailsPage';
 import FieldOperationsPage from './pages/FieldOperationsPage';
 import ProducePage from './pages/ProducePage'; // New Checkout Page
 import FinancialServicesPage from './pages/FinancialServicesPage';
+import FarmIntelligencePage from './pages/FarmIntelligencePage';
 import PrivateRoute from './components/PrivateRoute';
 
 // Admin Pages
@@ -139,162 +141,165 @@ function App() {
     <ThemeProvider>
       <DataProvider>
         <AuthProvider>
-          <CartProvider>
-            <Router>
-              <ScrollToTop />
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/careers" element={<Careers />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/partners" element={<Partners />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/verify-email" element={<Verify />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+          <FarmProvider>
+            <CartProvider>
+              <Router>
+                <ScrollToTop />
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/careers" element={<Careers />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/partners" element={<Partners />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/verify-email" element={<Verify />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
-                {/* Vendor Registration */}
-                <Route path="/sell" element={<VendorRegister />} />
+                  {/* Vendor Registration */}
+                  <Route path="/sell" element={<VendorRegister />} />
 
-                {/* Vendor Portal */}
-                <Route path="/vendor-dashboard" element={<Navigate to="/vendor/dashboard" replace />} />
-                <Route path="/vendor" element={<PrivateRoute><VendorLayout /></PrivateRoute>}>
-                  <Route index element={<Navigate to="dashboard" replace />} />
-                  <Route path="dashboard" element={<VendorAnalytics />} />
-                  <Route path="market-trends" element={<VendorMarketTrends />} />
-                  <Route path="products" element={<MyProducts />} />
-                  <Route path="orders" element={<VendorOrders />} />
-                  <Route path="negotiations" element={<VendorNegotiations />} />
-                  <Route path="reviews" element={<VendorReviews />} />
-                  <Route path="analytics" element={<VendorAnalytics />} />
-                  <Route path="payments" element={<VendorPayments />} />
-                  <Route path="notifications" element={<VendorNotifications />} />
-                  <Route path="profile" element={<VendorProfile />} />
-                </Route>
+                  {/* Vendor Portal */}
+                  <Route path="/vendor-dashboard" element={<Navigate to="/vendor/dashboard" replace />} />
+                  <Route path="/vendor" element={<PrivateRoute><VendorLayout /></PrivateRoute>}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<VendorAnalytics />} />
+                    <Route path="market-trends" element={<VendorMarketTrends />} />
+                    <Route path="products" element={<MyProducts />} />
+                    <Route path="orders" element={<VendorOrders />} />
+                    <Route path="negotiations" element={<VendorNegotiations />} />
+                    <Route path="reviews" element={<VendorReviews />} />
+                    <Route path="analytics" element={<VendorAnalytics />} />
+                    <Route path="payments" element={<VendorPayments />} />
+                    <Route path="notifications" element={<VendorNotifications />} />
+                    <Route path="profile" element={<VendorProfile />} />
+                  </Route>
 
-                {/* Dashboard Routes */}
-                <Route path="/farmer-dashboard" element={<PrivateRoute><Dashboard expectedRole="farmer" /></PrivateRoute>} />
-                <Route path="/buyer-dashboard" element={<PrivateRoute><Dashboard expectedRole="buyer" /></PrivateRoute>} />
-                <Route path="/orders" element={<PrivateRoute><BuyerOrdersPage /></PrivateRoute>} />
-                <Route path="/dashboard" element={<Navigate to="/farmer-dashboard" replace />} />
+                  {/* Dashboard Routes */}
+                  <Route path="/farmer-dashboard" element={<PrivateRoute><Dashboard expectedRole="farmer" /></PrivateRoute>} />
+                  <Route path="/buyer-dashboard" element={<PrivateRoute><Dashboard expectedRole="buyer" /></PrivateRoute>} />
+                  <Route path="/orders" element={<PrivateRoute><BuyerOrdersPage /></PrivateRoute>} />
+                  <Route path="/dashboard" element={<Navigate to="/farmer-dashboard" replace />} />
 
-                {/* Secure Modules */}
-                <Route path="/recommendations" element={<PrivateRoute><Recommendations /></PrivateRoute>} />
-                <Route path="/profile-settings" element={<PrivateRoute><ProfileSettings /></PrivateRoute>} />
-                <Route path="/farms/new" element={<PrivateRoute><AddFarmPage /></PrivateRoute>} />
-                <Route path="/farmer/farms/:farmId/ai-recommendations" element={<PrivateRoute><AiRecommendationsPage /></PrivateRoute>} />
-                <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
+                  {/* Secure Modules */}
+                  <Route path="/recommendations" element={<PrivateRoute><Recommendations /></PrivateRoute>} />
+                  <Route path="/profile-settings" element={<PrivateRoute><ProfileSettings /></PrivateRoute>} />
+                  <Route path="/farms/new" element={<PrivateRoute><AddFarmPage /></PrivateRoute>} />
+                  <Route path="/farmer/farms/:farmId/ai-recommendations" element={<PrivateRoute><AiRecommendationsPage /></PrivateRoute>} />
+                  <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
 
-                {/* Community & Events */}
-                <Route path="/community" element={<PrivateRoute><ForumPage /></PrivateRoute>} />
-                <Route path="/community/question/:id" element={<PrivateRoute><QuestionDetail /></PrivateRoute>} />
+                  {/* Community & Events */}
+                  <Route path="/community" element={<PrivateRoute><ForumPage /></PrivateRoute>} />
+                  <Route path="/community/question/:id" element={<PrivateRoute><QuestionDetail /></PrivateRoute>} />
 
-                {/* Marketplace - Valid for both, logic inside */}
-                <Route path="/marketplace" element={<PrivateRoute><MarketplaceLayout /></PrivateRoute>}>
-                  <Route index element={<Marketplace />} />
-                  <Route path="cart" element={<CartPage />} />
-                  <Route path="checkout" element={<CheckoutPage />} />
-                  <Route path="orders" element={<FarmerOrdersPage />} />
-                  <Route path="orders/:id" element={<OrderDetailsPage />} />
-                  <Route path="saved-suppliers" element={<SavedSuppliersPage />} />
-                </Route>
+                  {/* Marketplace - Valid for both, logic inside */}
+                  <Route path="/marketplace" element={<PrivateRoute><MarketplaceLayout /></PrivateRoute>}>
+                    <Route index element={<Marketplace />} />
+                    <Route path="cart" element={<CartPage />} />
+                    <Route path="checkout" element={<CheckoutPage />} />
+                    <Route path="orders" element={<FarmerOrdersPage />} />
+                    <Route path="orders/:id" element={<OrderDetailsPage />} />
+                    <Route path="saved-suppliers" element={<SavedSuppliersPage />} />
+                  </Route>
 
-                {/* Negotiation Routes */}
-                <Route path="/negotiations" element={<PrivateRoute><NegotiationsListPage /></PrivateRoute>} />
-                <Route path="/negotiations/:negotiationId" element={<PrivateRoute><NegotiationPage /></PrivateRoute>} />
-                <Route path="/market-analytics" element={<PrivateRoute><MarketAnalyticsPage /></PrivateRoute>} />
-                <Route path="/financial-services" element={<PrivateRoute><FinancialServicesPage /></PrivateRoute>} />
+                  {/* Negotiation Routes */}
+                  <Route path="/negotiations" element={<PrivateRoute><NegotiationsListPage /></PrivateRoute>} />
+                  <Route path="/negotiations/:negotiationId" element={<PrivateRoute><NegotiationPage /></PrivateRoute>} />
+                  <Route path="/market-analytics" element={<PrivateRoute><MarketAnalyticsPage /></PrivateRoute>} />
+                  <Route path="/financial-services" element={<PrivateRoute><FinancialServicesPage /></PrivateRoute>} />
 
-                <Route path="/feedback" element={<PrivateRoute><FeedbackCenter /></PrivateRoute>} />
+                  <Route path="/feedback" element={<PrivateRoute><FeedbackCenter /></PrivateRoute>} />
 
-                {/* Coming Soon / Placeholders */}
-                <Route path="/crops/:id" element={<div className="container mt-5"><h2>Crop Detail Page (Coming Soon)</h2></div>} />
-                <Route path="/disease-detection" element={<PrivateRoute><DiseasePredictionPage /></PrivateRoute>} />
-                <Route path="/advisories" element={<PrivateRoute><ConsultationPage /></PrivateRoute>} />
+                  {/* Coming Soon / Placeholders */}
+                  <Route path="/crops/:id" element={<div className="container mt-5"><h2>Crop Detail Page (Coming Soon)</h2></div>} />
+                  <Route path="/disease-detection" element={<PrivateRoute><DiseasePredictionPage /></PrivateRoute>} />
+                  <Route path="/advisories" element={<PrivateRoute><ConsultationPage /></PrivateRoute>} />
 
-                {/* Warehouse Module */}
-                <Route path="/warehouses" element={<Warehouses />} />
-                <Route path="/warehouse/:id" element={<WarehouseDetailsPage />} />
-                <Route path="/booking/request" element={<PrivateRoute><BookingRequestForm /></PrivateRoute>} />
-                <Route path="/my-bookings" element={<PrivateRoute><MyBookingsPage /></PrivateRoute>} />
-                <Route path="/booking/:id" element={<PrivateRoute><BookingDetailsPage /></PrivateRoute>} />
+                  {/* Warehouse Module */}
+                  <Route path="/warehouses" element={<Warehouses />} />
+                  <Route path="/warehouse/:id" element={<WarehouseDetailsPage />} />
+                  <Route path="/booking/request" element={<PrivateRoute><BookingRequestForm /></PrivateRoute>} />
+                  <Route path="/my-bookings" element={<PrivateRoute><MyBookingsPage /></PrivateRoute>} />
+                  <Route path="/booking/:id" element={<PrivateRoute><BookingDetailsPage /></PrivateRoute>} />
 
-                {/* Help Center Routes */}
-                <Route path="/resources/help" element={<HelpCenter />} />
-                <Route path="/resources/help/:slug" element={<HelpCenterDetail />} />
+                  {/* Help Center Routes */}
+                  <Route path="/resources/help" element={<HelpCenter />} />
+                  <Route path="/resources/help/:slug" element={<HelpCenterDetail />} />
 
-                {/* Farm Management */}
-                <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
-                <Route path="/weather-alerts" element={<PrivateRoute><WeatherAlertsPage /></PrivateRoute>} />
-                <Route path="/farm-management" element={<PrivateRoute><FarmManagement /></PrivateRoute>} />
-                <Route path="/crop-knowledge" element={<PrivateRoute><CropKnowledge /></PrivateRoute>} />
-                <Route path="/plant-doctor" element={<PrivateRoute><PlantIdentificationPage /></PrivateRoute>} />
-                <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
-                <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
-                <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
-                <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
-                <Route path="/crop-rotation" element={<PrivateRoute><CropRotationPage /></PrivateRoute>} />
-                <Route path="/farms" element={<PrivateRoute><FarmsPage /></PrivateRoute>} />
-                <Route path="/farms/:id" element={<PrivateRoute><FarmDetailsPage /></PrivateRoute>} />
-                <Route path="/field-operations" element={<PrivateRoute><FieldOperationsPage /></PrivateRoute>} />
-                <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
-                <Route path="/services/soil-test" element={<PrivateRoute><SoilTestPage /></PrivateRoute>} />
-                <Route path="/rl-irrigation" element={<PrivateRoute><IrrigationRLPage /></PrivateRoute>} />
-                <Route path="/procure" element={<PrivateRoute><ProcurePage /></PrivateRoute>} />
-                <Route path="/yield-prediction" element={<PrivateRoute><YieldPredictionPage /></PrivateRoute>} />
-                <Route path="/crop-calendar" element={<PrivateRoute><CropCalendarPage /></PrivateRoute>} />
-                <Route path="/disease-map" element={<PrivateRoute><DiseaseMapPage /></PrivateRoute>} />
-                <Route path="/smart-farming" element={<PrivateRoute><SmartFarmingPage /></PrivateRoute>} />
-                <Route path="/fertilizer-calculator" element={<PrivateRoute><FertilizerCalculatorPage /></PrivateRoute>} />
-                <Route path="/services/soil-test" element={<PrivateRoute><SoilTestPage /></PrivateRoute>} />
-                <Route path="/rl-irrigation" element={<PrivateRoute><IrrigationRLPage /></PrivateRoute>} />
-                <Route path="/procure" element={<PrivateRoute><ProcurePage /></PrivateRoute>} />
-                <Route path="/yield-prediction" element={<PrivateRoute><YieldPredictionPage /></PrivateRoute>} />
+                  {/* Farm Management */}
+                  <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
+                  <Route path="/weather-alerts" element={<PrivateRoute><WeatherAlertsPage /></PrivateRoute>} />
+                  <Route path="/farm-management" element={<PrivateRoute><FarmManagement /></PrivateRoute>} />
+                  <Route path="/crop-knowledge" element={<PrivateRoute><CropKnowledge /></PrivateRoute>} />
+                  <Route path="/plant-doctor" element={<PrivateRoute><PlantIdentificationPage /></PrivateRoute>} />
+                  <Route path="/pest-prediction" element={<PrivateRoute><PestPredictionPage /></PrivateRoute>} />
+                  <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
+                  <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
+                  <Route path="/weather-intelligence" element={<PrivateRoute><MicroWeatherPage /></PrivateRoute>} />
+                  <Route path="/crop-rotation" element={<PrivateRoute><CropRotationPage /></PrivateRoute>} />
+                  <Route path="/farms" element={<PrivateRoute><FarmsPage /></PrivateRoute>} />
+                  <Route path="/farms/:id" element={<PrivateRoute><FarmDetailsPage /></PrivateRoute>} />
+                  <Route path="/field-operations" element={<PrivateRoute><FieldOperationsPage /></PrivateRoute>} />
+                  <Route path="/intelligence" element={<PrivateRoute><FarmIntelligencePage /></PrivateRoute>} />
+                  <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
+                  <Route path="/services/soil-test" element={<PrivateRoute><SoilTestPage /></PrivateRoute>} />
+                  <Route path="/rl-irrigation" element={<PrivateRoute><IrrigationRLPage /></PrivateRoute>} />
+                  <Route path="/procure" element={<PrivateRoute><ProcurePage /></PrivateRoute>} />
+                  <Route path="/yield-prediction" element={<PrivateRoute><YieldPredictionPage /></PrivateRoute>} />
+                  <Route path="/crop-calendar" element={<PrivateRoute><CropCalendarPage /></PrivateRoute>} />
+                  <Route path="/disease-map" element={<PrivateRoute><DiseaseMapPage /></PrivateRoute>} />
+                  <Route path="/smart-farming" element={<PrivateRoute><SmartFarmingPage /></PrivateRoute>} />
+                  <Route path="/fertilizer-calculator" element={<PrivateRoute><FertilizerCalculatorPage /></PrivateRoute>} />
+                  <Route path="/services/soil-test" element={<PrivateRoute><SoilTestPage /></PrivateRoute>} />
+                  <Route path="/rl-irrigation" element={<PrivateRoute><IrrigationRLPage /></PrivateRoute>} />
+                  <Route path="/procure" element={<PrivateRoute><ProcurePage /></PrivateRoute>} />
+                  <Route path="/yield-prediction" element={<PrivateRoute><YieldPredictionPage /></PrivateRoute>} />
 
-                {/* Admin Routes */}
-                <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<Navigate to="dashboard" replace />} />
-                  <Route path="dashboard" element={<AdminDashboard />} />
-                  <Route path="users" element={<UsersAdmin />} />
-                  <Route path="vendors" element={<AdminVendorApproval />} />
-                  <Route path="farms" element={<FarmsAdmin />} />
-                  <Route path="marketplace" element={<MarketplaceAdmin />} />
-                  <Route path="recommendations" element={<RecommendationsAdmin />} />
-                  <Route path="feature-flags" element={<FeatureFlagsAdmin />} />
-                  <Route path="community" element={<CommunityAdmin />} />
-                  <Route path="roles" element={<RolesPermissionsAdmin />} />
-                  <Route path="audit" element={<AuditLogsAdmin />} />
-                  <Route path="settings" element={<SettingsAdmin />} />
-                  <Route path="loans" element={<AdminLoanQueue />} />
-                  <Route path="loans/:id" element={<LoanReviewPage />} />
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="users" element={<UsersAdmin />} />
+                    <Route path="vendors" element={<AdminVendorApproval />} />
+                    <Route path="farms" element={<FarmsAdmin />} />
+                    <Route path="marketplace" element={<MarketplaceAdmin />} />
+                    <Route path="recommendations" element={<RecommendationsAdmin />} />
+                    <Route path="feature-flags" element={<FeatureFlagsAdmin />} />
+                    <Route path="community" element={<CommunityAdmin />} />
+                    <Route path="roles" element={<RolesPermissionsAdmin />} />
+                    <Route path="audit" element={<AuditLogsAdmin />} />
+                    <Route path="settings" element={<SettingsAdmin />} />
+                    <Route path="loans" element={<AdminLoanQueue />} />
+                    <Route path="loans/:id" element={<LoanReviewPage />} />
 
-                  {/* Warehouse Admin */}
-                  <Route path="warehouses" element={<AdminWarehousePage />} />
-                  <Route path="warehouse-requests" element={<AdminBookingRequestsPage />} />
-                  <Route path="warehouse-reports" element={<AdminWarehouseReportsPage />} />
-                  <Route path="feedback" element={<AdminFeedbackPage />} />
+                    {/* Warehouse Admin */}
+                    <Route path="warehouses" element={<AdminWarehousePage />} />
+                    <Route path="warehouse-requests" element={<AdminBookingRequestsPage />} />
+                    <Route path="warehouse-reports" element={<AdminWarehouseReportsPage />} />
+                    <Route path="feedback" element={<AdminFeedbackPage />} />
 
-                  {/* CMS */}
-                  <Route path="homepage/hero" element={<HeroEditor />} />
-                  <Route path="homepage/features" element={<FeaturesEditor />} />
-                  <Route path="homepage/performance" element={<PerformanceEditor />} />
-                  <Route path="homepage/marketplace" element={<MarketplaceEditor />} />
-                  <Route path="homepage/footer" element={<FooterEditor />} />
-                  
-                  {/* Help Center Admin */}
-                  <Route path="resources/help" element={<HelpCenterAdmin />} />
-                  
-                  <Route path="*" element={<div className="text-white">Admin Page Not Found</div>} />
-                </Route>
+                    {/* CMS */}
+                    <Route path="homepage/hero" element={<HeroEditor />} />
+                    <Route path="homepage/features" element={<FeaturesEditor />} />
+                    <Route path="homepage/performance" element={<PerformanceEditor />} />
+                    <Route path="homepage/marketplace" element={<MarketplaceEditor />} />
+                    <Route path="homepage/footer" element={<FooterEditor />} />
 
-                {/* 404 Fallback */}
-                <Route path="*" element={<div className="p-10 text-center"><h1>404 - Page Not Found</h1></div>} />
-              </Routes>
-            </Router>
-          </CartProvider>
+                    {/* Help Center Admin */}
+                    <Route path="resources/help" element={<HelpCenterAdmin />} />
+
+                    <Route path="*" element={<div className="text-white">Admin Page Not Found</div>} />
+                  </Route>
+
+                  {/* 404 Fallback */}
+                  <Route path="*" element={<div className="p-10 text-center"><h1>404 - Page Not Found</h1></div>} />
+                </Routes>
+              </Router>
+            </CartProvider>
+          </FarmProvider>
         </AuthProvider>
       </DataProvider>
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />

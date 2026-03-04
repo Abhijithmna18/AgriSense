@@ -12,6 +12,8 @@ import {
 import SharedExpenseManager from './shared/SharedExpenseManager';
 import FinanceHistory from './FinanceHistory';
 import ProductReviews from './buyer/ProductReviews';
+import ProfitabilityAnalysis from './farmer/ProfitabilityAnalysis';
+import SubsidiesTracker from './farmer/SubsidiesTracker';
 
 const FinancialModuleExecution = ({ moduleId, moduleName, dataContext, config }) => {
     const [executionState, setExecutionState] = useState({
@@ -24,7 +26,8 @@ const FinancialModuleExecution = ({ moduleId, moduleName, dataContext, config })
     useEffect(() => {
         // Only run execution for modules that rely on AI/Generic engine
         // Skip for direct component modules to avoid unnecessary API calls
-        if (moduleId === 'expenses' || moduleId === 'transactions' || moduleId === 'credit' || moduleId === 'loans' || moduleId === 'product_reviews') {
+        const localModules = ['expenses', 'transactions', 'credit', 'loans', 'product_reviews', 'profitability', 'subsidies'];
+        if (localModules.includes(moduleId)) {
             return;
         }
 
@@ -106,6 +109,14 @@ const FinancialModuleExecution = ({ moduleId, moduleName, dataContext, config })
                 <ProductReviews />
             </div>
         );
+    }
+
+    if (moduleId === 'profitability') {
+        return <ProfitabilityAnalysis dataContext={dataContext} />;
+    }
+
+    if (moduleId === 'subsidies') {
+        return <SubsidiesTracker dataContext={dataContext} />;
     }
 
     // --- AI Execution Engine (Fallback for other modules) ---

@@ -107,7 +107,9 @@ app.use('/api/soil-tests', require('./src/routes/soilTestRoutes'));
 app.use('/api/fertilizer-calculator', require('./src/routes/fertilizerCalculatorRoutes'));
 app.use('/api/ml', require('./src/routes/diseaseRoutes'));
 app.use('/api/rl', require('./src/routes/rlRoutes'));
-app.use('/api/yield', require('./src/routes/yieldPredictionRoutes'));
+app.use('/api/ai-proxy', require('./src/routes/aiProxyRoutes'));
+app.use('/api/sensors', require('./src/routes/iotRoutes'));
+app.use('/api/insights', require('./src/routes/farmInsightRoutes'));
 
 // Community & Events Routes
 app.use('/api/forum', require('./src/routes/forumRoutes'));

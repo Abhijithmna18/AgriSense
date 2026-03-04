@@ -33,7 +33,7 @@ export const FARMER_CONFIG = {
         { id: 'revenue', label: 'Revenue Tracking', icon: TrendingUp },
         { id: 'expenses', label: 'Expense Manager', icon: TrendingDown },
         { id: 'profitability', label: 'Profitability Analysis', icon: PieChart },
-        { id: 'insurance', label: 'Crop Insurance', icon: Shield },
+        { id: 'subsidies', label: 'Subsidies & Insurance', icon: Shield },
         { id: 'credit', label: 'Loans & Financial Health', icon: Landmark }, // "credit" maps to Loans
     ],
     overview: {

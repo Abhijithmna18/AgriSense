@@ -225,28 +225,84 @@ exports.getTransactions = async (req, res) => {
 // @access  Private
 exports.addTransaction = async (req, res) => {
     try {
-        const { amount, category, description, date, type } = req.body;
+        const { amount, category, description, date, type, farmId, cropCycleId } = req.body;
 
         // Map frontend type 'expense' to 'debit', 'income' to 'credit' if needed
-        // But schema says enum: ['credit', 'debit']
         let dbType = type;
         if (type === 'expense') dbType = 'debit';
         if (type === 'income') dbType = 'credit';
 
         const newTx = await Transaction.create({
             user: req.user._id,
+            farm: farmId || undefined,
+            cropCycle: cropCycleId || undefined,
             type: dbType,
             amount,
-            category: category || 'other', // Ensure category matches enum or is lenient
+            category: category || 'other',
             description,
             date: date || Date.now(),
             status: 'completed',
-            sourceModel: 'External' // Manual entry
+            sourceModel: 'External'
         });
 
         res.status(201).json(newTx);
     } catch (error) {
         console.error("Error adding transaction:", error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Get Profitability & ROI for a specific Crop Cycle
+// @route   GET /api/finance/profitability/:cropCycleId
+// @access  Private
+exports.getProfitabilityAnalysis = async (req, res) => {
+    try {
+        const { cropCycleId } = req.params;
+        const userId = req.user._id;
+
+        // Fetch all transactions linked to this crop cycle
+        const transactions = await Transaction.find({
+            user: userId,
+            cropCycle: cropCycleId,
+            status: 'completed'
+        });
+
+        let totalRevenue = 0;
+        let totalExpenses = 0;
+        const expensesByCategory = {};
+
+        // Aggregate data
+        transactions.forEach(tx => {
+            if (tx.type === 'credit') {
+                totalRevenue += tx.amount;
+            } else if (tx.type === 'debit') {
+                totalExpenses += tx.amount;
+                // Group expenses for pie chart
+                expensesByCategory[tx.category] = (expensesByCategory[tx.category] || 0) + tx.amount;
+            }
+        });
+
+        const netProfit = totalRevenue - totalExpenses;
+        const roi = totalExpenses > 0 ? ((netProfit / totalExpenses) * 100).toFixed(2) : 0;
+
+        // Format for Recharts PieChart [{name: 'Category', value: 100}]
+        const expenseBreakdown = Object.keys(expensesByCategory).map(key => ({
+            name: key,
+            value: expensesByCategory[key]
+        }));
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalRevenue,
+                totalExpenses,
+                netProfit,
+                roi: Number(roi),
+                expenseBreakdown
+            }
+        });
+    } catch (error) {
+        console.error("Error calculating profitability:", error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };

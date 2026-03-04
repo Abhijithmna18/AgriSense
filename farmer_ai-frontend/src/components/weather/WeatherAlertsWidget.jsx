@@ -26,7 +26,7 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+  const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5002') + '/api';
 
   useEffect(() => {
     if (farmId && farmLocation) {
@@ -39,7 +39,7 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      
+
       // Fetch current weather
       const response = await axios.get(`${API_BASE}/weather/farm/${farmId}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -51,7 +51,7 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
       // Fetch forecast - handle different location formats
       if (farmLocation) {
         let city = '';
-        
+
         // Try different location formats
         if (farmLocation.district && farmLocation.state) {
           city = `${farmLocation.district}, ${farmLocation.state}`;
@@ -60,7 +60,7 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
         } else if (farmLocation.name) {
           city = farmLocation.name;
         }
-        
+
         if (city) {
           const forecastResponse = await axios.get(`${API_BASE}/weather/forecast?city=${encodeURIComponent(city)}`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -119,17 +119,17 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
     const now = new Date();
     const hour = now.getHours();
     const month = now.getMonth() + 1;
-    
+
     let timeOfDay = 'morning';
     if (hour >= 12 && hour < 17) timeOfDay = 'afternoon';
     else if (hour >= 17 && hour < 20) timeOfDay = 'evening';
     else if (hour >= 20 || hour < 6) timeOfDay = 'night';
-    
+
     let season = 'summer';
     if ((month >= 6 && month <= 9)) season = 'southwest_monsoon';
     else if (month >= 10 && month <= 11) season = 'northeast_monsoon';
     else if (month >= 12 || month <= 2) season = 'winter';
-    
+
     const alerts = {
       southwest_monsoon: {
         morning: {
@@ -207,8 +207,8 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
             rounded-xl p-4 border-2
             ${keralaAlert.color === 'red' ? 'bg-red-50 border-red-200' :
               keralaAlert.color === 'orange' ? 'bg-orange-50 border-orange-200' :
-              keralaAlert.color === 'green' ? 'bg-green-50 border-green-200' :
-              'bg-blue-50 border-blue-200'}
+                keralaAlert.color === 'green' ? 'bg-green-50 border-green-200' :
+                  'bg-blue-50 border-blue-200'}
           `}>
             <div className="flex items-start gap-3">
               <div className="text-2xl">{keralaAlert.icon}</div>
@@ -218,8 +218,8 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
                     px-2 py-0.5 rounded-full text-xs font-bold uppercase
                     ${keralaAlert.color === 'red' ? 'bg-red-500 text-white' :
                       keralaAlert.color === 'orange' ? 'bg-orange-500 text-white' :
-                      keralaAlert.color === 'green' ? 'bg-green-500 text-white' :
-                      'bg-blue-500 text-white'}
+                        keralaAlert.color === 'green' ? 'bg-green-500 text-white' :
+                          'bg-blue-500 text-white'}
                   `}>
                     {keralaAlert.severity}
                   </span>
@@ -276,8 +276,8 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
           rounded-xl p-4 border-2
           ${keralaAlert.color === 'red' ? 'bg-red-50 border-red-200' :
             keralaAlert.color === 'orange' ? 'bg-orange-50 border-orange-200' :
-            keralaAlert.color === 'green' ? 'bg-green-50 border-green-200' :
-            'bg-blue-50 border-blue-200'}
+              keralaAlert.color === 'green' ? 'bg-green-50 border-green-200' :
+                'bg-blue-50 border-blue-200'}
         `}>
           <div className="flex items-start gap-3">
             <div className="text-2xl">{keralaAlert.icon}</div>
@@ -287,8 +287,8 @@ const WeatherAlertsWidget = ({ farmId, farmLocation }) => {
                   px-2 py-0.5 rounded-full text-xs font-bold uppercase
                   ${keralaAlert.color === 'red' ? 'bg-red-500 text-white' :
                     keralaAlert.color === 'orange' ? 'bg-orange-500 text-white' :
-                    keralaAlert.color === 'green' ? 'bg-green-500 text-white' :
-                    'bg-blue-500 text-white'}
+                      keralaAlert.color === 'green' ? 'bg-green-500 text-white' :
+                        'bg-blue-500 text-white'}
                 `}>
                   {keralaAlert.severity}
                 </span>

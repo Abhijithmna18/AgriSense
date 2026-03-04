@@ -76,7 +76,8 @@ const Login = () => {
                 }
             }
         } catch (error) {
-            setError("Google Sign-In failed. Please try again.");
+            console.error("Google Sign-In Error Details:", error);
+            setError("Google Sign-In failed. Please try again or check console for details.");
         } finally {
             setLoading(false);
         }

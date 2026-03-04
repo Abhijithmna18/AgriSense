@@ -6,6 +6,7 @@ import {
     BarChart3,
     TrendingUp,
     BrainCircuit,
+    Brain,
     ShoppingBag,
     Link as LinkIcon,
     Settings,
@@ -48,6 +49,7 @@ const Sidebar = ({ onLogout }) => {
         { icon: Sparkles, label: 'Smart Farming', path: '/smart-farming', roles: ['farmer', 'admin'] },
         { icon: Calculator, label: 'Fertilizer Calculator', path: '/fertilizer-calculator', roles: ['farmer', 'admin'] },
         { icon: Lightbulb, label: 'Recommendations', path: '/recommendations', roles: ['farmer', 'admin'] },
+        { icon: Brain, label: 'Farm Intelligence', path: '/intelligence', roles: ['farmer', 'admin']},
 
         // Buyer Specific (New)
         { icon: Sparkles, label: 'Smart Procure', path: '/procure', roles: ['buyer', 'admin'] },
