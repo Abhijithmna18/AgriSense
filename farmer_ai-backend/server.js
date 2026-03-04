@@ -113,6 +113,10 @@ app.use('/api/yield', require('./src/routes/yieldPredictionRoutes'));
 app.use('/api/forum', require('./src/routes/forumRoutes'));
 app.use('/api/events', require('./src/routes/eventRoutes'));
 
+// Resources Routes
+app.use('/api/resources/crop-knowledge', require('./src/routes/cropKnowledgeRoutes'));
+app.use('/api/resources/help', require('./src/routes/helpCenterRoutes'));
+
 
 // Make uploads folder static
 const path = require('path');

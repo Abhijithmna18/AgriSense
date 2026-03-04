@@ -1,4 +1,4 @@
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { motion } from 'framer-motion';
@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import styles from './MarketplacePreview.module.css';
 
 export const MarketplacePreview = () => {
+    const { t } = useTranslation();
     const { data, adminMode, updateData } = useData();
     const [ref, isVisible] = useScrollReveal();
 
@@ -18,9 +19,9 @@ export const MarketplacePreview = () => {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-5"
                 >
-                    <h2 className={styles.sectionTitle}>Marketplace Preview</h2>
+                    <h2 className={styles.sectionTitle}>{t('marketplace_section.title', 'Marketplace Preview')}</h2>
                     <p className={styles.sectionSubtitle}>
-                        Premium products from verified sellers
+                        {t('marketplace_section.subtitle', 'Premium products from verified sellers')}
                     </p>
                 </motion.div>
 
@@ -47,7 +48,7 @@ export const MarketplacePreview = () => {
                                     <div className={styles.imageOverlay}>
                                         <button className={styles.viewButton}>
                                             <ArrowRight size={20} />
-                                            View Details
+                                            {t('marketplace_section.view_details', 'View Details')}
                                         </button>
                                     </div>
                                 </div>

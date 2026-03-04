@@ -8,12 +8,16 @@ import translationEN from './locales/en/translation.json';
 import translationHI from './locales/hi/translation.json';
 import translationKN from './locales/kn/translation.json';
 import translationTA from './locales/ta/translation.json';
+import translationTE from './locales/te/translation.json';
+import translationML from './locales/ml/translation.json';
 
 const resources = {
     en: { translation: translationEN },
     hi: { translation: translationHI },
     kn: { translation: translationKN },
-    ta: { translation: translationTA }
+    ta: { translation: translationTA },
+    te: { translation: translationTE },
+    ml: { translation: translationML }
 };
 
 i18n
@@ -22,7 +26,7 @@ i18n
     .use(initReactI18next)
     .init({
         resources,
-        supportedLngs: ['en', 'hi', 'kn', 'ta'],
+        supportedLngs: ['en', 'hi', 'kn', 'ta', 'te', 'ml'],
         fallbackLng: 'en',
         detection: {
             order: ['localStorage', 'cookie', 'htmlTag', 'path', 'subdomain'],

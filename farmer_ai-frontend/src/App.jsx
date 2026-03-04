@@ -129,6 +129,11 @@ import VendorMarketTrends from './pages/vendor/VendorMarketTrends';
 // ... existing imports ...
 import VendorRegister from './pages/VendorRegister';
 import AdminVendorApproval from './pages/admin/AdminVendorApproval';
+
+// Help Center Pages
+import HelpCenter from './pages/resources/HelpCenter';
+import HelpCenterDetail from './pages/resources/HelpCenterDetail';
+import HelpCenterAdmin from './pages/admin/resources/HelpCenterAdmin';
 function App() {
   return (
     <ThemeProvider>
@@ -217,6 +222,10 @@ function App() {
                 <Route path="/my-bookings" element={<PrivateRoute><MyBookingsPage /></PrivateRoute>} />
                 <Route path="/booking/:id" element={<PrivateRoute><BookingDetailsPage /></PrivateRoute>} />
 
+                {/* Help Center Routes */}
+                <Route path="/resources/help" element={<HelpCenter />} />
+                <Route path="/resources/help/:slug" element={<HelpCenterDetail />} />
+
                 {/* Farm Management */}
                 <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
                 <Route path="/weather-alerts" element={<PrivateRoute><WeatherAlertsPage /></PrivateRoute>} />
@@ -274,6 +283,10 @@ function App() {
                   <Route path="homepage/performance" element={<PerformanceEditor />} />
                   <Route path="homepage/marketplace" element={<MarketplaceEditor />} />
                   <Route path="homepage/footer" element={<FooterEditor />} />
+                  
+                  {/* Help Center Admin */}
+                  <Route path="resources/help" element={<HelpCenterAdmin />} />
+                  
                   <Route path="*" element={<div className="text-white">Admin Page Not Found</div>} />
                 </Route>
 

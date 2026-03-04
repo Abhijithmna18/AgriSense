@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import styles from './HeroSection.module.css';
 
 export const HeroSection = () => {
     const { data, adminMode, updateData } = useData();
+    const { t } = useTranslation();
     const [editingField, setEditingField] = useState(null);
 
     const handleEdit = (field, value) => {
@@ -65,14 +67,14 @@ export const HeroSection = () => {
                 >
                     <EditableText
                         field="title"
-                        value={data.hero.title}
+                        value={t('hero_section.title', data.hero.title)}
                         className={styles.title}
                         as="h1"
                     />
 
                     <EditableText
                         field="subtitle"
-                        value={data.hero.subtitle}
+                        value={t('hero_section.subtitle', data.hero.subtitle)}
                         className={styles.subtitle}
                         as="p"
                     />
@@ -101,7 +103,7 @@ export const HeroSection = () => {
                                     onClick={() => adminMode && setEditingField('cta')}
                                     className={adminMode ? styles.editable : ''}
                                 >
-                                    {data.hero.cta}
+                                    {t('hero_section.cta', data.hero.cta)}
                                 </span>
                             )}
                         </button>

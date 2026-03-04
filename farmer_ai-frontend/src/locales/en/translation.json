@@ -4,7 +4,10 @@
         "search": "Search system...",
         "refetch": "Refetch",
         "report": "Report",
-        "language": "Language"
+        "language": "Language",
+        "features": "Features",
+        "data_insights": "Data Insights",
+        "about": "About"
     },
     "sidebar": {
         "home": "Home",
@@ -16,5 +19,73 @@
     "dashboard": {
         "welcome": "Welcome back",
         "overview": "Overview"
+    },
+    "hero_section": {
+        "title": "Cultivate Brilliance",
+        "subtitle": "Grow Smarter, Harvest Better",
+        "cta": "Get Started"
+    },
+    "features_section": {
+        "header_subtitle": "Everything you need to succeed",
+        "header_title": "Powerful Features for Modern Farming",
+        "header_description": "Our platform integrates cutting-edge technology to provide you with actionable insights and tools for smarter farming.",
+        "learn_more": "Learn More",
+        "cta_badge": "Get Started Today",
+        "cta_title": "Ready to Transform Your Farm?",
+        "cta_description": "Join thousands of farmers who are already using AgriSense to increase yields, reduce costs, and make smarter decisions.",
+        "cta_start": "Start Free Trial",
+        "cta_watch": "Watch Demo",
+        "trust_secure": "Secure & Trusted",
+        "trust_users": "10K+ Active Users",
+        "trust_nocredit": "No Credit Card Required",
+        "f1_title": "AI-Powered Advisory",
+        "f1_desc": "Get real-time, data-driven recommendations for crop management and disease prevention powered by advanced machine learning.",
+        "f1_benefits": [
+            "24/7 AI Support",
+            "Predictive Analytics",
+            "Custom Recommendations"
+        ],
+        "f1_badge": "Most Popular",
+        "f2_title": "Crop Health Monitoring",
+        "f2_desc": "Monitor plant vitality with advanced satellite imagery, ground sensor integration, and real-time health diagnostics.",
+        "f2_benefits": [
+            "Satellite Imagery",
+            "Disease Detection",
+            "Growth Tracking"
+        ],
+        "f3_title": "Yield Analytics",
+        "f3_desc": "Predict harvest outcomes and optimize resource allocation for maximum profitability with data-driven insights.",
+        "f3_benefits": [
+            "Harvest Prediction",
+            "ROI Optimization",
+            "Resource Planning"
+        ],
+        "f4_title": "Smart Weather Intelligence",
+        "f4_desc": "Hyper-local weather forecasts tailored specifically for agricultural planning with precision accuracy.",
+        "f4_benefits": [
+            "Micro-Climate Data",
+            "7-Day Forecasts",
+            "Alert System"
+        ],
+        "f5_title": "Marketplace Access",
+        "f5_desc": "Connect directly with verified vendors and buyers for transparent, fair-priced agricultural transactions.",
+        "f5_benefits": [
+            "Verified Vendors",
+            "Secure Payments",
+            "Price Transparency"
+        ],
+        "f6_title": "Financial Services",
+        "f6_desc": "Access loans, insurance, and financial planning tools designed specifically for farmers and agricultural businesses.",
+        "f6_benefits": [
+            "Quick Loans",
+            "Crop Insurance",
+            "Financial Planning"
+        ],
+        "f6_badge": "New"
+    },
+    "marketplace_section": {
+        "title": "Marketplace Preview",
+        "subtitle": "Premium products from verified sellers",
+        "view_details": "View Details"
     }
 }

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import * as Icons from 'lucide-react';
-import { 
-    Sparkles, 
-    ArrowRight, 
+import {
+    Sparkles,
+    ArrowRight,
     Check,
     Zap,
     Shield,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 
 const ModernFeatures = ({ config }) => {
+    const { t } = useTranslation();
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const [selectedFeature, setSelectedFeature] = useState(0);
 
@@ -22,70 +24,70 @@ const ModernFeatures = ({ config }) => {
     const defaultFeatures = [
         {
             icon: "Cpu",
-            title: "AI-Powered Advisory",
-            description: "Get real-time, data-driven recommendations for crop management and disease prevention powered by advanced machine learning.",
+            title: t('features_section.f1_title', "AI-Powered Advisory"),
+            description: t('features_section.f1_desc', "Get real-time, data-driven recommendations for crop management and disease prevention powered by advanced machine learning."),
             color: "bg-gradient-to-br from-blue-500 to-blue-600",
             lightColor: "bg-blue-50",
             textColor: "text-blue-600",
-            benefits: ["24/7 AI Support", "Predictive Analytics", "Custom Recommendations"],
-            badge: "Most Popular"
+            benefits: t('features_section.f1_benefits', { returnObjects: true, defaultValue: ["24/7 AI Support", "Predictive Analytics", "Custom Recommendations"] }),
+            badge: t('features_section.f1_badge', "Most Popular")
         },
         {
             icon: "Sprout",
-            title: "Crop Health Monitoring",
-            description: "Monitor plant vitality with advanced satellite imagery, ground sensor integration, and real-time health diagnostics.",
+            title: t('features_section.f2_title', "Crop Health Monitoring"),
+            description: t('features_section.f2_desc', "Monitor plant vitality with advanced satellite imagery, ground sensor integration, and real-time health diagnostics."),
             color: "bg-gradient-to-br from-emerald-500 to-emerald-600",
             lightColor: "bg-emerald-50",
             textColor: "text-emerald-600",
-            benefits: ["Satellite Imagery", "Disease Detection", "Growth Tracking"],
+            benefits: t('features_section.f2_benefits', { returnObjects: true, defaultValue: ["Satellite Imagery", "Disease Detection", "Growth Tracking"] }),
             badge: null
         },
         {
             icon: "BarChart3",
-            title: "Yield Analytics",
-            description: "Predict harvest outcomes and optimize resource allocation for maximum profitability with data-driven insights.",
+            title: t('features_section.f3_title', "Yield Analytics"),
+            description: t('features_section.f3_desc', "Predict harvest outcomes and optimize resource allocation for maximum profitability with data-driven insights."),
             color: "bg-gradient-to-br from-purple-500 to-purple-600",
             lightColor: "bg-purple-50",
             textColor: "text-purple-600",
-            benefits: ["Harvest Prediction", "ROI Optimization", "Resource Planning"],
+            benefits: t('features_section.f3_benefits', { returnObjects: true, defaultValue: ["Harvest Prediction", "ROI Optimization", "Resource Planning"] }),
             badge: null
         },
         {
             icon: "CloudSun",
-            title: "Smart Weather Intelligence",
-            description: "Hyper-local weather forecasts tailored specifically for agricultural planning with precision accuracy.",
+            title: t('features_section.f4_title', "Smart Weather Intelligence"),
+            description: t('features_section.f4_desc', "Hyper-local weather forecasts tailored specifically for agricultural planning with precision accuracy."),
             color: "bg-gradient-to-br from-amber-500 to-orange-500",
             lightColor: "bg-amber-50",
             textColor: "text-amber-600",
-            benefits: ["Micro-Climate Data", "7-Day Forecasts", "Alert System"],
+            benefits: t('features_section.f4_benefits', { returnObjects: true, defaultValue: ["Micro-Climate Data", "7-Day Forecasts", "Alert System"] }),
             badge: null
         },
         {
             icon: "ShoppingCart",
-            title: "Marketplace Access",
-            description: "Connect directly with verified vendors and buyers for transparent, fair-priced agricultural transactions.",
+            title: t('features_section.f5_title', "Marketplace Access"),
+            description: t('features_section.f5_desc', "Connect directly with verified vendors and buyers for transparent, fair-priced agricultural transactions."),
             color: "bg-gradient-to-br from-pink-500 to-rose-600",
             lightColor: "bg-pink-50",
             textColor: "text-pink-600",
-            benefits: ["Verified Vendors", "Secure Payments", "Price Transparency"],
+            benefits: t('features_section.f5_benefits', { returnObjects: true, defaultValue: ["Verified Vendors", "Secure Payments", "Price Transparency"] }),
             badge: null
         },
         {
             icon: "DollarSign",
-            title: "Financial Services",
-            description: "Access loans, insurance, and financial planning tools designed specifically for farmers and agricultural businesses.",
+            title: t('features_section.f6_title', "Financial Services"),
+            description: t('features_section.f6_desc', "Access loans, insurance, and financial planning tools designed specifically for farmers and agricultural businesses."),
             color: "bg-gradient-to-br from-green-500 to-teal-600",
             lightColor: "bg-green-50",
             textColor: "text-green-600",
-            benefits: ["Quick Loans", "Crop Insurance", "Financial Planning"],
-            badge: "New"
+            benefits: t('features_section.f6_benefits', { returnObjects: true, defaultValue: ["Quick Loans", "Crop Insurance", "Financial Planning"] }),
+            badge: t('features_section.f6_badge', "New")
         }
     ];
 
     const featuresToRender = (config?.cards || defaultFeatures).filter(card => card.active !== false);
-    const title = config?.title || "Powerful Features for Modern Farming";
-    const subtitle = config?.subtitle || "Everything you need to succeed";
-    const description = config?.description || "Our platform integrates cutting-edge technology to provide you with actionable insights and tools for smarter farming.";
+    const title = t('features_section.header_title', config?.title || "Powerful Features for Modern Farming");
+    const subtitle = t('features_section.header_subtitle', config?.subtitle || "Everything you need to succeed");
+    const description = t('features_section.header_description', config?.description || "Our platform integrates cutting-edge technology to provide you with actionable insights and tools for smarter farming.");
 
     return (
         <section id="features" className="relative py-24 bg-gradient-to-b from-white via-slate-50 to-white overflow-hidden">
@@ -205,7 +207,7 @@ const ModernFeatures = ({ config }) => {
                                         whileHover={{ x: 5 }}
                                         className={`flex items-center gap-2 ${feature.textColor} font-semibold text-sm group/btn`}
                                     >
-                                        Learn More
+                                        {t('features_section.learn_more', 'Learn More')}
                                         <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
                                     </motion.button>
                                 </div>
@@ -244,14 +246,14 @@ const ModernFeatures = ({ config }) => {
                         <div className="relative z-10">
                             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
                                 <Zap className="text-white" size={18} />
-                                <span className="text-white font-semibold text-sm">Get Started Today</span>
+                                <span className="text-white font-semibold text-sm">{t('features_section.cta_badge', 'Get Started Today')}</span>
                             </div>
 
                             <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                                Ready to Transform Your Farm?
+                                {t('features_section.cta_title', 'Ready to Transform Your Farm?')}
                             </h3>
                             <p className="text-emerald-50 text-lg mb-8 max-w-2xl mx-auto">
-                                Join thousands of farmers who are already using AgriSense to increase yields, reduce costs, and make smarter decisions.
+                                {t('features_section.cta_description', 'Join thousands of farmers who are already using AgriSense to increase yields, reduce costs, and make smarter decisions.')}
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -260,7 +262,7 @@ const ModernFeatures = ({ config }) => {
                                     whileTap={{ scale: 0.95 }}
                                     className="px-8 py-4 bg-white text-emerald-600 rounded-full font-bold shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2"
                                 >
-                                    Start Free Trial
+                                    {t('features_section.cta_start', 'Start Free Trial')}
                                     <ArrowRight size={20} />
                                 </motion.button>
                                 <motion.button
@@ -268,7 +270,7 @@ const ModernFeatures = ({ config }) => {
                                     whileTap={{ scale: 0.95 }}
                                     className="px-8 py-4 bg-emerald-800/50 backdrop-blur-sm text-white rounded-full font-bold border-2 border-white/30 hover:bg-emerald-800/70 transition-all"
                                 >
-                                    Watch Demo
+                                    {t('features_section.cta_watch', 'Watch Demo')}
                                 </motion.button>
                             </div>
 
@@ -276,15 +278,15 @@ const ModernFeatures = ({ config }) => {
                             <div className="flex flex-wrap justify-center gap-8 mt-10 pt-8 border-t border-white/20">
                                 <div className="flex items-center gap-2 text-white">
                                     <Shield size={20} />
-                                    <span className="text-sm font-medium">Secure & Trusted</span>
+                                    <span className="text-sm font-medium">{t('features_section.trust_secure', 'Secure & Trusted')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-white">
                                     <TrendingUp size={20} />
-                                    <span className="text-sm font-medium">10K+ Active Users</span>
+                                    <span className="text-sm font-medium">{t('features_section.trust_users', '10K+ Active Users')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-white">
                                     <Check size={20} />
-                                    <span className="text-sm font-medium">No Credit Card Required</span>
+                                    <span className="text-sm font-medium">{t('features_section.trust_nocredit', 'No Credit Card Required')}</span>
                                 </div>
                             </div>
                         </div>
