@@ -1,0 +1,47 @@
+# Smart Irrigation Monitoring & AI Decision Dashboard Implementation
+
+## User Review Required
+No immediate user review required, proceeding with standard UI dashboard layout per requirements.
+
+## Proposed Changes
+
+### Python API
+#### [MODIFY] main.py (farmer_ai-python)
+- Add `SmartIrrigationRequest` Pydantic model for receiving `temperature`, `humidity`, `soil_moisture`, and `water_flow`.
+- Add `@app.post("/predict/smart-irrigation")` endpoint implementing the exact AI logic:
+  - `< 40%` soil moisture = irrigation needed.
+  - `40-60%` = not required.
+  - `> 60%` = OFF.
+  - Return `irrigation_needed`, `duration` (in seconds), and `confidence`.
+
+### Node API
+#### [NEW] iotRoutes.js (farmer_ai-backend/src/routes/)
+#### [NEW] iotController.js (farmer_ai-backend/src/controllers/)
+- Implement `POST /api/iot/sensor-data` to act as a webhook for future ESP32 integration. It will broadcast or store real-time data.
+
+### Frontend
+#### [MODIFY] Sidebar.jsx (farmer_ai-frontend/src/components/dashboard/)
+- Add a new "Smart Irrigation" navigation link with a Droplet icon, pointing to `/smart-irrigation`.
+
+#### [MODIFY] App.jsx (farmer_ai-frontend/src/)
+- Add routing for `<Route path="/smart-irrigation" element={<SmartIrrigationDashboard />} />`.
+
+#### [NEW] SmartIrrigationDashboard.jsx (farmer_ai-frontend/src/pages/)
+- Create the main dashboard component meeting all 8 user requirements:
+  1. Live Sensor Data Panel (Temp, Humidity, Soil Moisture, Flow).
+  2. AI Irrigation Recommendation Panel (Status, Duration, Confidence).
+  3. Pump Status Panel (ON / OFF).
+  4. Data Visualization using Recharts (Soil Moisture Trend, Temp/Humidity Trend, Water Usages, Timeline).
+  5. Mock Data Mode (runs interval every 5 seconds to generate data if real data isn't arriving).
+  6. Visual Indicators (Green/Yellow/Red for Soil Moisture).
+  7. Pump control simulation (calculating estimated water usage and duration).
+
+## Verification Plan
+### Automated Verification
+- Backend nodes start correctly.
+- Python server starts correctly.
+### Manual Verification
+- View `/smart-irrigation` in browser.
+- Verify that every 5 seconds a new data point is generated and plotted.
+- Verify AI logic is correct (pump turns ON when soil < 40%).
+- Verify visual indicators match specifications.

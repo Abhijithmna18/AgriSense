@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Activity, Droplets, Thermometer, Wind, AlertTriangle,
     RefreshCw, Download, FileText, Plus, Bell, Wifi, WifiOff,
@@ -14,48 +14,56 @@ import TopBar from '../components/dashboard/TopBar';
 import WaterUsageTracker from '../components/dashboard/WaterUsageTracker';
 import '../styles/admin.css';
 
-// --- MOCK DATA ---
-const MOCK_SENSOR_DATA = {
-    temperature: 28.5,
-    humidity: 62,
-    soilMoisture: 28, // Low to trigger alert
-    lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+// ─── Adafruit IO Config ────────────────────────────────────────────────────────
+const AIO_USERNAME = import.meta.env.VITE_AIO_USERNAME || '';
+const AIO_KEY = import.meta.env.VITE_AIO_KEY || '';
+const AIO_BASE = `https://io.adafruit.com/api/v2/${AIO_USERNAME}/feeds`;
+const AIO_HEADERS = { 'X-AIO-Key': AIO_KEY };
+
+const aioFetch = async (feed) => {
+    const res = await fetch(`${AIO_BASE}/${feed}/data/last`, { headers: AIO_HEADERS });
+    if (!res.ok) throw new Error(`AIO ${feed}: ${res.status}`);
+    const d = await res.json();
+    return parseFloat(d.value) ?? 0;
 };
 
-const MOCK_TREND_DATA = Array.from({ length: 12 }, (_, i) => ({
-    time: `${i * 2}:00`,
-    temp: 24 + Math.random() * 5,
-    humidity: 50 + Math.random() * 20,
-    moisture: 40 - Math.random() * 15 // Dropping trend
-}));
+// ─── Feed status helper ───────────────────────────────────────────────────────
+const makeFeedRow = (name, feedKey, value, connected) => ({
+    name,
+    feedKey,
+    value,
+    status: connected ? 'connected' : 'error',
+    lastSync: connected ? 'just now' : 'failed',
+});
 
-const MOCK_FEEDS = [
-    { name: 'ESP32 - Temp Sensor', status: 'connected', lastSync: '2s ago' },
-    { name: 'ESP32 - Humidity Sensor', status: 'connected', lastSync: '2s ago' },
-    { name: 'Adafruit - Soil Moisture', status: 'syncing', lastSync: '15s ago' },
-];
-
-// --- SUB-COMPONENTS ---
+// ─── Sub-components (unchanged layout, data-driven) ──────────────────────────
 
 /* 1. Page Header */
-const MonitoringHeader = ({ lastUpdated, onRefresh }) => (
+const MonitoringHeader = ({ lastUpdated, onRefresh, isLoading, connected }) => (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
             <h1 className="text-2xl font-bold text-gray-800">Farm Monitoring Dashboard</h1>
-            <div className="flex items-center gap-2 mt-1">
-                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-sm font-medium">
-                    <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
-                    Live
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-sm font-medium ${connected ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-600'}`}>
+                    {connected
+                        ? <><span className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />AIO Live</>
+                        : <><WifiOff size={12} />Disconnected</>
+                    }
                 </span>
-                <span className="text-sm text-gray-500">Last updated: {lastUpdated}</span>
+                <span className="text-sm text-gray-500">Last updated: {lastUpdated || '—'}</span>
+                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                    @{AIO_USERNAME}
+                </span>
             </div>
         </div>
         <div className="flex gap-2">
             <button
                 onClick={onRefresh}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors shadow-sm text-sm font-medium"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors shadow-sm text-sm font-medium disabled:opacity-60"
             >
-                <RefreshCw size={16} /> Fetch New Data
+                <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+                {isLoading ? 'Fetching…' : 'Fetch New Data'}
             </button>
             <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors shadow-sm text-sm font-medium">
                 <FileText size={16} /> Export CSV
@@ -69,8 +77,7 @@ const MonitoringHeader = ({ lastUpdated, onRefresh }) => (
 
 /* 2. Critical Alerts */
 const CriticalAlerts = ({ soilMoisture }) => {
-    if (soilMoisture >= 30) return null; // No alerts
-
+    if (soilMoisture === null || soilMoisture >= 30) return null;
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
@@ -79,7 +86,9 @@ const CriticalAlerts = ({ soilMoisture }) => {
                 </div>
                 <div>
                     <h3 className="font-bold text-red-700">Critical Soil Moisture Alert</h3>
-                    <p className="text-red-600 text-sm mt-1">Current Level: <span className="font-bold">{soilMoisture}%</span> (Threshold: 30%)</p>
+                    <p className="text-red-600 text-sm mt-1">
+                        Current Level: <span className="font-bold">{soilMoisture.toFixed(0)}%</span> (Threshold: 30%)
+                    </p>
                     <p className="text-red-800 text-sm font-medium mt-2 bg-red-100/50 p-2 rounded">
                         Action: Immediate irrigation required to prevent crop stress.
                     </p>
@@ -99,13 +108,15 @@ const CriticalAlerts = ({ soilMoisture }) => {
     );
 };
 
-/* 3. Sensor Metrics */
+/* 3. Sensor Metric Card */
 const MetricCard = ({ label, value, unit, icon: Icon, colorClass, iconBgClass }) => (
     <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
         <div>
             <p className="text-gray-500 text-sm font-medium">{label}</p>
             <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-3xl font-bold text-gray-800">{value}</span>
+                <span className="text-3xl font-bold text-gray-800">
+                    {value !== null ? Number(value).toFixed(value >= 10 ? 1 : 2) : '—'}
+                </span>
                 <span className="text-gray-400 text-sm font-medium">{unit}</span>
             </div>
         </div>
@@ -117,44 +128,23 @@ const MetricCard = ({ label, value, unit, icon: Icon, colorClass, iconBgClass })
 
 const SensorMetrics = ({ data }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricCard
-            label="Temperature"
-            value={data.temperature}
-            unit="°C"
-            icon={Thermometer}
-            colorClass="text-orange-500"
-            iconBgClass="bg-orange-50"
-        />
-        <MetricCard
-            label="Humidity"
-            value={data.humidity}
-            unit="%"
-            icon={Wind}
-            colorClass="text-blue-500"
-            iconBgClass="bg-blue-50"
-        />
-        <MetricCard
-            label="Soil Moisture"
-            value={data.soilMoisture}
-            unit="%"
-            icon={Droplets}
-            colorClass="text-green-500"
-            iconBgClass="bg-green-50"
-        />
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-center items-center text-center opacity-80 hover:opacity-100 transition-opacity cursor-pointer">
+        <MetricCard label="Temperature" value={data.temperature} unit="°C" icon={Thermometer} colorClass="text-orange-500" iconBgClass="bg-orange-50" />
+        <MetricCard label="Humidity" value={data.humidity} unit="%" icon={Wind} colorClass="text-blue-500" iconBgClass="bg-blue-50" />
+        <MetricCard label="Soil Moisture" value={data.soilMoisture} unit="%" icon={Droplets} colorClass="text-green-500" iconBgClass="bg-green-50" />
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-center items-center text-center hover:shadow-md transition-shadow">
             <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-2 animate-spin-slow">
                 <Activity size={20} />
             </div>
             <p className="text-gray-900 font-bold text-sm">Analytics</p>
-            <p className="text-xs text-gray-400 mt-1">Processing forecast...</p>
+            <p className="text-xs text-gray-400 mt-1">Processing forecast…</p>
         </div>
     </div>
 );
 
-/* 4. Trend Carts */
+/* 4. Trend Charts */
 const TrendCharts = ({ data }) => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Environment Trends */}
+        {/* Environmental Trends */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Thermometer size={18} className="text-gray-400" /> Environmental Trends
@@ -163,11 +153,9 @@ const TrendCharts = ({ data }) => (
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                        <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                        <Tooltip
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                        />
+                        <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} dy={10} minTickGap={20} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                        <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                         <Line type="monotone" dataKey="temp" stroke="#f97316" strokeWidth={2} dot={false} name="Temp (°C)" />
                         <Line type="monotone" dataKey="humidity" stroke="#3b82f6" strokeWidth={2} dot={false} name="Humidity (%)" />
                     </LineChart>
@@ -175,7 +163,7 @@ const TrendCharts = ({ data }) => (
             </div>
         </div>
 
-        {/* Moisture Trends */}
+        {/* Soil Moisture Trend */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Droplets size={18} className="text-gray-400" /> Soil Moisture Trend
@@ -184,11 +172,9 @@ const TrendCharts = ({ data }) => (
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                        <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} domain={[0, 100]} />
-                        <Tooltip
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                        />
+                        <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} dy={10} minTickGap={20} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} domain={[0, 100]} />
+                        <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                         <Line type="step" dataKey="moisture" stroke="#22c55e" strokeWidth={2} dot={false} name="Moisture (%)" />
                     </LineChart>
                 </ResponsiveContainer>
@@ -197,7 +183,7 @@ const TrendCharts = ({ data }) => (
     </div>
 );
 
-/* 5. Bottom Section: Info, Feeds & Custom Alerts */
+/* 5. Bottom Section */
 const BottomSection = ({ feeds }) => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -210,60 +196,55 @@ const BottomSection = ({ feeds }) => (
             <div className="flex flex-col items-center justify-center h-40 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center p-4">
                 <Bell size={24} className="text-gray-300 mb-2" />
                 <p className="text-gray-500 text-sm font-medium">No custom alerts configured.</p>
-                <button className="mt-2 text-xs font-bold text-green-600 hover:underline">
-                    Create your first alert
-                </button>
+                <button className="mt-2 text-xs font-bold text-green-600 hover:underline">Create your first alert</button>
             </div>
         </div>
 
-        {/* Data Information */}
+        {/* Sensor Info */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h3 className="font-bold text-gray-800 mb-4">Sensor Information</h3>
             <div className="space-y-4">
                 <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                    <span className="text-gray-500">Total Data Points</span>
-                    <span className="font-bold text-gray-800">12,450</span>
+                    <span className="text-gray-500">Data Source</span>
+                    <span className="font-bold text-gray-800">Adafruit IO</span>
                 </div>
                 <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Moisture Guide</p>
                     <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                            <span className="text-gray-600">&lt; 30% : Immediate Irrigation</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                            <span className="text-gray-600">30-60% : Moderate</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span className="text-gray-600">&gt; 60% : Adequate</span>
-                        </div>
+                        <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /><span className="text-gray-600">&lt; 30% : Immediate Irrigation</span></div>
+                        <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-yellow-500" /><span className="text-gray-600">30–60% : Moderate</span></div>
+                        <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" /><span className="text-gray-600">&gt; 60% : Adequate</span></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {/* IoT Feed Mapping */}
+        {/* IoT Feed Mapping — live status */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h3 className="font-bold text-gray-800 mb-4">Adafruit IO Feed Mapping</h3>
             <div className="space-y-3">
                 {feeds.map((feed, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                         <div className="flex items-center gap-3">
-                            <div className={`p-1.5 rounded-full ${feed.status === 'connected' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
-                                <Wifi size={14} />
+                            <div className={`p-1.5 rounded-full ${feed.status === 'connected' ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-500'}`}>
+                                {feed.status === 'connected' ? <Wifi size={14} /> : <WifiOff size={14} />}
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-gray-800">{feed.name}</p>
-                                <p className="text-xs text-gray-400">{feed.status} • {feed.lastSync}</p>
+                                <p className="text-xs text-gray-400">
+                                    {feed.feedKey} &bull; {feed.status} &bull; {feed.lastSync}
+                                </p>
                             </div>
                         </div>
-                        {feed.status === 'connected' ? (
-                            <CheckCircle size={16} className="text-green-500" />
-                        ) : (
-                            <RefreshCw size={16} className="text-blue-500 animate-spin" />
-                        )}
+                        <div className="flex flex-col items-end gap-0.5">
+                            {feed.status === 'connected'
+                                ? <CheckCircle size={16} className="text-green-500" />
+                                : <XCircle size={16} className="text-rose-400" />
+                            }
+                            {feed.value !== null && (
+                                <span className="text-xs font-bold text-gray-600">{Number(feed.value).toFixed(1)}</span>
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>
@@ -271,86 +252,133 @@ const BottomSection = ({ feeds }) => (
                 Configure Feeds
             </button>
         </div>
-
     </div>
 );
 
-// --- MAIN PAGE COMPONENT ---
-// --- MAIN PAGE COMPONENT ---
-
+// ─── Main Page Component ──────────────────────────────────────────────────────
 const FarmMonitoringPage = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [isLoadingData, setIsLoadingData] = useState(false);
-    const [data, setData] = useState(MOCK_SENSOR_DATA);
+    const [authLoading, setAuthLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [connected, setConnected] = useState(false);
+    const [fetchError, setFetchError] = useState(null);
 
+    const [sensorData, setSensorData] = useState({
+        temperature: null,
+        humidity: null,
+        soilMoisture: null,
+        lastUpdated: null,
+    });
+
+    const [feeds, setFeeds] = useState([
+        { name: 'DHT — Temperature', feedKey: 'dht-temp', value: null, status: 'syncing', lastSync: '—' },
+        { name: 'DHT — Humidity', feedKey: 'dht-hum', value: null, status: 'syncing', lastSync: '—' },
+        { name: 'Soil Moisture', feedKey: 'soil-moisture', value: null, status: 'syncing', lastSync: '—' },
+    ]);
+
+    const [trendData, setTrendData] = useState([]);
+
+    // ── Auth init ────────────────────────────────────────────────────────────
     useEffect(() => {
-        const init = async () => {
-            try {
-                const res = await authAPI.getMe();
-                setUser(res.data);
-            } catch (err) {
-                console.error(err);
-                if (err.response?.status === 401) navigate('/login');
-            } finally {
-                setLoading(false);
-            }
-        };
-        init();
+        authAPI.getMe()
+            .then(res => setUser(res.data))
+            .catch(err => { if (err.response?.status === 401) navigate('/login'); })
+            .finally(() => setAuthLoading(false));
     }, [navigate]);
 
-    const handleRefresh = () => {
-        setIsLoadingData(true);
-        setTimeout(() => {
-            setData({
-                ...MOCK_SENSOR_DATA,
-                temperature: (28 + Math.random() * 2).toFixed(1),
-                humidity: Math.floor(60 + Math.random() * 5),
-                soilMoisture: Math.floor(25 + Math.random() * 10),
-                lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    // ── Adafruit IO fetch ────────────────────────────────────────────────────
+    const fetchAIO = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const [temp, hum, soil] = await Promise.all([
+                aioFetch('dht-temp'),
+                aioFetch('dht-hum'),
+                aioFetch('soil-moisture'),
+            ]);
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const displayTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            setSensorData({ temperature: temp, humidity: hum, soilMoisture: soil, lastUpdated: displayTime });
+            setConnected(true);
+            setFetchError(null);
+
+            // Update feed status panel
+            setFeeds([
+                makeFeedRow('DHT — Temperature', 'dht-temp', temp, true),
+                makeFeedRow('DHT — Humidity', 'dht-hum', hum, true),
+                makeFeedRow('Soil Moisture', 'soil-moisture', soil, true),
+            ]);
+
+            // Append to rolling trend (max 30 points)
+            setTrendData(prev => {
+                const point = { time: timeStr, temp, humidity: hum, moisture: soil };
+                const updated = [...prev, point];
+                return updated.length > 30 ? updated.slice(-30) : updated;
             });
-            setIsLoadingData(false);
-        }, 1200);
-    };
+
+        } catch (err) {
+            console.error('Adafruit IO fetch failed:', err);
+            setConnected(false);
+            setFetchError('Could not reach Adafruit IO. Check your network.');
+            setFeeds(prev => prev.map(f => ({ ...f, status: 'error', lastSync: 'failed' })));
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // ── Auto-poll every 5 seconds ─────────────────────────────────────────────
+    useEffect(() => {
+        fetchAIO();
+        const id = setInterval(fetchAIO, 5000);
+        return () => clearInterval(id);
+    }, [fetchAIO]);
 
     const handleLogout = async () => {
-        try {
-            await authAPI.logout();
-            localStorage.removeItem('auth_token');
-            navigate('/login');
-        } catch (err) {
-            console.error(err);
-        }
+        try { await authAPI.logout(); } catch (_) { }
+        localStorage.removeItem('auth_token');
+        navigate('/login');
     };
 
-    if (loading) return <div className="p-10 text-center">Loading...</div>;
+    if (authLoading) return <div className="p-10 text-center">Loading…</div>;
 
     return (
         <div className="flex h-screen bg-[#F8FAF9] font-sans overflow-hidden">
-            {/* Sidebar */}
             <Sidebar onLogout={handleLogout} />
 
-            {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 md:ml-64">
                 <TopBar user={user} onLogout={handleLogout} />
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
                     <div className="w-full pb-10">
-                        <MonitoringHeader lastUpdated={data.lastUpdated} onRefresh={handleRefresh} />
 
-                        {isLoadingData && (
-                            <div className="mb-4 p-2 bg-green-50 text-green-700 text-sm text-center rounded-lg animate-pulse">
-                                Syncing with IoT Gateway...
+                        <MonitoringHeader
+                            lastUpdated={sensorData.lastUpdated}
+                            onRefresh={fetchAIO}
+                            isLoading={isLoading}
+                            connected={connected}
+                        />
+
+                        {fetchError && (
+                            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg flex items-center gap-2">
+                                <WifiOff size={16} /> {fetchError}
                             </div>
                         )}
 
-                        <CriticalAlerts soilMoisture={data.soilMoisture} />
-                        <SensorMetrics data={data} />
-                        <TrendCharts data={MOCK_TREND_DATA} />
-                        <BottomSection feeds={MOCK_FEEDS} />
+                        {isLoading && !connected && (
+                            <div className="mb-4 p-2 bg-green-50 text-green-700 text-sm text-center rounded-lg animate-pulse">
+                                Syncing with Adafruit IO…
+                            </div>
+                        )}
 
-                        {/* New Water Usage Tracker */}
+                        <CriticalAlerts soilMoisture={sensorData.soilMoisture} />
+                        <SensorMetrics data={sensorData} />
+                        <TrendCharts data={trendData} />
+                        <BottomSection feeds={feeds} />
+
+                        {/* Water Usage Tracker */}
                         <WaterUsageTracker />
                     </div>
                 </div>

@@ -123,9 +123,12 @@ import VendorPayments from './pages/vendor/VendorPayments';
 import VendorNotifications from './pages/vendor/VendorNotifications';
 import VendorProfile from './pages/vendor/VendorProfile';
 import VendorNegotiations from './pages/vendor/VendorNegotiations';
+import VendorIntelligencePage from './pages/vendor/VendorIntelligencePage';
 // VendorDashboard is reused as "My Products" for now
 import MyProducts from './pages/VendorDashboard';
 import VendorMarketTrends from './pages/vendor/VendorMarketTrends';
+
+import SmartIrrigationDashboard from './pages/SmartIrrigationDashboard';
 
 
 // ... existing imports ...
@@ -176,6 +179,7 @@ function App() {
                     <Route path="payments" element={<VendorPayments />} />
                     <Route path="notifications" element={<VendorNotifications />} />
                     <Route path="profile" element={<VendorProfile />} />
+                    <Route path="intelligence" element={<VendorIntelligencePage />} />
                   </Route>
 
                   {/* Dashboard Routes */}
@@ -231,6 +235,7 @@ function App() {
 
                   {/* Farm Management */}
                   <Route path="/monitoring" element={<PrivateRoute><FarmMonitoringPage /></PrivateRoute>} />
+                  <Route path="/smart-irrigation" element={<PrivateRoute allowedRoles={['farmer', 'admin']}><SmartIrrigationDashboard /></PrivateRoute>} />
                   <Route path="/weather-alerts" element={<PrivateRoute><WeatherAlertsPage /></PrivateRoute>} />
                   <Route path="/farm-management" element={<PrivateRoute><FarmManagement /></PrivateRoute>} />
                   <Route path="/crop-knowledge" element={<PrivateRoute><CropKnowledge /></PrivateRoute>} />

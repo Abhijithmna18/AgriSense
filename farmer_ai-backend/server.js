@@ -108,8 +108,11 @@ app.use('/api/fertilizer-calculator', require('./src/routes/fertilizerCalculator
 app.use('/api/ml', require('./src/routes/diseaseRoutes'));
 app.use('/api/rl', require('./src/routes/rlRoutes'));
 app.use('/api/ai-proxy', require('./src/routes/aiProxyRoutes'));
-app.use('/api/sensors', require('./src/routes/iotRoutes'));
+app.use('/api/sensors', require('./src/routes/iotRoutes')); // Legacy
+app.use('/api/iot', require('./src/routes/iotRoutes')); // New Smart Irrigation
+app.use('/api/yield', require('./src/routes/yieldPredictionRoutes')); // Crop Yield ML
 app.use('/api/insights', require('./src/routes/farmInsightRoutes'));
+app.use('/api/vendor-intelligence', require('./src/routes/vendorIntelligenceRoutes'));
 
 // Community & Events Routes
 app.use('/api/forum', require('./src/routes/forumRoutes'));
@@ -154,7 +157,25 @@ if (require.main === module) {
     const { startWeatherCron } = require('./src/cron/weatherAlertsJob');
     startWeatherCron();
 
-    app.listen(PORT, () => {
+    // Create HTTP server for Socket.io
+    const http = require('http');
+    const { Server } = require('socket.io');
+    const server = http.createServer(app);
+
+    // Configure Socket.io with existing CORS options
+    const io = new Server(server, { cors: corsOptions });
+    app.set('io', io);
+
+    // Start mock IoT generator
+    const { startMockDataGenerator } = require('./src/controllers/iotController');
+    startMockDataGenerator(io);
+
+    io.on('connection', (socket) => {
+        console.log('Client connected to Socket.io');
+        socket.on('disconnect', () => console.log('Client disconnected'));
+    });
+
+    server.listen(PORT, () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
     });
 }

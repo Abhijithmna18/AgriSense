@@ -642,3 +642,6 @@
 {"level":"warn","message":"404 - Can't find /weather/farm/69a44f9ddca2eee2c3bfa49e on this server! - /weather/farm/69a44f9ddca2eee2c3bfa49e - GET - ::1","service":"farmer-ai-backend"}
 {"level":"warn","message":"404 - Can't find /weather/farm/69a44f9ddca2eee2c3bfa49e on this server! - /weather/farm/69a44f9ddca2eee2c3bfa49e - GET - ::1","service":"farmer-ai-backend"}
 {"level":"warn","message":"404 - Can't find /weather/farm/69a44f9ddca2eee2c3bfa49e on this server! - /weather/farm/69a44f9ddca2eee2c3bfa49e - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/yield/health on this server! - /api/yield/health - GET - ::1","service":"farmer-ai-backend"}

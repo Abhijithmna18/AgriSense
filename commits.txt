@@ -1,0 +1,3 @@
+9e62a9f chore: auto-commit pending changes before pull
+90dc84c feat: integrate Adafruit IO for Smart Irrigation and Farm Monitoring, register Yield ML route
+add34c1 feat: Implement Help Center, Crop Knowledge, and Farm Weather Monitoring features with full backend and frontend integration, alongside comprehensive project documentation.

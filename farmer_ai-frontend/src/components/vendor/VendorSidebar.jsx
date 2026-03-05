@@ -14,7 +14,8 @@ import {
     ChevronRight,
     Store,
     MessageSquare,
-    TrendingUp
+    TrendingUp,
+    Brain
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -36,6 +37,7 @@ const VendorSidebar = ({ isCollapsed, toggleSidebar }) => {
         { path: '/vendor/reviews', icon: Star, label: 'Product Reviews' },
         { path: '/vendor/analytics', icon: BarChart3, label: 'Sales Analytics' },
         { path: '/vendor/payments', icon: Wallet, label: 'Payment History' },
+        { path: '/vendor/intelligence', icon: Brain, label: 'Commerce Intelligence', badge: 'AI' },
         { path: '/vendor/notifications', icon: Bell, label: 'Notifications' },
         { path: '/vendor/profile', icon: User, label: 'Profile' },
     ];

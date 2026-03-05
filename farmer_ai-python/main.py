@@ -57,6 +57,12 @@ class FinancialRiskRequest(BaseModel):
     monthly_cashflow: List[float]
     recent_crop_failure: bool
 
+class SmartIrrigationRequest(BaseModel):
+    temperature: float
+    humidity: float
+    soil_moisture: float
+    water_flow: float
+
 # -----------------------------------------------
 # Crop Knowledge Base
 # -----------------------------------------------
@@ -356,6 +362,41 @@ def predict_irrigation(req: IrrigationRequest):
     }
 
 
+@app.post("/predict/smart-irrigation")
+def predict_smart_irrigation(req: SmartIrrigationRequest):
+    """
+    Dedicated AI decision model for the Smart Irrigation Dashboard.
+    Rules:
+    - < 40%: irrigation required
+    - 40-60%: no irrigation
+    - > 60%: irrigation OFF
+    """
+    irrigation_needed = False
+    duration = 0
+    confidence = 0.80
+
+    if req.soil_moisture < 40:
+        irrigation_needed = True
+        # Calculate duration based on how dry it is. ~240s for very dry.
+        duration = int(240 * ((40 - req.soil_moisture) / 40))
+        # Ensure minimum beneficial run time
+        if duration < 60: duration = 60
+        confidence = 0.85 + (0.10 * ((40 - req.soil_moisture) / 40))
+    elif req.soil_moisture <= 60:
+        irrigation_needed = False
+        duration = 0
+        confidence = 0.90
+    else:
+        irrigation_needed = False
+        duration = 0
+        confidence = 0.95
+
+    return {
+        "irrigation_needed": irrigation_needed,
+        "duration": duration,
+        "confidence": round(min(0.99, confidence), 2)
+    }
+
 @app.post("/predict/market-price")
 def predict_market_price(req: MarketPriceRequest):
     """
@@ -524,5 +565,302 @@ def analyze_financial_risk(request: FinancialRiskRequest):
         "max_loan_recommended": 50000 if eligibility else 0
     }
 
+
+# ═══════════════════════════════════════════════════════════════
+# VENDOR COMMERCE INTELLIGENCE ENDPOINTS (v3.0)
+# ═══════════════════════════════════════════════════════════════
+
+# ── Schemas ──────────────────────────────────────────────────
+
+class InventoryStockoutRequest(BaseModel):
+    product_name: str
+    current_stock: float          # in units (kg, litre, etc.)
+    unit: str
+    avg_daily_sales: float        # average units sold per day
+    price_per_unit: float
+
+class DemandForecastRequest(BaseModel):
+    product_type: str
+    sales_history: List[float]    # last N days sales volumes
+    current_price: float
+    month: int                    # 1-12 for seasonality
+
+class OptimalPriceRequest(BaseModel):
+    product_type: str
+    current_price: float
+    market_avg_price: float
+    current_stock: float          # % stock remaining (0-100)
+    demand_score: float           # 0-1 (low to high demand)
+    competitor_prices: List[float]
+
+class VendorPerformanceRequest(BaseModel):
+    avg_rating: float             # 0-5
+    total_orders: int
+    completed_orders: int
+    cancelled_orders: int
+    avg_response_hours: float     # avg hours to respond to buyer
+
+class NegotiationRequest(BaseModel):
+    product_name: str
+    your_listed_price: float
+    buyer_offer_price: float
+    market_avg_price: float
+    current_stock: float          # % remaining stock
+    demand_score: float           # 0-1
+
+# ── Endpoint 1: Inventory Stockout Prediction ──────────────────
+
+@app.post("/predict/inventory-stockout")
+def predict_inventory_stockout(req: InventoryStockoutRequest):
+    """Predicts days until a product runs out of stock."""
+    if req.avg_daily_sales <= 0:
+        days_until_stockout = 999
+        status = "Sufficient"
+        urgency = "None"
+    else:
+        days_until_stockout = round(req.current_stock / req.avg_daily_sales, 1)
+        if days_until_stockout <= 3:
+            status = "Critical"
+            urgency = "Restock Immediately"
+        elif days_until_stockout <= 7:
+            status = "Low"
+            urgency = "Restock This Week"
+        elif days_until_stockout <= 14:
+            status = "Moderate"
+            urgency = "Plan Restock Soon"
+        else:
+            status = "Sufficient"
+            urgency = "No Action Needed"
+
+    # Revenue at risk
+    weekly_revenue_at_risk = round(min(7, days_until_stockout) * req.avg_daily_sales * req.price_per_unit, 2)
+
+    recommendation = {
+        "Critical": f"Order more {req.product_name} immediately. You will run out in {days_until_stockout} days and risk losing ₹{weekly_revenue_at_risk}.",
+        "Low": f"Stock of {req.product_name} is low. Restock within the next 3 days to maintain sales continuity.",
+        "Moderate": f"Plan a restock order for {req.product_name} within the next week to avoid gaps.",
+        "Sufficient": f"{req.product_name} stock is healthy. Monitor weekly and restock when below 7-day supply.",
+    }.get(status, "Monitor stock levels regularly.")
+
+    return {
+        "product": req.product_name,
+        "current_stock": req.current_stock,
+        "unit": req.unit,
+        "avg_daily_sales": req.avg_daily_sales,
+        "days_until_stockout": days_until_stockout,
+        "status": status,
+        "urgency": urgency,
+        "weekly_revenue_at_risk": weekly_revenue_at_risk,
+        "recommendation": recommendation
+    }
+
+# ── Endpoint 2: Demand Forecast (7-day) ───────────────────────
+
+@app.post("/predict/demand-forecast")
+def predict_demand_forecast(req: DemandForecastRequest):
+    """Produces a 7-day demand forecast using sales history and seasonality."""
+    history = req.sales_history[-7:] if len(req.sales_history) >= 7 else req.sales_history
+    avg = sum(history) / len(history) if history else 50
+
+    # Seasonal multiplier (Kharif: Jun-Oct, Rabi: Nov-Mar peaks)
+    seasonal_map = {
+        1: 1.10, 2: 1.05, 3: 0.95, 4: 0.90, 5: 0.85,
+        6: 1.05, 7: 1.15, 8: 1.20, 9: 1.15, 10: 1.10,
+        11: 1.05, 12: 1.10
+    }
+    seasonal = seasonal_map.get(req.month, 1.0)
+
+    # Price sensitivity: high price → lower demand
+    price_factor = 1.0 if req.current_price <= 0 else max(0.7, min(1.3, 50 / req.current_price))
+
+    daily_forecasts = []
+    for day in range(1, 8):
+        # Add slight trend variation + noise
+        micro_trend = 1 + (day - 4) * 0.01
+        noise = random.uniform(-0.05, 0.05)
+        predicted = round(avg * seasonal * price_factor * micro_trend * (1 + noise), 1)
+        daily_forecasts.append({"day": f"Day {day}", "predicted_sales": max(0, predicted)})
+
+    total_7day = round(sum(d["predicted_sales"] for d in daily_forecasts), 1)
+    avg_daily = round(total_7day / 7, 1)
+
+    trend_avg = sum([d["predicted_sales"] for d in daily_forecasts[:3]]) / 3
+    trend_end_avg = sum([d["predicted_sales"] for d in daily_forecasts[4:]]) / 3
+    trend = "Upward" if trend_end_avg > trend_avg * 1.05 else "Downward" if trend_end_avg < trend_avg * 0.95 else "Stable"
+    pct_change = round(((trend_end_avg - trend_avg) / max(trend_avg, 0.01)) * 100, 1)
+
+    return {
+        "product_type": req.product_type,
+        "forecast_7_days": daily_forecasts,
+        "total_predicted_units": total_7day,
+        "avg_daily_demand": avg_daily,
+        "trend": trend,
+        "pct_change_vs_current": pct_change,
+        "seasonal_factor": round(seasonal, 2),
+        "recommendation": (
+            f"Demand for {req.product_type} is trending {trend.lower()} by {abs(pct_change)}% over the next 7 days. "
+            + ("Stock up to meet rising demand." if trend == "Upward" else
+               "Consider promotions or discounts to move inventory." if trend == "Downward" else
+               "Maintain current inventory levels.")
+        )
+    }
+
+# ── Endpoint 3: Optimal Price Recommendation ──────────────────
+
+@app.post("/predict/optimal-price")
+def predict_optimal_price(req: OptimalPriceRequest):
+    """Recommends an optimal selling price based on market, demand, and stock."""
+    competitors_avg = sum(req.competitor_prices) / len(req.competitor_prices) if req.competitor_prices else req.market_avg_price
+    reference_price = (req.market_avg_price * 0.6 + competitors_avg * 0.4)
+
+    # Demand premium: high demand → slight premium
+    demand_premium = 1 + (req.demand_score - 0.5) * 0.20  # ±10%
+
+    # Stock discount: high remaining stock → push lower
+    stock_factor = 1.0 if req.current_stock <= 50 else max(0.88, 1.0 - (req.current_stock - 50) * 0.003)
+
+    optimal = round(reference_price * demand_premium * stock_factor, 2)
+    diff_pct = round(((optimal - req.current_price) / max(req.current_price, 0.01)) * 100, 1)
+
+    if diff_pct > 5:
+        action = "INCREASE"
+        reason = f"Demand is high and competitors price at ₹{round(competitors_avg, 2)}. You can increase margins."
+    elif diff_pct < -5:
+        action = "DECREASE"
+        reason = "Current stock is high and market price is lower. A small discount will increase order velocity."
+    else:
+        action = "MAINTAIN"
+        reason = "Your current price is well aligned with market conditions."
+
+    return {
+        "product_type": req.product_type,
+        "your_current_price": req.current_price,
+        "market_avg_price": req.market_avg_price,
+        "competitors_avg_price": round(competitors_avg, 2),
+        "recommended_price": optimal,
+        "price_change_pct": diff_pct,
+        "action": action,
+        "reason": reason,
+        "demand_score": req.demand_score
+    }
+
+# ── Endpoint 4: Vendor Performance Score ─────────────────────
+
+@app.post("/analyze/vendor-performance")
+def analyze_vendor_performance(req: VendorPerformanceRequest):
+    """Computes a composite vendor score from operational metrics."""
+    # Rating score (0-5 → 40%)
+    rating_score = (req.avg_rating / 5) * 40
+
+    # Order success rate (0-100% → 35%)
+    if req.total_orders == 0:
+        success_rate = 1.0
+    else:
+        success_rate = (req.completed_orders / req.total_orders)
+    order_score = success_rate * 35
+
+    # Response time score (lower is better, 0-24h → 25%)
+    if req.avg_response_hours <= 1:
+        response_score = 25
+    elif req.avg_response_hours <= 6:
+        response_score = 20
+    elif req.avg_response_hours <= 24:
+        response_score = 12
+    else:
+        response_score = 5
+
+    total_score = (rating_score + order_score + response_score) / 100 * 5
+    total_score = round(max(0, min(5, total_score)), 2)
+
+    if total_score >= 4.5:
+        tier = "Platinum"
+        tier_badge = "🏆"
+    elif total_score >= 4.0:
+        tier = "Gold"
+        tier_badge = "🥇"
+    elif total_score >= 3.0:
+        tier = "Silver"
+        tier_badge = "🥈"
+    else:
+        tier = "Bronze"
+        tier_badge = "🥉"
+
+    completion_rate = round(success_rate * 100, 1)
+    cancellation_rate = round((req.cancelled_orders / max(req.total_orders, 1)) * 100, 1)
+
+    improvements = []
+    if req.avg_rating < 4.0:
+        improvements.append("Improve product quality and packaging to boost ratings above 4.0.")
+    if success_rate < 0.90:
+        improvements.append(f"Reduce cancellations — current cancellation rate is {cancellation_rate}%.")
+    if req.avg_response_hours > 6:
+        improvements.append("Respond to buyer inquiries within 6 hours to improve score.")
+
+    return {
+        "vendor_score": total_score,
+        "tier": tier,
+        "tier_badge": tier_badge,
+        "breakdown": {
+            "rating_score": round(rating_score / 40 * 5, 2),
+            "delivery_score": round(order_score / 35 * 5, 2),
+            "response_score": round(response_score / 25 * 5, 2)
+        },
+        "metrics": {
+            "avg_rating": req.avg_rating,
+            "completion_rate_pct": completion_rate,
+            "cancellation_rate_pct": cancellation_rate,
+            "avg_response_hours": req.avg_response_hours
+        },
+        "improvements": improvements if improvements else ["Excellent vendor performance! Keep it up."]
+    }
+
+# ── Endpoint 5: Negotiation Counter-Offer ─────────────────────
+
+@app.post("/suggest/negotiation")
+def suggest_negotiation(req: NegotiationRequest):
+    """Suggests an AI-driven counter offer during buyer negotiations."""
+    gap = req.your_listed_price - req.buyer_offer_price
+    gap_pct = (gap / max(req.your_listed_price, 0.01)) * 100
+
+    # Determine how much to concede based on stock, demand, and market
+    # High stock + low demand → more willing to concede
+    concession_factor = (req.current_stock / 100) * (1 - req.demand_score)
+    max_concession_pct = min(20, 5 + concession_factor * 15)
+
+    # Counter-offer floor: market price weighted
+    market_floor = req.market_avg_price * 0.92
+    counter = max(market_floor, req.your_listed_price * (1 - max_concession_pct / 100))
+    counter = round(counter, 2)
+
+    if gap_pct <= 3:
+        strategy = "ACCEPT"
+        advice = f"The buyer's offer of ₹{req.buyer_offer_price} is within 3% of your list price. Accept it to close the deal quickly."
+        counter = req.buyer_offer_price
+    elif gap_pct <= 10:
+        strategy = "COUNTER_CLOSE"
+        advice = f"The offer is reasonable. Counter at ₹{counter} — a small concession that keeps margin healthy."
+    elif gap_pct <= 25:
+        strategy = "COUNTER_FIRM"
+        advice = f"The offer is too low. Counter firmly at ₹{counter} and explain market price is ₹{req.market_avg_price}/unit."
+    else:
+        strategy = "DECLINE"
+        counter = req.your_listed_price * 0.95
+        counter = round(counter, 2)
+        advice = f"The offer of ₹{req.buyer_offer_price} is far below market value. Decline and offer a minimal discount at ₹{counter}."
+
+    return {
+        "product": req.product_name,
+        "your_price": req.your_listed_price,
+        "buyer_offer": req.buyer_offer_price,
+        "market_price": req.market_avg_price,
+        "suggested_counter_offer": counter,
+        "strategy": strategy,
+        "gap_pct": round(gap_pct, 1),
+        "advice": advice,
+        "max_safe_discount_pct": round(max_concession_pct, 1)
+    }
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
