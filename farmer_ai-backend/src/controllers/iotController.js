@@ -13,10 +13,22 @@ let lastRealDataTime = 0;
 // @access  Public
 exports.ingestSmartIrrigationTelemetry = async (req, res) => {
     try {
-        const { temperature, humidity, soil_moisture, water_flow } = req.body;
+        let { temperature, humidity, soil_moisture, water_flow, pump_status } = req.body;
 
         // Track the last time real data was received to stop mock generation
         lastRealDataTime = Date.now();
+
+        // FLOW METER FIX: Apply noise filtering and pump-state validation
+        // Only record flow if pump is ON and flow exceeds noise threshold
+        const FLOW_NOISE_THRESHOLD = 0.1; // L/min - ignore readings below this
+        
+        if (!pump_status || pump_status === 'OFF' || pump_status === false) {
+            // Pump is OFF - force flow to zero regardless of sensor reading
+            water_flow = 0;
+        } else if (water_flow < FLOW_NOISE_THRESHOLD) {
+            // Pump is ON but reading is below noise threshold - likely sensor noise
+            water_flow = 0;
+        }
 
         // 1. Call Python AI Service
         let aiDecision = { irrigation_needed: false, duration: 0, confidence: 0 };
@@ -35,6 +47,7 @@ exports.ingestSmartIrrigationTelemetry = async (req, res) => {
             humidity,
             soil_moisture,
             water_flow,
+            pump_status: pump_status || 'UNKNOWN',
             irrigation_needed: aiDecision.irrigation_needed,
             irrigation_duration: aiDecision.duration,
             confidence: aiDecision.confidence
@@ -69,7 +82,16 @@ exports.startMockDataGenerator = (io) => {
             const temperature = parseFloat((Math.random() * (35 - 20) + 20).toFixed(1));
             const humidity = parseFloat((Math.random() * (90 - 40) + 40).toFixed(1));
             const soil_moisture = parseFloat((Math.random() * (80 - 5) + 5).toFixed(1));
-            const water_flow = parseFloat((Math.random() * 5).toFixed(1));
+            
+            // Simulate pump cycling: 70% OFF, 30% ON
+            const pump_status = Math.random() > 0.7 ? 'ON' : 'OFF';
+            
+            // Water flow should only be non-zero when pump is ON
+            let water_flow = 0;
+            if (pump_status === 'ON') {
+                // Realistic flow rate: 1.0 - 2.5 L/min when pump is running
+                water_flow = parseFloat((Math.random() * 1.5 + 1.0).toFixed(2));
+            }
 
             // Call Python AI Service
             let aiDecision = { irrigation_needed: false, duration: 0, confidence: 0 };
@@ -88,6 +110,7 @@ exports.startMockDataGenerator = (io) => {
                 humidity,
                 soil_moisture,
                 water_flow,
+                pump_status,
                 irrigation_needed: aiDecision.irrigation_needed,
                 irrigation_duration: aiDecision.duration,
                 confidence: aiDecision.confidence

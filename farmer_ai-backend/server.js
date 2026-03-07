@@ -90,6 +90,8 @@ app.use('/api/marketplace', require('./src/routes/marketplaceRoutes'));
 app.use('/api/admin/marketplace', require('./src/routes/adminMarketplaceRoutes')); // New Admin Routes
 app.use('/api/notifications', require('./src/routes/notificationRoutes'));
 app.use('/api/finance', require('./src/routes/financeRoutes'));
+app.use('/api/finance/minibank', require('./routes/miniBankRoutes')); // Mini Bank Routes
+app.use('/api/banking', require('./routes/banking')); // New Banking System Routes
 app.use('/api/admin/finance', require('./src/routes/adminFinanceRoutes'));
 app.use('/api/crop-intelligence', require('./src/routes/cropIntelligenceRoutes'));
 app.use('/api/consultations', require('./src/routes/consultationRoutes'));
@@ -183,3 +185,7 @@ if (require.main === module) {
 module.exports = app;
 
 const mongoose = require('mongoose'); // Required for health check
+
+// trigger restart
+
+console.log('Forcing nodemon restart...');

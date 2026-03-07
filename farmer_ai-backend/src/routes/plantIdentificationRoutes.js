@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const { identifyPlantController } = require('../controllers/plantIdentificationController');
+const { getIrrigationRecommendation } = require('../controllers/aiIrrigationController');
 const { protect } = require('../middleware/auth'); // Assuming we want this protected
 
 // Configure Multer for image uploads
@@ -33,5 +34,9 @@ const upload = multer({
 // Route: POST /api/ai/identify
 // Access: Private (Logged in users)
 router.post('/identify', protect, upload.single('image'), identifyPlantController);
+
+// Route: POST /api/ai/irrigation-recommendation
+// Access: Private
+router.post('/irrigation-recommendation', protect, getIrrigationRecommendation);
 
 module.exports = router;

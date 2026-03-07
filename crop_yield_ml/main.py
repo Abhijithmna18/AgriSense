@@ -47,22 +47,36 @@ async def load_model():
     global model, metadata, crop_stats
 
     if os.path.exists(MODEL_PATH):
-        model = joblib.load(MODEL_PATH)
-        print(f"Model loaded from {MODEL_PATH}")
+        try:
+            model = joblib.load(MODEL_PATH)
+            print(f"[OK] Model loaded from {MODEL_PATH}")
+        except Exception as e:
+            print(f"[WARNING] Could not load model: {e}")
+            print(f"[WARNING] Model version mismatch. Crop yield predictions will be unavailable.")
+            print(f"[WARNING] Smart irrigation endpoint will still work!")
+            model = None
     else:
-        print(f"WARNING: {MODEL_PATH} not found. Train the model first with: python train.py")
+        print(f"[WARNING] {MODEL_PATH} not found. Train the model first with: python train.py")
+        print(f"[OK] Smart irrigation endpoint will still work!")
 
     if os.path.exists(FEATURE_COLS_PATH):
         with open(FEATURE_COLS_PATH, "r") as f:
             metadata = json.load(f)
-        print(f"Metadata loaded. Features: {metadata.get('feature_columns', [])}")
+        print(f"[OK] Metadata loaded. Features: {metadata.get('feature_columns', [])}")
     else:
-        print(f"WARNING: {FEATURE_COLS_PATH} not found.")
+        print(f"[WARNING] {FEATURE_COLS_PATH} not found.")
 
     if os.path.exists(CROP_STATS_PATH):
         with open(CROP_STATS_PATH, "r") as f:
             crop_stats = json.load(f)
-        print(f"Crop stats loaded for {len(crop_stats)} crops.")
+        print(f"[OK] Crop stats loaded for {len(crop_stats)} crops.")
+    else:
+        print(f"[WARNING] No crop stats available.")
+    
+    print(f"\n{'='*60}")
+    print(f"[OK] Smart Irrigation Endpoint: READY")
+    print(f"  POST /predict/smart-irrigation")
+    print(f"{'='*60}\n")
 
 
 @app.get("/health")
@@ -235,4 +249,163 @@ def _generate_recommendations(predicted, avg, inputs: dict, meta: dict) -> list[
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001, reload=False)
+    # Run on port 5001 to match backend PYTHON_AI_URL configuration
+    # Or update backend .env: PYTHON_AI_URL=http://localhost:8001
+    port = int(os.getenv("PORT", "5001"))
+    print(f"Starting server on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
+
+
+# ============================================================================
+# SMART IRRIGATION ENDPOINT (for IoT integration)
+# ============================================================================
+
+class SmartIrrigationRequest(BaseModel):
+    """Request model for smart irrigation predictions."""
+    temperature: float = Field(..., description="Temperature in Celsius", example=28.0)
+    humidity: float = Field(..., description="Relative humidity percentage", example=45.0)
+    soil_moisture: float = Field(..., description="Soil moisture percentage", example=30.0)
+    water_flow: float = Field(0.0, description="Current water flow rate (L/min)", example=0.0)
+
+
+@app.post("/predict/smart-irrigation")
+async def predict_smart_irrigation(request: SmartIrrigationRequest):
+    """
+    AI-powered irrigation decision endpoint.
+    
+    Analyzes sensor data and provides irrigation recommendations including:
+    - Whether irrigation is needed
+    - Recommended duration
+    - Confidence level
+    - ET (Evapotranspiration) index
+    """
+    try:
+        temp = request.temperature
+        humidity = request.humidity
+        soil_moisture = request.soil_moisture
+        water_flow = request.water_flow
+        
+        # Calculate ET (Evapotranspiration) index
+        # Higher ET = more water loss through evaporation and plant transpiration
+        et_index = (temp - 15) / 2 + (100 - humidity) / 10
+        et_index = max(0, et_index)  # Ensure non-negative
+        
+        # Initialize decision variables
+        irrigation_needed = False
+        duration = 0  # seconds
+        confidence = 0.8
+        reason = ""
+        
+        # Decision Logic
+        if soil_moisture < 35:
+            irrigation_needed = True
+            # Calculate duration based on moisture deficit
+            moisture_deficit = 60 - soil_moisture
+            duration = int(moisture_deficit * 20)  # Base duration
+            
+            # Adjust for high ET conditions
+            if et_index > 10:
+                duration = int(duration * 1.5)
+                reason = "Low soil moisture + High ET demand"
+                confidence = 0.95
+            else:
+                reason = "Low soil moisture detected"
+                confidence = 0.9
+                
+        elif soil_moisture > 70:
+            irrigation_needed = False
+            reason = "Soil moisture optimal"
+            confidence = 0.95
+            
+        elif 35 <= soil_moisture <= 50 and et_index > 15:
+            # Moderate moisture but very high ET
+            irrigation_needed = True
+            duration = int((50 - soil_moisture) * 15)
+            reason = "Moderate moisture with very high ET"
+            confidence = 0.85
+            
+        else:
+            irrigation_needed = False
+            reason = "Monitoring conditions - no action needed"
+            confidence = 0.8
+        
+        # Safety check: if water is already flowing, don't recommend more
+        if water_flow > 0.1:
+            irrigation_needed = False
+            reason = "Irrigation already active"
+            confidence = 1.0
+        
+        # Cap duration at reasonable maximum (30 minutes = 1800 seconds)
+        duration = min(duration, 1800)
+        
+        return {
+            "irrigation_needed": irrigation_needed,
+            "duration": duration,
+            "confidence": round(confidence, 2),
+            "et_index": round(et_index, 2),
+            "reason": reason,
+            "sensor_readings": {
+                "temperature": temp,
+                "humidity": humidity,
+                "soil_moisture": soil_moisture,
+                "water_flow": water_flow
+            },
+            "recommendations": _generate_irrigation_recommendations(
+                soil_moisture, temp, humidity, et_index, irrigation_needed
+            )
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Smart irrigation prediction failed: {str(e)}"
+        )
+
+
+def _generate_irrigation_recommendations(
+    soil_moisture: float,
+    temperature: float,
+    humidity: float,
+    et_index: float,
+    irrigation_needed: bool
+) -> list[str]:
+    """Generate irrigation-specific recommendations."""
+    recs = []
+    
+    # Soil moisture recommendations
+    if soil_moisture < 25:
+        recs.append("[CRITICAL] Soil moisture very low. Immediate irrigation required to prevent crop stress.")
+    elif soil_moisture < 35:
+        recs.append("Soil moisture below optimal. Start irrigation soon.")
+    elif soil_moisture > 80:
+        recs.append("[WARNING] Soil moisture very high. Risk of waterlogging and root rot. Stop irrigation.")
+    elif soil_moisture > 70:
+        recs.append("Soil moisture optimal. No irrigation needed.")
+    
+    # Temperature recommendations
+    if temperature > 35:
+        recs.append("🌡️ High temperature detected. Consider evening irrigation to reduce evaporation loss.")
+    elif temperature < 15:
+        recs.append("🌡️ Low temperature. Reduce irrigation frequency to prevent root diseases.")
+    
+    # Humidity recommendations
+    if humidity < 30:
+        recs.append("💨 Low humidity increases water loss. Monitor soil moisture closely.")
+    elif humidity > 80:
+        recs.append("💨 High humidity reduces evaporation. Reduce irrigation frequency.")
+    
+    # ET index recommendations
+    if et_index > 15:
+        recs.append("🔥 Very high evapotranspiration. Increase irrigation frequency and duration.")
+    elif et_index > 10:
+        recs.append("☀️ High evapotranspiration. Monitor soil moisture daily.")
+    elif et_index < 5:
+        recs.append("☁️ Low evapotranspiration. Reduce irrigation to prevent overwatering.")
+    
+    # General advice
+    if irrigation_needed:
+        recs.append("[OK] Irrigation recommended. Ensure water supply is adequate.")
+    else:
+        recs.append("[OK] Current conditions are good. Continue monitoring.")
+    
+    return recs

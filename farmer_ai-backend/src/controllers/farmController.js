@@ -74,6 +74,27 @@ exports.addCropCycle = async (req, res, next) => {
     }
 };
 
+// @desc    Get Crop Cycles for a Farm
+// @route   GET /api/farms/:id/crop-cycles
+// @access  Private
+exports.getCropCycles = async (req, res, next) => {
+    try {
+        const farm = await Farm.findById(req.params.id);
+        if (!farm) throw new AppError('Farm not found', 404);
+        if (farm.user.toString() !== req.user.id) throw new AppError('Not authorized', 403);
+
+        const cycles = await CropCycle.find({ farm: req.params.id }).sort({ sowingDate: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: cycles.length,
+            data: cycles
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 // @desc    Update Crop Cycle
 // @route   PUT /api/farms/crop-cycles/:id
 // @access  Private

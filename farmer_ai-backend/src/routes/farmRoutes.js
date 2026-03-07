@@ -8,6 +8,7 @@ const {
     getAllFarms,
     getFarmIntelligence,
     addCropCycle,
+    getCropCycles,
     updateCropCycle,
     addObservation,
     logAction,
@@ -36,6 +37,7 @@ router
 
 // Intelligence Routes
 router.get('/:id/intelligence', getFarmIntelligence);
+router.get('/:id/crop-cycles', getCropCycles);
 router.post('/:id/crop-cycles', addCropCycle);
 router.put('/crop-cycles/:id', updateCropCycle); // ID is cycle ID
 router.put('/crop-cycles/:id/harvest', recordHarvest); // Record Harvest

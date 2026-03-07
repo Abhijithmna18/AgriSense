@@ -139,24 +139,26 @@ const FinanceHistory = ({ loans, transactions = [], defaultTab = 'transactions' 
                 ) : (
                     /* Loan Tab - Reused existing logic */
                     <div className="space-y-6">
-                        {/* Loan Logic Preserved... but we can check if we have loans to determine outstanding logic */}
-                        {/* Using the first active loan as "highlight" if available */}
+                        {/* Calculate total active loans */}
                         {loans && loans.length > 0 ? (
-                            <div className="bg-slate-900 rounded-xl p-6 text-white relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-6 text-white relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                                 <div className="relative z-10 flex justify-between items-start">
                                     <div>
-                                        <h4 className="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">Active Loan</h4>
-                                        <h3 className="text-2xl font-bold">₹{loans[0].amount.toLocaleString()} <span className="text-sm font-normal text-slate-400">principal</span></h3>
+                                        <h4 className="text-emerald-200 text-xs font-bold uppercase tracking-wider mb-1">Active Loan</h4>
+                                        <h3 className="text-3xl font-bold">
+                                            ₹{loans.reduce((total, loan) => total + loan.amount, 0).toLocaleString()} 
+                                            <span className="text-sm font-normal text-slate-400 ml-2">principal</span>
+                                        </h3>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm text-slate-300">Status</p>
-                                        <p className="font-bold text-emerald-400 capitalize">{loans[0].status}</p>
+                                        <p className="text-sm text-slate-300">Total Loans</p>
+                                        <p className="font-bold text-emerald-400">{loans.length}</p>
                                     </div>
                                 </div>
                                 <div className="mt-8">
-                                    <p className="text-xs text-indigo-300 flex items-center gap-1">
-                                        <CheckCircle size={12} /> Loan active and monitored.
+                                    <p className="text-xs text-emerald-300 flex items-center gap-1">
+                                        <CheckCircle size={12} /> {loans.length} loan{loans.length > 1 ? 's' : ''} active and monitored.
                                     </p>
                                 </div>
                             </div>

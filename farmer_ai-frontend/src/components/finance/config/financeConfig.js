@@ -14,7 +14,9 @@ import {
     Truck,
     ShoppingCart,
     Wallet,
-    MessageSquare
+    MessageSquare,
+    Building2,
+    Award
 } from 'lucide-react';
 
 // --- SHARED CONSTANTS ---
@@ -35,6 +37,8 @@ export const FARMER_CONFIG = {
         { id: 'profitability', label: 'Profitability Analysis', icon: PieChart },
         { id: 'subsidies', label: 'Subsidies & Insurance', icon: Shield },
         { id: 'credit', label: 'Loans & Financial Health', icon: Landmark }, // "credit" maps to Loans
+        { id: 'bank_integration', label: 'Bank Integration', icon: Building2 },
+        { id: 'government_schemes', label: 'Government Schemes', icon: Award },
     ],
     overview: {
         kpiCards: [
@@ -96,6 +100,8 @@ export const BUYER_CONFIG = {
         { id: 'transactions', label: 'Transactions', icon: CreditCard },
         { id: 'margin_analysis', label: 'Margin Analysis', icon: PieChart },
         { id: 'credit', label: 'Loans & Credit', icon: Landmark },
+        { id: 'bank_integration', label: 'Bank Integration', icon: Building2 },
+        { id: 'government_schemes', label: 'Government Schemes', icon: Award },
         { id: 'product_reviews', label: 'Product Reviews', icon: MessageSquare }, // New Item
         { id: 'reports', label: 'Reports', icon: FileText }
     ],

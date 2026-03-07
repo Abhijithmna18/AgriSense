@@ -1,7 +1,7 @@
 @echo off
-REM Starts the Crop Yield Prediction FastAPI server on port 8001
+REM Starts the Crop Yield Prediction FastAPI server on port 5001 (matches backend config)
 set AGRI_ROOT=%~dp0..
-echo [YIELD-ML] Starting Crop Yield Prediction server on http://0.0.0.0:8001 ...
+echo [YIELD-ML] Starting Crop Yield Prediction server on http://0.0.0.0:5001 ...
 
 if exist "%AGRI_ROOT%\.venv\Scripts\activate.bat" (
     call "%AGRI_ROOT%\.venv\Scripts\activate.bat"
@@ -17,5 +17,12 @@ if not exist "model.pkl" (
     python train.py
 )
 
-echo [YIELD-ML] Starting uvicorn on port 8001...
-uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+echo [YIELD-ML] Starting uvicorn on port 5001...
+echo [YIELD-ML] Endpoints available:
+echo [YIELD-ML]   - GET  /health
+echo [YIELD-ML]   - POST /predict-yield
+echo [YIELD-ML]   - POST /predict/smart-irrigation  (NEW - for IoT)
+echo [YIELD-ML]   - GET  /metadata
+echo [YIELD-ML]   - Docs: http://localhost:5001/docs
+echo.
+uvicorn main:app --host 0.0.0.0 --port 5001 --reload

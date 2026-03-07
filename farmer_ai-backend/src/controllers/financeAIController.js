@@ -305,10 +305,83 @@ Generate the response strictly following the MANDATORY OUTPUT FORMAT.
     } catch (error) {
         console.error("AI Finance Engine Error:", error.message);
 
-        // Fallback or Error
-        if (error.code === 'ECONNREFUSED') {
-            return res.status(503).json({ message: "AI Engine unavailable." });
+        // Fallback with meaningful insights when AI is unavailable
+        if (error.code === 'ECONNREFUSED' || error.response?.status === 503) {
+            // Generate fallback insights based on available data
+            const fallbackInsight = await generateFallbackInsight(userId);
+            return res.json({
+                insight: fallbackInsight,
+                contextUsed: true,
+                taskType: taskType || 'execution',
+                fallback: true
+            });
         }
-        res.status(500).json({ message: "Failed to generate financial insight." });
+        
+        // For other errors, still provide basic insight
+        const basicInsight = "Financial Health Assessment: Your financial data is being processed. Please ensure all your farm and loan information is up to date for accurate insights.";
+        res.json({
+            insight: basicInsight,
+            contextUsed: false,
+            taskType: taskType || 'execution',
+            fallback: true
+        });
     }
 };
+
+// Helper function to generate fallback insights
+async function generateFallbackInsight(userId) {
+    try {
+        const [activeLoans, recentTransactions, farm] = await Promise.all([
+            Loan.find({ farmer: userId, status: 'active' }),
+            Transaction.find({ user: userId }).sort({ date: -1 }).limit(10),
+            Farm.findOne({ user: userId })
+        ]);
+
+        const totalDebt = activeLoans.reduce((sum, loan) => sum + (loan.amount - (loan.repaidAmount || 0)), 0);
+        const monthlyIncome = recentTransactions
+            .filter(t => t.type === 'credit')
+            .reduce((sum, t) => sum + t.amount, 0) / 3; // Average over 3 months
+        const monthlyExpenses = recentTransactions
+            .filter(t => t.type === 'debit')
+            .reduce((sum, t) => sum + t.amount, 0) / 3;
+
+        let insight = "📊 Financial Health Assessment\n\n";
+        
+        if (activeLoans.length > 0) {
+            insight += `💰 Active Loans: ${activeLoans.length} loan(s) with total outstanding of ₹${totalDebt.toLocaleString('en-IN')}\n`;
+            insight += `📈 Monthly EMI: ₹${activeLoans.reduce((sum, l) => sum + (l.emiAmount || 0), 0).toLocaleString('en-IN')}\n\n`;
+        } else {
+            insight += "✅ No active loans - Excellent debt-free status!\n\n";
+        }
+
+        if (farm) {
+            insight += `🌾 Farm Size: ${farm.totalArea} acres\n`;
+            insight += `🌱 Crops: ${farm.crops?.join(', ') || 'Not specified'}\n\n`;
+        }
+
+        if (monthlyIncome > 0) {
+            const savingsRate = ((monthlyIncome - monthlyExpenses) / monthlyIncome * 100).toFixed(1);
+            insight += `💵 Monthly Cash Flow:\n`;
+            insight += `  Income: ₹${monthlyIncome.toLocaleString('en-IN')}\n`;
+            insight += `  Expenses: ₹${monthlyExpenses.toLocaleString('en-IN')}\n`;
+            insight += `  Savings Rate: ${savingsRate}%\n\n`;
+        }
+
+        // Recommendations
+        insight += "💡 Recommendations:\n";
+        if (totalDebt > monthlyIncome * 6) {
+            insight += "• Consider debt consolidation to reduce interest burden\n";
+        }
+        if (!farm) {
+            insight += "• Add your farm details for personalized crop recommendations\n";
+        }
+        if (activeLoans.length === 0 && monthlyIncome > 50000) {
+            insight += "• Explore investment opportunities in agricultural equipment\n";
+        }
+        insight += "• Maintain emergency fund of 3-6 months expenses\n";
+
+        return insight;
+    } catch (err) {
+        return "Financial Health Assessment: Your financial profile is being analyzed. Please ensure your farm and transaction data is up to date for detailed insights.";
+    }
+}
