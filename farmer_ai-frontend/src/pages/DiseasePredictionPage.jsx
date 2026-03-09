@@ -27,6 +27,8 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
     const [result, setResult] = useState(null);
     const [mlStatus, setMlStatus] = useState(null); // null = checking, 'online', 'offline'
     const [isDragging, setIsDragging] = useState(false);
+    const [validating, setValidating] = useState(false);
+    const [validationResult, setValidationResult] = useState(null); // { is_valid, confidence, message }
 
     // Check if the ML service is running on component mount
     useEffect(() => {
@@ -45,7 +47,7 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
         checkMLService();
     }, []);
 
-    const processFile = (file) => {
+    const processFile = async (file) => {
         if (!file) return;
         if (!file.type.startsWith('image/')) {
             toast.error('Please upload a valid image file (JPG, PNG, WebP).');
@@ -55,9 +57,51 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
             toast.error('Image size should be less than 10MB');
             return;
         }
+        
         setSelectedImage(file);
         setPreviewUrl(URL.createObjectURL(file));
         setResult(null);
+        setValidationResult(null);
+        
+        // Automatically validate the image
+        await validateImage(file);
+    };
+
+    const validateImage = async (file) => {
+        setValidating(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await api.post('/api/ml/validate-leaf', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            if (response.data) {
+                setValidationResult({
+                    is_valid: response.data.is_leaf,
+                    confidence: response.data.confidence,
+                    message: response.data.message
+                });
+
+                if (!response.data.is_leaf) {
+                    toast.error(response.data.message || 'Invalid image. Please upload a plant leaf photo.');
+                } else {
+                    toast.success('✓ Leaf detected! Ready for diagnosis.');
+                }
+            }
+        } catch (error) {
+            console.error('Validation error:', error);
+            // If validation service is down, allow proceeding but warn user
+            setValidationResult({
+                is_valid: true,
+                confidence: 0,
+                message: 'Validation service unavailable. Proceeding without validation.'
+            });
+            toast.warning('Image validation unavailable. Results may be inaccurate.');
+        } finally {
+            setValidating(false);
+        }
     };
 
     const handleImageChange = (e) => processFile(e.target.files[0]);
@@ -70,6 +114,12 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
 
     const handlePredict = async () => {
         if (!selectedImage) return;
+
+        // Block diagnosis if validation failed
+        if (validationResult && !validationResult.is_valid) {
+            toast.error('Cannot run diagnosis on invalid image. Please upload a plant leaf photo.');
+            return;
+        }
 
         setLoading(true);
         const formData = new FormData();
@@ -88,8 +138,20 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
             }
         } catch (error) {
             console.error('Prediction error:', error);
-            const msg = error.response?.data?.message || 'Failed to analyze plant. Please try again.';
-            toast.error(msg);
+            
+            // Handle validation errors from backend
+            if (error.response?.data?.detail?.error === 'INVALID_IMAGE') {
+                const detail = error.response.data.detail;
+                toast.error(detail.message || 'Invalid image detected');
+                setValidationResult({
+                    is_valid: false,
+                    confidence: detail.confidence || 0,
+                    message: detail.message
+                });
+            } else {
+                const msg = error.response?.data?.message || 'Failed to analyze plant. Please try again.';
+                toast.error(msg);
+            }
         } finally {
             setLoading(false);
         }
@@ -235,6 +297,7 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
                                             setSelectedImage(null);
                                             setPreviewUrl(null);
                                             setResult(null);
+                                            setValidationResult(null);
                                         }}
                                         className="text-sm text-red-600 hover:text-red-700 font-medium"
                                     >
@@ -263,12 +326,54 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
                             onChange={handleImageChange}
                         />
 
+                        {/* Validation Status */}
+                        {validating && (
+                            <div className="mt-4 flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg">
+                                <Loader2 className="animate-spin" size={16} />
+                                <span>Validating image...</span>
+                            </div>
+                        )}
+
+                        {validationResult && !validating && (
+                            <div className={`mt-4 flex items-start gap-2 text-sm px-3 py-2 rounded-lg border ${
+                                validationResult.is_valid
+                                    ? 'text-green-700 bg-green-50 border-green-200'
+                                    : 'text-red-700 bg-red-50 border-red-200'
+                            }`}>
+                                {validationResult.is_valid ? (
+                                    <>
+                                        <CheckCircle size={18} className="flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <strong>✓ Leaf Detected</strong>
+                                            <p className="text-xs mt-1 opacity-80">
+                                                Confidence: {(validationResult.confidence * 100).toFixed(1)}%
+                                            </p>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <strong>✗ Invalid Image</strong>
+                                            <p className="text-xs mt-1">{validationResult.message}</p>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
                         <button
                             onClick={handlePredict}
-                            disabled={!selectedImage || loading || mlStatus === 'offline'}
+                            disabled={
+                                !selectedImage || 
+                                loading || 
+                                validating || 
+                                mlStatus === 'offline' || 
+                                (validationResult && !validationResult.is_valid)
+                            }
                             className={`
                                 w-full mt-6 py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all
-                                ${!selectedImage || loading || mlStatus === 'offline'
+                                ${!selectedImage || loading || validating || mlStatus === 'offline' || (validationResult && !validationResult.is_valid)
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg'
                                 }
@@ -278,6 +383,11 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
                                 <>
                                     <Loader2 className="animate-spin" size={20} />
                                     Analyzing Imagery...
+                                </>
+                            ) : validating ? (
+                                <>
+                                    <Loader2 className="animate-spin" size={20} />
+                                    Validating...
                                 </>
                             ) : (
                                 <>
@@ -290,6 +400,12 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
                         {mlStatus === 'offline' && (
                             <p className="text-xs text-center text-amber-600 mt-2">
                                 Start the Python ML server to enable diagnosis.
+                            </p>
+                        )}
+
+                        {validationResult && !validationResult.is_valid && (
+                            <p className="text-xs text-center text-red-600 mt-2">
+                                Upload a plant leaf image to continue
                             </p>
                         )}
                     </div>

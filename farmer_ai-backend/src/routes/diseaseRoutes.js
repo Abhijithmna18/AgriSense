@@ -19,6 +19,60 @@ const upload = multer({
     }
 });
 
+// @route   POST /api/ml/validate-leaf
+// @desc    Validate if an image contains a plant leaf before disease detection
+// @access  Private
+router.post('/validate-leaf', protect, upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No image file provided' });
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(req.file.path), {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+        });
+
+        const mlBaseUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+        const validationUrl = `${mlBaseUrl}/validate-leaf`;
+
+        const response = await axios.post(validationUrl, formData, {
+            headers: {
+                ...formData.getHeaders(),
+            },
+            timeout: 15000
+        });
+
+        // Clean up temp file
+        fs.unlink(req.file.path, (err) => {
+            if (err) console.error("Error deleting temp file:", err);
+        });
+
+        res.status(200).json(response.data);
+
+    } catch (error) {
+        // Clean up on error
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        console.error('Leaf Validation Error:', error.message);
+
+        if (error.code === 'ECONNREFUSED') {
+            return res.status(503).json({
+                success: false,
+                message: 'Machine Learning service is currently unavailable.'
+            });
+        }
+
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.detail || 'Error validating image',
+        });
+    }
+});
+
 // @route   POST /api/ml/predict-disease
 // @desc    Proxy image upload to the FastAPI Plant Disease Model
 // @access  Private

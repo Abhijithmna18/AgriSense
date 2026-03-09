@@ -12,6 +12,7 @@ import cv2
 
 from model import DiseaseClassifier
 from grad_cam import GradCAM, apply_heatmap_to_image
+from leaf_validator import get_validator
 
 app = FastAPI(title="Plant Doctor - ML Inference Engine")
 
@@ -147,6 +148,36 @@ async def health_check():
     }
 
 
+@app.post("/validate-leaf")
+async def validate_leaf(file: UploadFile = File(...)):
+    """
+    Validate if an uploaded image contains a plant leaf.
+    This endpoint should be called BEFORE predict-disease to ensure valid input.
+    """
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
+
+    # Read and validate file size (10MB limit)
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size exceeds 10MB limit.")
+
+    try:
+        image = Image.open(BytesIO(contents)).convert("RGB")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Error decoding image file.")
+
+    # Run leaf validation
+    validator = get_validator()
+    validation_result = validator.validate(image)
+
+    return {
+        "is_leaf": validation_result["is_valid"],
+        "confidence": validation_result["confidence"],
+        "message": validation_result["message"]
+    }
+
+
 @app.post("/predict-disease")
 async def predict_disease(file: UploadFile = File(...)):
     if not file.content_type.startswith('image/'):
@@ -161,6 +192,21 @@ async def predict_disease(file: UploadFile = File(...)):
         image = Image.open(BytesIO(contents)).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Error decoding image file.")
+
+    # CRITICAL: Validate that the image contains a leaf BEFORE running disease detection
+    validator = get_validator()
+    validation_result = validator.validate(image)
+    
+    if not validation_result["is_valid"]:
+        raise HTTPException(
+            status_code=400, 
+            detail={
+                "error": "INVALID_IMAGE",
+                "message": validation_result["message"],
+                "confidence": validation_result["confidence"],
+                "suggestion": "Please upload a clear photo of a plant leaf. Images of faces, objects, or backgrounds are not supported."
+            }
+        )
 
     # Preprocess
     input_tensor = transform(image).unsqueeze(0).to(DEVICE)
