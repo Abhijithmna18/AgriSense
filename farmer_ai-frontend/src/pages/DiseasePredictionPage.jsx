@@ -98,7 +98,7 @@ const DiseasePredictionPage = ({ isEmbedded }) => {
                 confidence: 0,
                 message: 'Validation service unavailable. Proceeding without validation.'
             });
-            toast.warning('Image validation unavailable. Results may be inaccurate.');
+            toast.error('Image validation unavailable. Results may be inaccurate.');
         } finally {
             setValidating(false);
         }
