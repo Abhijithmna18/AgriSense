@@ -278,51 +278,14 @@ router.post('/orders/:id/override', async (req, res) => {
 });
 
 // FEATURE FLAGS
+const featureFlagController = require('../controllers/featureFlagController');
 
-// GET /api/admin/feature-flags
-router.get('/feature-flags', async (req, res) => {
-    try {
-        const flags = await FeatureFlag.find().sort({ key: 1 });
-        res.json(flags);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-});
-
-// POST /api/admin/feature-flags
-router.post('/feature-flags', async (req, res) => {
-    try {
-        const { key, description, isEnabled, rolloutPercentage } = req.body;
-
-        let flag = await FeatureFlag.findOne({ key });
-        const before = flag ? flag.toObject() : null;
-
-        if (flag) {
-            flag.description = description || flag.description;
-            flag.isEnabled = isEnabled !== undefined ? isEnabled : flag.isEnabled;
-            flag.rolloutPercentage = rolloutPercentage !== undefined ? rolloutPercentage : flag.rolloutPercentage;
-            flag.updatedBy = req.user._id;
-            flag.lastUpdated = Date.now();
-        } else {
-            flag = new FeatureFlag({
-                key,
-                description,
-                isEnabled,
-                rolloutPercentage,
-                updatedBy: req.user._id
-            });
-        }
-
-        await flag.save();
-        const after = flag.toObject();
-
-        await logAdminAction(req, before ? 'UPDATE_FLAG' : 'CREATE_FLAG', 'FeatureFlag', flag._id, { before, after });
-
-        res.json(flag);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-});
+router.get('/feature-flags', featureFlagController.getFeatureFlags);
+router.post('/feature-flags', featureFlagController.createFeatureFlag);
+router.get('/feature-flags/:id', featureFlagController.getFeatureFlag);
+router.put('/feature-flags/:id', featureFlagController.updateFeatureFlag);
+router.patch('/feature-flags/:id/toggle', featureFlagController.toggleFeatureFlag);
+router.delete('/feature-flags/:id', featureFlagController.deleteFeatureFlag);
 
 // AUDIT LOGS
 
@@ -380,5 +343,18 @@ router.delete('/forum/:id', deleteQuestion);
 // Community Events Management
 router.post('/events', createEvent);
 router.put('/events/:id/status', updateEventStatus);
+
+// --- ROLES & PERMISSIONS ---
+const roleController = require('../controllers/roleController');
+
+// Role routes
+router.get('/roles', roleController.getRoles);
+router.post('/roles', roleController.createRole);
+router.get('/roles/permissions/all', roleController.getPermissions);
+router.get('/roles/:id', roleController.getRole);
+router.put('/roles/:id', roleController.updateRole);
+router.delete('/roles/:id', roleController.deleteRole);
+router.get('/roles/:id/permissions', roleController.getRolePermissions);
+router.put('/users/:userId/role', roleController.assignRoleToUser);
 
 module.exports = router;

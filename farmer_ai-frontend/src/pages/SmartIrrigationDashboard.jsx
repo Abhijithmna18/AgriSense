@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Droplets, Thermometer, Wind, Activity, Zap, AlertTriangle,
     BrainCircuit, Power, RefreshCw, BarChart2, Wifi, WifiOff, Beaker,
-    TrendingUp, TrendingDown, CheckCircle, XCircle, AlertCircle, Gauge
+    TrendingUp, TrendingDown, CheckCircle, XCircle, AlertCircle, Gauge, Leaf
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -23,40 +23,36 @@ const AIO_KEY = import.meta.env.VITE_AIO_KEY || '';
 const AIO_BASE = `https://io.adafruit.com/api/v2/${AIO_USERNAME}/feeds`;
 const AIO_HEADERS = { 'X-AIO-Key': AIO_KEY, 'Content-Type': 'application/json' };
 
-// Feed names matching ESP32 configuration
+// Feed names matching official Adafruit IO configuration
 const FEEDS = {
-    PUMP_CONTROL: 'pump-control',
-    PUMP_STATUS: 'pump-status',
+    PUMP_CONTROL: 'pump',
+    PUMP_STATUS: 'pump',
     SOIL_MOISTURE: 'soil-moisture',
     TEMPERATURE: 'temperature',
     HUMIDITY: 'humidity',
     TDS: 'tds',
-    FLOW_RATE: 'flow-rate',
+    FLOW_RATE: 'water-flow',
     WATER_VOLUME: 'water-volume',
-    ET_INDEX: 'et-index',
-    DRY_RUN_ALERT: 'dry-run-alert',
-    SOIL_WARNING: 'soil-warning'
+    DRY_RUN_ALERT: 'dry-run-alert'
 };
 
 const missingFeeds = new Set();
 
 const aioFetch = (feed) => {
-    // If we already know the feed is missing, don't spam the network (which causes native browser 404 logs)
     if (missingFeeds.has(feed)) return Promise.resolve(0);
 
     return fetch(`${AIO_BASE}/${feed}/data/last`, { headers: AIO_HEADERS })
         .then(r => {
             if (!r.ok) {
                 if (r.status === 404) missingFeeds.add(feed);
-                return { value: 0 }; // Fallback object instead of throwing
+                return { value: 0 };
             }
-            // If it succeeds, ensure it's removed from missing feeds just in case
             if (missingFeeds.has(feed)) missingFeeds.delete(feed);
             return r.json();
         })
         .then(d => parseFloat(d.value) || 0)
         .catch(err => {
-            return 0; // Final fallback
+            return 0;
         });
 };
 
@@ -74,85 +70,16 @@ const aioPublish = async (feed, value) => {
         console.log(`✓ Published to ${feed}: ${value}`);
         return true;
     } catch (err) {
-        console.warn(`Feed ${feed} could not be published to (likely 404/Missing)`);
+        console.warn(`Feed ${feed} could not be published to`);
         return false;
     }
 };
 
-// ─── AI Decision Engine ────────────────────────────────────────────────────────
 const calculateETIndex = (temp, humidity) => {
-    // Simplified ET calculation based on temperature and humidity
     const tempFactor = Math.max(0, (temp - 15) / 2);
     const humidityFactor = Math.max(0, (100 - humidity) / 10);
     return parseFloat((tempFactor + humidityFactor).toFixed(2));
 };
-
-const makeIrrigationDecision = (sensorData) => {
-    const { soilMoisture, temperature, humidity, tdsValue, flowRate, pumpActive, totalWaterVolume } = sensorData;
-
-    const etIndex = calculateETIndex(temperature, humidity);
-
-    let decision = {
-        irrigation: 0,
-        fertilizer_needed: false,
-        fertilizer_level: 'optimal',
-        dry_run_warning: false,
-        soil_response_warning: false,
-        recommended_runtime_seconds: 0,
-        et_index: etIndex,
-        decision_reason: ''
-    };
-
-    // Rule 1: Irrigation decision based on soil moisture and ET
-    if (soilMoisture < 35 && etIndex > 10) {
-        decision.irrigation = 1;
-        decision.recommended_runtime_seconds = Math.ceil((60 - soilMoisture) * 30);
-        decision.decision_reason = 'Low soil moisture + High ET demand';
-    } else if (soilMoisture < 35) {
-        decision.irrigation = 1;
-        decision.recommended_runtime_seconds = Math.ceil((60 - soilMoisture) * 20);
-        decision.decision_reason = 'Low soil moisture detected';
-    } else if (soilMoisture > 60) {
-        decision.irrigation = 0;
-        decision.decision_reason = 'Soil moisture optimal';
-    } else {
-        decision.decision_reason = 'Monitoring conditions';
-    }
-
-    // Rule 2: Fertilizer management based on TDS
-    if (tdsValue < 400) {
-        decision.fertilizer_needed = true;
-        decision.fertilizer_level = 'low';
-    } else if (tdsValue > 1200) {
-        decision.fertilizer_level = 'high';
-        decision.fertilizer_needed = false;
-    } else {
-        decision.fertilizer_level = 'optimal';
-    }
-
-    // Rule 3: Dry run detection
-    // Note: The ESP32 handles rapid dry-run shutoff internally after a 5 second pump start delay. 
-    // We rely on the `dryRunAlert` feed from the ESP32 rather than making an instantaneous frontend decision.
-
-
-    return decision;
-};
-
-// ─── Status Badge Component ───────────────────────────────────────────────────
-const StatusBadge = ({ status, label }) => {
-    const styles = {
-        active: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white',
-        warning: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
-        critical: 'bg-gradient-to-r from-rose-500 to-red-500 text-white animate-pulse',
-        inactive: 'bg-slate-200 text-slate-600',
-    };
-    return (
-        <span className={`px-3 py-1.5 font-bold rounded-full text-xs shadow-lg ${styles[status] || styles.inactive}`}>
-            {label}
-        </span>
-    );
-};
-
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function SmartIrrigationDashboard() {
@@ -172,7 +99,6 @@ export default function SmartIrrigationDashboard() {
     // ── State ─────────────────────────────────────────────────────────────────
     const [connected, setConnected] = useState(false);
     const [lastUpdated, setLastUpdated] = useState(null);
-    const [fetchError, setFetchError] = useState(null);
 
     const [sensorData, setSensorData] = useState({
         temperature: null,
@@ -184,9 +110,11 @@ export default function SmartIrrigationDashboard() {
         pumpActive: false,
         dryRunAlert: false,
         soilWarning: false,
+        etIndex: 0
     });
 
     const [aiDecision, setAiDecision] = useState(null);
+    const [isAiLoading, setIsAiLoading] = useState(false);
     const [pumpLoading, setPumpLoading] = useState(false);
     const [manualOverride, setManualOverride] = useState(false);
     const [historicalData, setHistoricalData] = useState([]);
@@ -198,10 +126,51 @@ export default function SmartIrrigationDashboard() {
     useEffect(() => { pumpActiveRef.current = sensorData.pumpActive; }, [sensorData.pumpActive]);
     useEffect(() => { manualOverrideRef.current = manualOverride; }, [manualOverride]);
 
+    // ── AI Advice Fetch ───────────────────────────────────────────────────────
+    const fetchAIAdvice = async (currentData) => {
+        setIsAiLoading(true);
+        try {
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+            const response = await fetch(`${apiUrl}/api/ai-proxy/agronomy-advice`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    soil_moisture: currentData.soilMoisture,
+                    temperature: currentData.temperature,
+                    humidity: currentData.humidity,
+                    tds: currentData.tdsValue,
+                    flow_rate: currentData.waterFlow,
+                    total_water_volume: currentData.totalWaterVolume,
+                    et_index: currentData.etIndex,
+                    pump_state: currentData.pumpActive ? 'ON' : 'OFF',
+                    dry_run_alert: currentData.dryRunAlert,
+                    soil_warning: currentData.soilWarning
+                })
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.success) {
+                    setAiDecision(json.data);
+                }
+            } else {
+                console.error("Failed to fetch AI Advice", response.status);
+            }
+        } catch (err) {
+            console.error("AI Advice Network Error:", err);
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
+
     // ── Adafruit IO Fetch ─────────────────────────────────────────────────────
     const fetchAdafruitFeeds = useCallback(async () => {
         try {
-            const [temp, hum, soil, flow, tds, pumpStatus, waterVol, dryRunAlert, soilWarn] = await Promise.all([
+            const [temp, hum, soil, flow, tds, pumpStatus, waterVol, dryRunAlert] = await Promise.all([
                 aioFetch(FEEDS.TEMPERATURE),
                 aioFetch(FEEDS.HUMIDITY),
                 aioFetch(FEEDS.SOIL_MOISTURE),
@@ -210,8 +179,9 @@ export default function SmartIrrigationDashboard() {
                 aioFetch(FEEDS.PUMP_STATUS),
                 aioFetch(FEEDS.WATER_VOLUME),
                 aioFetch(FEEDS.DRY_RUN_ALERT),
-                aioFetch(FEEDS.SOIL_WARNING),
             ]);
+
+            const etIndex = calculateETIndex(temp, hum);
 
             const reading = {
                 temperature: temp,
@@ -220,36 +190,26 @@ export default function SmartIrrigationDashboard() {
                 waterFlow: flow,
                 tdsValue: tds,
                 totalWaterVolume: waterVol,
-                pumpActive: pumpStatus === 1 || pumpStatus === '1', // Read actual pump state from ESP32
+                pumpActive: pumpStatus === 1 || pumpStatus === '1',
                 dryRunAlert: dryRunAlert === 1,
-                soilWarning: soilWarn === 1,
+                etIndex: etIndex,
+                soilWarning: false // Placeholder for complex logic
             };
 
             setSensorData(reading);
             setLastUpdated(Date.now());
-            setFetchError(null);
             setConnected(true);
 
-            // Make AI decision
-            const decision = makeIrrigationDecision(reading);
-            setAiDecision(decision);
+            // Trigger AI Strategy engine
+            fetchAIAdvice(reading);
 
-            // Generate alerts
+            // Generate simple high-level alerts
             const newAlerts = [];
             if (reading.dryRunAlert) {
                 newAlerts.push({ type: 'critical', message: '🚨 DRY RUN DETECTED! Pump running with no water flow. System auto-stopped.' });
             }
-            if (reading.soilWarning) {
-                newAlerts.push({ type: 'warning', message: '⚠️ Soil not responding to irrigation. Check soil sensor or water distribution.' });
-            }
-            if (decision.dry_run_warning) {
-                newAlerts.push({ type: 'critical', message: 'Dry run detected! Pump running with no flow.' });
-            }
-            if (decision.fertilizer_needed) {
-                newAlerts.push({ type: 'warning', message: 'Fertilizer level low. TDS below 400 ppm.' });
-            }
-            if (decision.fertilizer_level === 'high') {
-                newAlerts.push({ type: 'warning', message: 'Fertilizer concentration high. TDS above 1200 ppm.' });
+            if (aiDecision?.system_health === 'critical' || aiDecision?.system_health === 'warning') {
+                newAlerts.push({ type: aiDecision.system_health, message: `System flag: ${aiDecision.system_health.toUpperCase()} health.` });
             }
             setAlerts(newAlerts);
 
@@ -261,63 +221,41 @@ export default function SmartIrrigationDashboard() {
                     humidity: hum,
                     soilMoisture: soil,
                     tds: tds,
-                    etIndex: decision.et_index,
+                    etIndex: etIndex,
                 };
                 const updated = [...prev, point];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
 
-            // Auto-control pump based on AI decision (if not manual override)
-            if (!manualOverrideRef.current && decision.irrigation !== (pumpActiveRef.current ? 1 : 0)) {
-                // await sendPumpCommand(decision.irrigation === 1);
-                console.log("AI Auto-Control triggered, but overriding for safe demo. Decision:", decision.irrigation === 1);
-            }
-
         } catch (err) {
             console.error('Adafruit IO fetch failed:', err);
-            // Don't show network error for 404s, keep connected as true if basic feeds work
-            // setFetchError('Cannot reach Adafruit IO. Check your network and credentials.');
-            // setConnected(false);
         }
-    }, []);
+    }, [aiDecision?.system_health]); // Include AI health logic dependency
 
-    // ── Polling (every 60 seconds to respect Adafruit IO Free Tier 30 RPM limit)
+    // ── Polling ───────────────────────────────────────────────────────────────
     useEffect(() => {
         fetchAdafruitFeeds();
         const id = setInterval(fetchAdafruitFeeds, 60000);
         return () => clearInterval(id);
-    }, [fetchAdafruitFeeds]);
+        // eslint-disable-next-line
+    }, []);
 
     // ── Pump Command ──────────────────────────────────────────────────────────
     const sendPumpCommand = async (on) => {
         setPumpLoading(true);
-        console.log(`🎯 Sending pump command: ${on ? 'ON' : 'OFF'}`);
-
         try {
-            // Publish to pump-control feed - ESP32 subscribes to this
             const success = await aioPublish(FEEDS.PUMP_CONTROL, on ? 1 : 0);
-
             if (success) {
-                console.log(`✓ Pump command sent successfully: ${on ? 'ON' : 'OFF'}`);
-                // Optimistically update UI, but actual state comes from pump-status feed
                 setSensorData(prev => ({ ...prev, pumpActive: on }));
-
-                // Wait a moment then fetch actual pump status from ESP32
                 setTimeout(() => {
                     aioFetch(FEEDS.PUMP_STATUS).then(status => {
                         const actualState = status === 1 || status === '1';
                         setSensorData(prev => ({ ...prev, pumpActive: actualState }));
-                        console.log(`✓ Pump status confirmed: ${actualState ? 'ON' : 'OFF'}`);
                     });
                 }, 2000);
-            } else {
-                console.warn('Failed to publish pump command (Feed may be missing).');
-                // Don't show critical UI error if we're just missing the feed during setup
-                // setFetchError('Failed to send pump command. Check Adafruit IO connection.');
             }
         } catch (err) {
             console.warn('❌ Pump command failed:', err);
-            // setFetchError('Failed to send pump command. Check Adafruit IO connection.');
         } finally {
             setPumpLoading(false);
         }
@@ -342,231 +280,229 @@ export default function SmartIrrigationDashboard() {
 
     // ─────────────────────────────────────────────────────────────────────────
     return (
-        <div className="flex h-screen bg-gradient-to-br from-slate-900 via-blue-900/20 to-slate-900 font-sans overflow-hidden">
+        <div className="flex h-screen bg-slate-50 font-sans overflow-hidden text-slate-800">
             <Sidebar onLogout={handleLogout} />
 
-            <div className="flex-1 flex flex-col min-w-0 md:ml-64">
+            <div className="flex-1 flex flex-col min-w-0 md:ml-64 relative z-10">
                 <TopBar user={user} onLogout={handleLogout} />
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 lg:p-8">
-                    <div className="max-w-[1800px] mx-auto space-y-6 animate-in fade-in duration-500 pb-20">
+                    <div className="max-w-[1800px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
 
                         {/* ── Header ─────────────────────────────────────────── */}
-                        <div className="relative overflow-hidden bg-gradient-to-br from-slate-800/90 via-blue-900/50 to-slate-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-500/20">
-                            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl" />
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 rounded-full blur-3xl" />
-
-                            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-8">
-                                <div className="flex items-start gap-5">
-                                    <div className="relative">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl blur-xl opacity-60 animate-pulse" />
-                                        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center shadow-2xl">
-                                            <BrainCircuit size={32} className="text-white drop-shadow-lg" />
+                        <div className="relative overflow-hidden bg-white rounded-[2.5rem] shadow-sm border border-slate-200">
+                            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-8 md:p-10">
+                                <div className="flex items-start gap-6">
+                                    <div className="relative group cursor-default">
+                                        <div className="absolute inset-0 bg-emerald-100 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                                        <div className="relative w-20 h-20 rounded-3xl bg-white border border-slate-100 flex items-center justify-center shadow-lg overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-transparent" />
+                                            <BrainCircuit size={40} className="text-emerald-500 drop-shadow-sm" />
                                         </div>
                                     </div>
-                                    <div>
-                                        <h1 className="text-4xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent tracking-tight mb-2">
-                                            AI Irrigation & Fertigation Engine
+                                    <div className="flex flex-col justify-center h-20">
+                                        <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent tracking-tight mb-2">
+                                            AgriSense AI Engine
                                         </h1>
-                                        <div className="flex flex-wrap items-center gap-3">
-                                            <p className="text-slate-300 font-semibold text-sm">
-                                                Real-time Decision System • ESP32 IoT Controller
+                                        <div className="flex flex-wrap items-center gap-4">
+                                            <p className="text-slate-500 font-medium text-sm tracking-wide">
+                                                Autonomous Irrigation & Fertigation
                                             </p>
-                                            <span className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full font-bold shadow-lg ${connected ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'bg-gradient-to-r from-rose-500 to-orange-500 text-white'}`}>
-                                                {connected ? <Wifi size={14} /> : <WifiOff size={14} />}
-                                                <span className={`w-2 h-2 rounded-full ${connected ? 'bg-white animate-pulse' : 'bg-white/80'}`} />
-                                                {connected ? 'LIVE' : 'OFFLINE'}
+                                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300 hidden md:block" />
+                                            <span className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm border transition-colors ${connected ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                                                {connected ? <Wifi size={14} className="animate-pulse" /> : <WifiOff size={14} />}
+                                                {connected ? 'SYSTEM LIVE' : 'OFFLINE'}
                                             </span>
                                             {lastUpdated && (
-                                                <span className="text-xs text-slate-400 font-medium bg-slate-800/60 px-3 py-1 rounded-full">
+                                                <span className="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
                                                     Updated: {new Date(lastUpdated).toLocaleTimeString()}
                                                 </span>
                                             )}
                                         </div>
-                                        {fetchError && (
-                                            <p className="text-xs text-rose-400 mt-2 bg-rose-500/20 px-3 py-1 rounded-lg inline-block">{fetchError}</p>
-                                        )}
                                     </div>
                                 </div>
                                 <button
-                                    onClick={fetchAdafruitFeeds}
-                                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                    onClick={() => fetchAdafruitFeeds()}
+                                    className="group relative flex items-center gap-3 px-6 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl text-sm font-bold shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg active:scale-95"
                                 >
-                                    <RefreshCw size={16} /> Refresh Data
+                                    <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-700 ease-in-out text-emerald-500" />
+                                    <span className="tracking-wide">Sync Data</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* ── Alerts Bar ────────────────────────────────────── */}
                         {alerts.length > 0 && (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {alerts.map((alert, idx) => (
                                     <motion.div
                                         key={idx}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        className={`flex items-center gap-3 p-4 rounded-2xl border-2 ${alert.type === 'critical'
-                                            ? 'bg-rose-500/10 border-rose-500/50 text-rose-300'
-                                            : 'bg-amber-500/10 border-amber-500/50 text-amber-300'
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className={`flex items-center gap-4 p-5 rounded-2xl border shadow-sm ${alert.type === 'critical'
+                                            ? 'bg-rose-50 border-rose-200 text-rose-800'
+                                            : 'bg-amber-50 border-amber-200 text-amber-800'
                                             }`}
                                     >
-                                        <AlertTriangle size={20} className="flex-shrink-0" />
-                                        <span className="font-semibold">{alert.message}</span>
+                                        <div className={`p-2 rounded-full ${alert.type === 'critical' ? 'bg-rose-100' : 'bg-amber-100'}`}>
+                                            <AlertTriangle size={24} className={alert.type === 'critical' ? 'text-rose-600' : 'text-amber-600'} />
+                                        </div>
+                                        <span className="font-medium tracking-wide text-sm md:text-base">{alert.message}</span>
                                     </motion.div>
                                 ))}
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-
-                            {/* ── LEFT COLUMN: Sensor Inputs ─────────────────── */}
-                            <div className="xl:col-span-5 space-y-6">
-
+                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                            {/* ── LEFT COLUMN: Sensor Inputs & Pump ──────────── */}
+                            <div className="xl:col-span-5 space-y-8">
 
                                 {/* Sensor Inputs Panel */}
-                                <div className="relative overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-3xl shadow-2xl border border-slate-700/50">
-                                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
-
-                                    <div className="p-7">
-                                        <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
-                                            <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg">
-                                                <Activity className="text-white" size={20} />
-                                            </div>
-                                            Real-Time Sensor Inputs
-                                        </h3>
+                                <div className="relative bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden group/panel">
+                                    <div className="p-8 md:p-10">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3">
+                                                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                                                    <Activity className="text-emerald-500" size={20} />
+                                                </div>
+                                                Telemetry Data
+                                            </h3>
+                                        </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             {/* Soil Moisture */}
-                                            <motion.div
-                                                className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/30 hover:border-blue-400/50 transition-all"
-                                                whileHover={{ scale: 1.02 }}
-                                            >
-                                                <Droplets size={24} className="text-blue-400 mb-2" />
-                                                <div className="text-4xl font-black text-white">{fmt(sensorData.soilMoisture, 0)}%</div>
-                                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Soil Moisture</div>
-                                                <div className={`text-xs font-semibold mt-2 ${sensorData.soilMoisture < 35 ? 'text-rose-400' :
-                                                    sensorData.soilMoisture > 60 ? 'text-emerald-400' : 'text-amber-400'
-                                                    }`}>
-                                                    {sensorData.soilMoisture < 35 ? 'LOW' : sensorData.soilMoisture > 60 ? 'OPTIMAL' : 'MODERATE'}
+                                            <motion.div className="group relative p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:border-emerald-200 transition-all duration-300 shadow-sm">
+                                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                                                    <Droplets size={48} className="text-emerald-500" />
+                                                </div>
+                                                <div className="relative z-10">
+                                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Soil Moisture</div>
+                                                    <div className="flex items-baseline gap-2 mb-3">
+                                                        <span className="text-5xl font-black text-slate-800 tracking-tighter">{fmt(sensorData.soilMoisture, 0)}</span>
+                                                        <span className="text-lg text-emerald-500 font-bold">%</span>
+                                                    </div>
+                                                    <div className={`inline-flex px-2 py-1 rounded-md text-[10px] font-bold tracking-widest uppercase ${sensorData.soilMoisture < 35 ? 'bg-rose-100 text-rose-700' : sensorData.soilMoisture > 60 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                        {sensorData.soilMoisture < 35 ? 'CRITICAL LOW' : sensorData.soilMoisture > 60 ? 'OPTIMAL' : 'MONITORING'}
+                                                    </div>
                                                 </div>
                                             </motion.div>
 
                                             {/* Temperature */}
-                                            <motion.div
-                                                className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border-2 border-orange-500/30 hover:border-orange-400/50 transition-all"
-                                                whileHover={{ scale: 1.02 }}
-                                            >
-                                                <Thermometer size={24} className="text-orange-400 mb-2" />
-                                                <div className="text-4xl font-black text-white">{fmt(sensorData.temperature)}°C</div>
-                                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Temperature</div>
-                                            </motion.div>
-
-                                            {/* Humidity */}
-                                            <motion.div
-                                                className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 border-2 border-sky-500/30 hover:border-sky-400/50 transition-all"
-                                                whileHover={{ scale: 1.02 }}
-                                            >
-                                                <Wind size={24} className="text-sky-400 mb-2" />
-                                                <div className="text-4xl font-black text-white">{fmt(sensorData.humidity, 0)}%</div>
-                                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Humidity</div>
-                                            </motion.div>
-
-                                            {/* TDS Value */}
-                                            <motion.div
-                                                className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-2 border-purple-500/30 hover:border-purple-400/50 transition-all"
-                                                whileHover={{ scale: 1.02 }}
-                                            >
-                                                <Beaker size={24} className="text-purple-400 mb-2" />
-                                                <div className="text-4xl font-black text-white">{fmt(sensorData.tdsValue, 0)}</div>
-                                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">TDS (ppm)</div>
-                                                <div className={`text-xs font-semibold mt-2 ${tdsStatus.color}`}>
-                                                    {tdsStatus.label}
+                                            <motion.div className="group relative p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:border-orange-200 transition-all duration-300 shadow-sm">
+                                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                                                    <Thermometer size={48} className="text-orange-500" />
+                                                </div>
+                                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Temp</div>
+                                                    <div className="flex items-baseline gap-2 mt-auto">
+                                                        <span className="text-5xl font-black text-slate-800 tracking-tighter">{fmt(sensorData.temperature)}</span>
+                                                        <span className="text-lg text-orange-500 font-bold">°C</span>
+                                                    </div>
                                                 </div>
                                             </motion.div>
 
-                                            {/* Flow Rate */}
-                                            <motion.div
-                                                className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 border-2 border-teal-500/30 hover:border-teal-400/50 transition-all"
-                                                whileHover={{ scale: 1.02 }}
-                                            >
-                                                <Gauge size={24} className="text-teal-400 mb-2" />
-                                                <div className="text-4xl font-black text-white">{fmt(sensorData.waterFlow, 2)}</div>
-                                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Flow Rate (L/min)</div>
+                                            {/* Humidity */}
+                                            <motion.div className="group relative p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:border-sky-200 transition-all duration-300 shadow-sm">
+                                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                                                    <Wind size={48} className="text-sky-500" />
+                                                </div>
+                                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Humidity</div>
+                                                    <div className="flex items-baseline gap-2 mt-auto">
+                                                        <span className="text-5xl font-black text-slate-800 tracking-tighter">{fmt(sensorData.humidity, 0)}</span>
+                                                        <span className="text-lg text-sky-500 font-bold">%</span>
+                                                    </div>
+                                                </div>
                                             </motion.div>
 
-                                            {/* Total Water Volume */}
-                                            <motion.div
-                                                className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20 border-2 border-indigo-500/30 hover:border-indigo-400/50 transition-all"
-                                                whileHover={{ scale: 1.02 }}
-                                            >
-                                                <Droplets size={24} className="text-indigo-400 mb-2" />
-                                                <div className="text-4xl font-black text-white">{fmt(sensorData.totalWaterVolume, 1)}</div>
-                                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Total Volume (L)</div>
+                                            {/* TDS Value */}
+                                            <motion.div className="group relative p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:border-purple-200 transition-all duration-300 shadow-sm">
+                                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                                                    <Beaker size={48} className="text-purple-500" />
+                                                </div>
+                                                <div className="relative z-10">
+                                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Nutrients <span className="text-[10px] text-slate-500">(TDS)</span></div>
+                                                    <div className="flex items-baseline gap-2 mb-3">
+                                                        <span className="text-4xl font-black text-slate-800 tracking-tighter">{fmt(sensorData.tdsValue, 0)}</span>
+                                                        <span className="text-sm font-bold text-purple-500">ppm</span>
+                                                    </div>
+                                                    <div className={`inline-flex px-2 py-1 rounded-md text-[10px] font-bold tracking-widest uppercase ${tdsStatus.status === 'critical' ? 'bg-rose-100 text-rose-700' : tdsStatus.status === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                                        {tdsStatus.label}
+                                                    </div>
+                                                </div>
                                             </motion.div>
+
+                                            {/* Flow Rate & Total Volume */}
+                                            <div className="col-span-2 grid grid-cols-2 gap-4">
+                                                <motion.div className="group relative p-5 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-all duration-300 flex items-center justify-between shadow-sm">
+                                                    <div>
+                                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Flow Rate</div>
+                                                        <div className="flex items-baseline gap-1.5">
+                                                            <span className="text-2xl font-black text-slate-800">{fmt(sensorData.waterFlow, 1)}</span>
+                                                            <span className="text-xs text-teal-600 font-bold uppercase tracking-wider">L/m</span>
+                                                        </div>
+                                                    </div>
+                                                    <Gauge size={28} className="text-teal-500/30 group-hover:text-teal-500 transition-colors" />
+                                                </motion.div>
+
+                                                <motion.div className="group relative p-5 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-all duration-300 flex items-center justify-between shadow-sm">
+                                                    <div>
+                                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Vol</div>
+                                                        <div className="flex items-baseline gap-1.5">
+                                                            <span className="text-2xl font-black text-slate-800">{fmt(sensorData.totalWaterVolume, 1)}</span>
+                                                            <span className="text-xs text-indigo-600 font-bold uppercase tracking-wider">L</span>
+                                                        </div>
+                                                    </div>
+                                                    <Droplets size={28} className="text-indigo-500/30 group-hover:text-indigo-500 transition-colors" />
+                                                </motion.div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-
                                 {/* Pump Control Panel */}
-                                <div className="relative overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-3xl shadow-2xl border border-slate-700/50">
-                                    <div className="p-7">
-                                        <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
-                                            <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
-                                                <Power className="text-white" size={20} />
+                                <div className="relative bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="p-8 md:p-10">
+                                        <h3 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
+                                            <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                                                <Zap className="text-emerald-500" size={20} />
                                             </div>
-                                            Pump Control System
+                                            Pump Systems
                                         </h3>
 
-                                        <div className="flex justify-between items-center mb-6 bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                                        <div className="flex justify-between items-center mb-10 bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-sm">
                                             <div>
-                                                <p className="text-sm text-slate-300 uppercase tracking-wider font-bold mb-1">Control Mode</p>
-                                                <p className="text-xs text-slate-400">
-                                                    {manualOverride ? '⚡ Manual Override Active' : '🤖 AI Auto-Control'}
+                                                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-2">Operation Mode</p>
+                                                <p className={`text-sm font-bold flex items-center gap-2 ${manualOverride ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                    {manualOverride ? <><AlertCircle size={16} /> Manual Override</> : <><BrainCircuit size={16} /> AI Controlled</>}
                                                 </p>
                                             </div>
                                             <button
                                                 onClick={handleManualPumpToggle}
                                                 disabled={pumpLoading}
-                                                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${sensorData.pumpActive
-                                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/50'
-                                                    : 'bg-slate-600'
-                                                    } disabled:opacity-60`}
+                                                className={`relative inline-flex h-10 w-20 items-center rounded-full transition-all duration-300 outline-none shadow-inner ${sensorData.pumpActive
+                                                    ? 'bg-emerald-100 border border-emerald-300'
+                                                    : 'bg-slate-200 border border-slate-300 hover:bg-slate-300'
+                                                    } disabled:opacity-50`}
                                             >
-                                                <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform ${sensorData.pumpActive ? 'translate-x-9' : 'translate-x-1'
-                                                    }`} />
+                                                <span className={`inline-block h-8 w-8 transform rounded-full transition-all duration-300 flex items-center justify-center shadow-sm ${sensorData.pumpActive ? 'translate-x-[42px] bg-emerald-500 text-white' : 'translate-x-1 bg-white text-slate-400'
+                                                    }`}>
+                                                    {pumpLoading ? <RefreshCw size={14} className="animate-spin text-inherit opacity-70" /> : <Power size={14} className="text-inherit" />}
+                                                </span>
                                             </button>
                                         </div>
 
-                                        <div className="flex flex-col items-center justify-center p-8">
-                                            <div className="relative">
-                                                <AnimatePresence>
-                                                    {sensorData.pumpActive && (
-                                                        <>
-                                                            <motion.div
-                                                                initial={{ scale: 1, opacity: 0.5 }}
-                                                                animate={{ scale: 2, opacity: 0 }}
-                                                                exit={{ opacity: 0 }}
-                                                                transition={{ repeat: Infinity, duration: 1.5 }}
-                                                                className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
-                                                            />
-                                                            <motion.div
-                                                                initial={{ scale: 1, opacity: 0.3 }}
-                                                                animate={{ scale: 1.6, opacity: 0 }}
-                                                                exit={{ opacity: 0 }}
-                                                                transition={{ repeat: Infinity, duration: 1.5, delay: 0.5 }}
-                                                                className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full"
-                                                            />
-                                                        </>
-                                                    )}
-                                                </AnimatePresence>
-                                                <div className={`w-36 h-36 rounded-full flex flex-col items-center justify-center relative z-10 transition-all duration-500 ${sensorData.pumpActive
-                                                    ? 'bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600 shadow-2xl shadow-emerald-500/50 border-4 border-emerald-300'
-                                                    : 'bg-slate-800 border-4 border-slate-700 shadow-xl'
+                                        <div className="flex justify-center pb-6 mt-4">
+                                            <div className="relative group cursor-pointer" onClick={handleManualPumpToggle}>
+                                                <div className={`absolute inset-0 rounded-full blur-2xl transition-all duration-700 ${sensorData.pumpActive ? 'bg-emerald-300 opacity-60 scale-[2.0] animate-pulse' : 'bg-transparent opacity-0'}`} />
+
+                                                <div className={`w-40 h-40 rounded-full flex flex-col items-center justify-center relative z-10 transition-all duration-500 border-[8px] bg-white shadow-lg ${sensorData.pumpActive
+                                                    ? 'border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
+                                                    : 'border-slate-100 hover:border-slate-200 shadow-sm'
                                                     }`}>
-                                                    <Power size={48} className={sensorData.pumpActive ? 'text-white drop-shadow-lg' : 'text-slate-500'} />
-                                                    <span className={`text-sm font-black tracking-widest mt-2 ${sensorData.pumpActive ? 'text-white' : 'text-slate-500'}`}>
-                                                        {pumpLoading ? 'SENDING' : sensorData.pumpActive ? 'ACTIVE' : 'STANDBY'}
+                                                    <Power size={48} className={`transition-colors duration-500 ${sensorData.pumpActive ? 'text-emerald-500' : 'text-slate-300'}`} />
+                                                    <span className={`text-[10px] font-black tracking-[0.2em] mt-3 transition-colors duration-500 ${sensorData.pumpActive ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                                        {pumpLoading ? 'SYNCING...' : sensorData.pumpActive ? 'PUMPING' : 'STANDBY'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -575,189 +511,181 @@ export default function SmartIrrigationDashboard() {
                                 </div>
                             </div>
 
-                            {/* ── CENTER COLUMN: AI Decision Engine ──────────── */}
-                            <div className="xl:col-span-7 space-y-6">
+                            {/* ── CENTER COLUMN: AI Decision Engine & Charts ─── */}
+                            <div className="xl:col-span-7 space-y-8">
 
-
-                                {/* AI Decision Output */}
-                                {aiDecision && (
-                                    <div className="relative overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-3xl shadow-2xl border border-cyan-500/30">
-                                        <div className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-full blur-3xl animate-pulse" />
-
-                                        <div className="relative z-10 p-7">
-                                            <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
-                                                <div className="p-2 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg shadow-cyan-500/50">
-                                                    <BrainCircuit className="text-white" size={24} />
-                                                </div>
-                                                AI Decision Output
-                                            </h3>
-
-                                            <div className="grid grid-cols-2 gap-4 mb-6">
-                                                {/* Irrigation Decision */}
-                                                <div className="bg-slate-800/60 p-5 rounded-2xl border border-slate-700/50">
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">Irrigation</span>
-                                                        {aiDecision.irrigation === 1 ? (
-                                                            <CheckCircle className="text-emerald-400" size={20} />
-                                                        ) : (
-                                                            <XCircle className="text-slate-500" size={20} />
-                                                        )}
-                                                    </div>
-                                                    <div className={`text-3xl font-black ${aiDecision.irrigation === 1 ? 'text-emerald-400' : 'text-slate-500'}`}>
-                                                        {aiDecision.irrigation === 1 ? 'START' : 'STOP'}
-                                                    </div>
-                                                    {aiDecision.irrigation === 1 && (
-                                                        <div className="mt-3 text-xs text-slate-400">
-                                                            Runtime: <span className="text-cyan-400 font-bold">{aiDecision.recommended_runtime_seconds}s</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Fertilizer Status */}
-                                                <div className="bg-slate-800/60 p-5 rounded-2xl border border-slate-700/50">
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">Fertilizer</span>
-                                                        <Beaker className={`${aiDecision.fertilizer_level === 'optimal' ? 'text-emerald-400' :
-                                                            aiDecision.fertilizer_level === 'low' ? 'text-rose-400' : 'text-amber-400'
-                                                            }`} size={20} />
-                                                    </div>
-                                                    <div className={`text-2xl font-black uppercase ${aiDecision.fertilizer_level === 'optimal' ? 'text-emerald-400' :
-                                                        aiDecision.fertilizer_level === 'low' ? 'text-rose-400' : 'text-amber-400'
-                                                        }`}>
-                                                        {aiDecision.fertilizer_level}
-                                                    </div>
-                                                    {aiDecision.fertilizer_needed && (
-                                                        <div className="mt-3 text-xs text-rose-400 font-semibold">
-                                                            ⚠ Injection needed
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* ET Index */}
-                                                <div className="bg-slate-800/60 p-5 rounded-2xl border border-slate-700/50">
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">ET Index</span>
-                                                        <TrendingUp className="text-orange-400" size={20} />
-                                                    </div>
-                                                    <div className="text-3xl font-black text-orange-400">
-                                                        {fmt(aiDecision.et_index, 2)}
-                                                    </div>
-                                                    <div className="mt-3 text-xs text-slate-400">
-                                                        Evapotranspiration demand
-                                                    </div>
-                                                </div>
-
-                                                {/* System Status */}
-                                                <div className="bg-slate-800/60 p-5 rounded-2xl border border-slate-700/50">
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <span className="text-sm font-bold text-slate-300 uppercase tracking-wider">Status</span>
-                                                        {aiDecision.dry_run_warning ? (
-                                                            <AlertCircle className="text-rose-400 animate-pulse" size={20} />
-                                                        ) : (
-                                                            <CheckCircle className="text-emerald-400" size={20} />
-                                                        )}
-                                                    </div>
-                                                    <div className={`text-xl font-black ${aiDecision.dry_run_warning ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                                        {aiDecision.dry_run_warning ? 'DRY RUN!' : 'NORMAL'}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Decision Reason */}
-                                            <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 p-5 rounded-2xl border border-cyan-500/30">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <BrainCircuit size={16} className="text-cyan-400" />
-                                                    <span className="text-sm font-bold text-cyan-400 uppercase tracking-wider">Decision Logic</span>
-                                                </div>
-                                                <p className="text-slate-200 text-sm leading-relaxed">
-                                                    {aiDecision.decision_reason}
+                                {/* AI Decision Output rendered from the Groq Backend Endpoint */}
+                                <div className="relative bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden font-sans">
+                                    <div className="relative z-10 p-8 md:p-10">
+                                        <div className="flex items-center justify-between mb-10">
+                                            <div>
+                                                <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                                    <BrainCircuit className="text-emerald-500" size={28} />
+                                                    Cognitive Core
+                                                </h3>
+                                                <p className="text-slate-400 text-xs font-bold tracking-widest uppercase mt-2 ml-10 flex items-center gap-2">
+                                                    Powered by Groq LLM
+                                                    {isAiLoading && <RefreshCw size={12} className="animate-spin text-emerald-500" />}
                                                 </p>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
 
+                                        {aiDecision ? (
+                                            <>
+                                                <div className="grid grid-cols-2 gap-6 mb-8">
+                                                    {/* Irrigation Decision */}
+                                                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-sm transition-all duration-300 hover:border-emerald-200">
+                                                        <div className="flex flex-col h-full justify-between">
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 block">Water Protocol</span>
+                                                            <div>
+                                                                <div className={`text-4xl font-black tracking-tighter mb-4 capitalize ${aiDecision.irrigation_status === 'start' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                                                    {aiDecision.irrigation_status}
+                                                                </div>
+                                                                {aiDecision.irrigation_status === 'start' ? (
+                                                                    <div className="text-[10px] font-black tracking-widest uppercase text-emerald-700 bg-emerald-100 inline-flex px-3 py-1.5 rounded-full shadow-sm">
+                                                                        ACTIVE INJECTION
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="text-[10px] font-bold tracking-widest uppercase text-slate-500 flex items-center gap-1.5">
+                                                                        <XCircle size={14} /> Standby Mode
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Fertilizer Status */}
+                                                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-sm transition-all duration-300 hover:border-purple-200">
+                                                        <div className="flex flex-col h-full justify-between">
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 block">Nutrient Dosing</span>
+                                                            <div>
+                                                                <div className={`text-3xl font-black tracking-tighter mb-4 uppercase ${aiDecision.fertilizer_status === 'optimal' ? 'text-emerald-600' :
+                                                                    aiDecision.fertilizer_status === 'low' ? 'text-purple-600' : 'text-amber-600'
+                                                                    }`}>
+                                                                    {aiDecision.fertilizer_status}
+                                                                </div>
+                                                                {aiDecision.fertilizer_status !== 'optimal' ? (
+                                                                    <div className="text-[10px] font-black tracking-widest uppercase text-purple-700 bg-purple-100 inline-flex px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                                                        <AlertTriangle size={12} /> ACTION REQUIRED
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="text-[10px] font-bold tracking-widest uppercase text-slate-500 flex items-center gap-1.5">
+                                                                        <CheckCircle size={14} /> Balanced
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Hardware System Status */}
+                                                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-sm transition-all duration-300 hover:border-amber-200">
+                                                        <div className="flex flex-col h-full justify-between">
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 block">System Safety</span>
+                                                            <div>
+                                                                <div className={`text-2xl font-black tracking-tighter mb-4 uppercase ${aiDecision.system_health === 'critical' ? 'text-rose-600' : aiDecision.system_health === 'warning' ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                                    {aiDecision.system_health}
+                                                                </div>
+                                                                <div className="text-[10px] font-bold tracking-widest uppercase text-slate-500 flex items-center gap-1.5">
+                                                                    {aiDecision.system_health === 'normal' ? 'Operating normal' : 'Alert triggered'}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* AI Contextual Action */}
+                                                    <div className="bg-emerald-500 p-6 rounded-3xl shadow-md transition-all duration-300">
+                                                        <div className="flex flex-col h-full justify-between">
+                                                            <span className="text-[10px] font-bold text-emerald-100 uppercase tracking-widest mb-4 block">Recommended Action</span>
+                                                            <div>
+                                                                <div className="text-sm font-bold tracking-tight text-white mb-2 leading-snug">
+                                                                    {aiDecision.recommended_action}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Semantic Reasoning String built by LLM */}
+                                                <div className="relative overflow-hidden bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-sm">
+                                                    <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="p-2.5 bg-emerald-100 rounded-xl">
+                                                            <BrainCircuit size={20} className="text-emerald-600" />
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Groq LLM Reasoning</span>
+                                                            <p className="text-slate-700 text-sm leading-relaxed font-medium">
+                                                                {aiDecision.reasoning}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-3xl border border-slate-100 border-dashed">
+                                                <Leaf className="text-slate-300 mb-4 animate-pulse" size={48} />
+                                                <p className="text-slate-500 font-medium font-sm text-center max-w-sm">Awaiting telemetry data to generate Agronomy advice via AI Engine.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
 
                                 {/* Historical Trends */}
-                                <div className="relative overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-3xl shadow-2xl border border-slate-700/50">
-                                    <div className="p-7">
-                                        <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
-                                            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg">
-                                                <BarChart2 className="text-white" size={20} />
-                                            </div>
-                                            Multi-Parameter Trends
+                                <div className="relative bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="p-8 md:p-10">
+                                        <h3 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                                            <BarChart2 className="text-emerald-500" size={28} />
+                                            Parameter Telemetry
                                         </h3>
 
-                                        <div className="h-80 bg-slate-900/50 rounded-2xl p-4">
+                                        <div className="h-96 w-full -ml-4">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                <LineChart data={historicalData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                                <LineChart data={historicalData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" vertical={false} />
                                                     <XAxis
                                                         dataKey="time"
-                                                        tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }}
-                                                        stroke="#475569"
+                                                        tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
+                                                        stroke="#cbd5e1"
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        dy={10}
                                                     />
                                                     <YAxis
                                                         yAxisId="left"
-                                                        tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }}
-                                                        stroke="#475569"
+                                                        tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
+                                                        stroke="#cbd5e1"
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        dx={-10}
                                                     />
                                                     <YAxis
                                                         yAxisId="right"
                                                         orientation="right"
-                                                        tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }}
-                                                        stroke="#475569"
+                                                        tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
+                                                        stroke="#cbd5e1"
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        dx={10}
                                                     />
                                                     <RechartsTooltip
                                                         contentStyle={{
-                                                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                                                            border: '1px solid #334155',
-                                                            borderRadius: '12px',
-                                                            padding: '12px'
+                                                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                                            border: '1px solid rgba(226,232,240,1)',
+                                                            borderRadius: '16px',
+                                                            padding: '16px',
+                                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
                                                         }}
-                                                        labelStyle={{ color: '#e2e8f0', fontWeight: 'bold' }}
+                                                        labelStyle={{ color: '#475569', fontWeight: 'bold', marginBottom: '8px', fontSize: '12px' }}
+                                                        itemStyle={{ fontSize: '13px', fontWeight: '700' }}
                                                     />
                                                     <Legend
-                                                        wrapperStyle={{ fontSize: '12px', fontWeight: 'bold', paddingTop: '20px' }}
+                                                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px', letterSpacing: '0.05em', color: '#64748b' }}
                                                         iconType="circle"
                                                     />
-                                                    <Line
-                                                        yAxisId="left"
-                                                        type="monotone"
-                                                        dataKey="soilMoisture"
-                                                        name="Soil Moisture (%)"
-                                                        stroke="#3b82f6"
-                                                        strokeWidth={3}
-                                                        dot={false}
-                                                    />
-                                                    <Line
-                                                        yAxisId="left"
-                                                        type="monotone"
-                                                        dataKey="temperature"
-                                                        name="Temperature (°C)"
-                                                        stroke="#f97316"
-                                                        strokeWidth={3}
-                                                        dot={false}
-                                                    />
-                                                    <Line
-                                                        yAxisId="right"
-                                                        type="monotone"
-                                                        dataKey="tds"
-                                                        name="TDS (ppm)"
-                                                        stroke="#a855f7"
-                                                        strokeWidth={3}
-                                                        dot={false}
-                                                    />
-                                                    <Line
-                                                        yAxisId="left"
-                                                        type="monotone"
-                                                        dataKey="etIndex"
-                                                        name="ET Index"
-                                                        stroke="#10b981"
-                                                        strokeWidth={3}
-                                                        dot={false}
-                                                        strokeDasharray="5 5"
-                                                    />
+                                                    <Line yAxisId="left" type="monotone" dataKey="soilMoisture" name="Soil H2O" stroke="#10b981" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 3 }} />
+                                                    <Line yAxisId="left" type="monotone" dataKey="temperature" name="Temp" stroke="#f59e0b" strokeWidth={3} dot={false} activeDot={{ r: 5, fill: '#f59e0b', stroke: '#fff', strokeWidth: 2 }} />
+                                                    <Line yAxisId="right" type="monotone" dataKey="tds" name="Nutrients" stroke="#8b5cf6" strokeWidth={3} dot={false} activeDot={{ r: 5, fill: '#8b5cf6', stroke: '#fff', strokeWidth: 2 }} />
+                                                    <Line yAxisId="left" type="monotone" dataKey="etIndex" name="Stress" stroke="#06b6d4" strokeWidth={2} dot={false} strokeDasharray="5 5" />
                                                 </LineChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -765,62 +693,32 @@ export default function SmartIrrigationDashboard() {
                                 </div>
 
                                 {/* System Performance Radar */}
-                                <div className="relative overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-3xl shadow-2xl border border-slate-700/50">
-                                    <div className="p-7">
-                                        <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
-                                            <div className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-lg">
-                                                <Activity className="text-white" size={20} />
-                                            </div>
-                                            System Performance Matrix
+                                <div className="relative bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="p-8 md:p-10">
+                                        <h3 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                                            <Activity className="text-emerald-500" size={28} />
+                                            Ecosystem Health
                                         </h3>
 
-                                        <div className="h-80 bg-slate-900/50 rounded-2xl p-4">
+                                        <div className="h-[400px] w-full relative -mt-4">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <RadarChart data={[
-                                                    {
-                                                        metric: 'Soil Health',
-                                                        value: Math.min(100, (sensorData.soilMoisture / 60) * 100),
-                                                        fullMark: 100,
-                                                    },
-                                                    {
-                                                        metric: 'Nutrient Level',
-                                                        value: Math.min(100, (sensorData.tdsValue / 1200) * 100),
-                                                        fullMark: 100,
-                                                    },
-                                                    {
-                                                        metric: 'Water Efficiency',
-                                                        value: sensorData.pumpActive && sensorData.waterFlow > 0 ? 100 : 50,
-                                                        fullMark: 100,
-                                                    },
-                                                    {
-                                                        metric: 'Climate Stress',
-                                                        value: aiDecision ? (aiDecision.et_index / 20) * 100 : 50,
-                                                        fullMark: 100,
-                                                    },
-                                                    {
-                                                        metric: 'System Status',
-                                                        value: connected && !aiDecision?.dry_run_warning ? 100 : 30,
-                                                        fullMark: 100,
-                                                    },
+                                                    { metric: 'Soil Health', value: Math.min(100, (sensorData.soilMoisture / 60) * 100), fullMark: 100 },
+                                                    { metric: 'Nutrients', value: Math.min(100, (sensorData.tdsValue / 1200) * 100), fullMark: 100 },
+                                                    { metric: 'Flow Rate', value: sensorData.pumpActive && sensorData.waterFlow > 0 ? 100 : 50, fullMark: 100 },
+                                                    { metric: 'Climate', value: sensorData.etIndex ? Math.max(0, 100 - (sensorData.etIndex / 20) * 100) : 50, fullMark: 100 },
+                                                    { metric: 'Hardware', value: connected && !aiDecision?.dry_run_warning ? 100 : 30, fullMark: 100 },
                                                 ]}>
-                                                    <PolarGrid stroke="#334155" />
-                                                    <PolarAngleAxis
-                                                        dataKey="metric"
-                                                        tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
-                                                    />
-                                                    <PolarRadiusAxis
-                                                        angle={90}
-                                                        domain={[0, 100]}
-                                                        tick={{ fill: '#64748b', fontSize: 10 }}
-                                                    />
-                                                    <Radar
-                                                        name="Performance"
-                                                        dataKey="value"
-                                                        stroke="#06b6d4"
-                                                        fill="#06b6d4"
-                                                        fillOpacity={0.6}
-                                                        strokeWidth={2}
-                                                    />
+                                                    <PolarGrid stroke="#e2e8f0" />
+                                                    <PolarAngleAxis dataKey="metric" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }} />
+                                                    <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: '#94a3b8', fontSize: 9 }} tickCount={3} axisLine={false} />
+                                                    <Radar name="Status" dataKey="value" stroke="#10b981" strokeWidth={3} fill="url(#colorRadar)" fillOpacity={1} />
+                                                    <defs>
+                                                        <linearGradient id="colorRadar" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                                                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.05} />
+                                                        </linearGradient>
+                                                    </defs>
                                                 </RadarChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -828,6 +726,7 @@ export default function SmartIrrigationDashboard() {
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>

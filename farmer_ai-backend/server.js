@@ -115,6 +115,7 @@ app.use('/api/iot', require('./src/routes/iotRoutes')); // New Smart Irrigation
 app.use('/api/yield', require('./src/routes/yieldPredictionRoutes')); // Crop Yield ML
 app.use('/api/insights', require('./src/routes/farmInsightRoutes'));
 app.use('/api/vendor-intelligence', require('./src/routes/vendorIntelligenceRoutes'));
+app.use('/api/feature-flags', require('./src/routes/featureFlagRoutes')); // Feature Flags Public Routes
 
 // Community & Events Routes
 app.use('/api/forum', require('./src/routes/forumRoutes'));

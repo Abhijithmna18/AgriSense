@@ -92,6 +92,17 @@ const ProductCard = ({ product }) => {
         return fullUrl;
     };
 
+    // Default fallback images by category
+    const getDefaultImage = (type) => {
+        const defaults = {
+            'crop': 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&q=80&w=600',
+            'livestock': 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80&w=600',
+            'rent': 'https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?auto=format&fit=crop&q=80&w=600',
+            'input': 'https://images.unsplash.com/photo-1627920769842-894768393af8?auto=format&fit=crop&q=80&w=600'
+        };
+        return defaults[type] || defaults['input'];
+    };
+
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all overflow-hidden flex flex-col h-full">
             {/* Image Area */}
@@ -101,22 +112,20 @@ const ProductCard = ({ product }) => {
                         src={getImageUrl(product.images[0])}
                         alt={productName}
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        crossOrigin="anonymous"
+                        loading="lazy"
                         onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&q=80&w=600'; // Fallback
+                            e.target.src = getDefaultImage(product.productType || 'input');
                         }}
                     />
                 ) : (
                     <img
-                        src={(() => {
-                            const type = product.productType || 'input';
-                            if (type === 'crop') return 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&q=80&w=600'; // Wheat/Crops
-                            if (type === 'livestock') return 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80&w=600'; // Cow/Livestock
-                            if (type === 'rent') return 'https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?auto=format&fit=crop&q=80&w=600'; // Tractor
-                            return 'https://images.unsplash.com/photo-1627920769842-894768393af8?auto=format&fit=crop&q=80&w=600'; // Fertilizer/Input
-                        })()}
+                        src={getDefaultImage(product.productType || 'input')}
                         alt={category}
                         className="w-full h-full object-cover opacity-90 transition-transform group-hover:scale-105"
+                        crossOrigin="anonymous"
+                        loading="lazy"
                     />
                 )}
 

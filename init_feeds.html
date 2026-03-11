@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adafruit IO Feed Initializer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        .feed-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .feed-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .feed-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #e9ecef;
+            color: #666;
+        }
+        .feed-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .feed-status.done {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌾 Adafruit IO Feed Initializer</h1>
+        <p class="subtitle">Initialize pump and water-flow feeds with initial data</p>
+
+        <div class="form-group">
+            <label for="username">Adafruit IO Username</label>
+            <input type="text" id="username" placeholder="e.g., Abhijith2002" value="Abhijith2002">
+        </div>
+
+        <div class="form-group">
+            <label for="aioKey">Adafruit IO Key</label>
+            <input type="password" id="aioKey" placeholder="aio_xxxxxxxxxxxx">
+        </div>
+
+        <button onclick="initializeFeeds()">Initialize Feeds</button>
+
+        <div id="status" class="status"></div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h3 style="color: #333; margin-bottom: 15px;">Feeds to Initialize:</h3>
+            <div class="feed-item">
+                <span class="feed-name">pump</span>
+                <span class="feed-status" id="pump-status">Pending</span>
+            </div>
+            <div class="feed-item">
+                <span class="feed-name">water-flow</span>
+                <span class="feed-status" id="water-flow-status">Pending</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function initializeFeeds() {
+            const username = document.getElementById('username').value;
+            const aioKey = document.getElementById('aioKey').value;
+            const statusDiv = document.getElementById('status');
+
+            if (!username || !aioKey) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Please enter both username and AIO Key';
+                return;
+            }
+
+            statusDiv.className = 'status info';
+            statusDiv.textContent = '⏳ Initializing feeds...';
+
+            const feeds = ['pump', 'water-flow'];
+            let successCount = 0;
+
+            for (const feed of feeds) {
+                try {
+                    const response = await fetch(
+                        `https://io.adafruit.com/api/v2/${username}/feeds/${feed}/data`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'X-AIO-Key': aioKey,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ value: '0' })
+                        }
+                    );
+
+                    const statusEl = document.getElementById(`${feed}-status`);
+                    
+                    if (response.ok) {
+                        statusEl.className = 'feed-status done';
+                        statusEl.textContent = '✅ Done';
+                        successCount++;
+                    } else {
+                        const error = await response.json();
+                        statusEl.className = 'feed-status';
+                        statusEl.textContent = `❌ ${response.status}`;
+                        console.error(`Failed to init ${feed}:`, error);
+                    }
+                } catch (err) {
+                    const statusEl = document.getElementById(`${feed}-status`);
+                    statusEl.className = 'feed-status';
+                    statusEl.textContent = '❌ Error';
+                    console.error(`Error initializing ${feed}:`, err);
+                }
+
+                // Small delay between requests
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            if (successCount === feeds.length) {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ All feeds initialized! Refresh your dashboard now.';
+            } else if (successCount > 0) {
+                statusDiv.className = 'status info';
+                statusDiv.textContent = `⚠️ Partially initialized (${successCount}/${feeds.length}). Check console for errors.`;
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Failed to initialize feeds. Check your credentials and try again.';
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('aioKey').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') initializeFeeds();
+        });
+    </script>
+</body>
+</html>

@@ -6,6 +6,7 @@ import { UserCheck, UserX, Search, Shield, Sprout, ShoppingBag } from 'lucide-re
 
 const UsersAdmin = () => {
     const [users, setUsers] = useState([]);
+    const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
@@ -21,6 +22,10 @@ const UsersAdmin = () => {
         }, 300); // Debounce search
         return () => clearTimeout(timer);
     }, [page, search]);
+
+    useEffect(() => {
+        fetchRoles();
+    }, []);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -38,6 +43,25 @@ const UsersAdmin = () => {
             // Optionally set error state here
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchRoles = async () => {
+        try {
+            const res = await adminApi.get('/admin/roles', { params: { limit: 100 } });
+            setRoles(res.data.roles || []);
+        } catch (error) {
+            console.error("Failed to fetch roles", error);
+        }
+    };
+
+    const handleRoleChange = async (userId, newRole) => {
+        try {
+            await adminApi.put(`/admin/users/${userId}/role`, { role: newRole });
+            fetchUsers(); // Refresh the list
+        } catch (error) {
+            console.error("Failed to update role", error);
+            alert(error.response?.data?.message || 'Failed to update role');
         }
     };
 
@@ -73,15 +97,18 @@ const UsersAdmin = () => {
         {
             key: 'role', title: 'Role', render: (row) => {
                 const getRoleStyle = (r) => {
-                    switch (r) {
+                    switch (r?.toLowerCase()) {
                         case 'admin': return 'bg-[var(--admin-accent)]/10 text-[var(--admin-accent)] border-[var(--admin-accent)]/20';
                         case 'farmer': return 'bg-[var(--admin-success)]/10 text-[var(--admin-success)] border-[var(--admin-success)]/20';
+                        case 'vendor': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+                        case 'loan officer': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                        case 'manager': return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
                         default: return 'bg-[var(--admin-bg-hover)] text-[var(--admin-text-secondary)] border-[var(--admin-border)]';
                     }
                 };
 
                 const getRoleIcon = (r) => {
-                    switch (r) {
+                    switch (r?.toLowerCase()) {
                         case 'admin': return <Shield size={12} className="mr-1" />;
                         case 'farmer': return <Sprout size={12} className="mr-1" />;
                         default: return <ShoppingBag size={12} className="mr-1" />;
@@ -91,10 +118,25 @@ const UsersAdmin = () => {
                 const displayRole = row.role || row.activeRole || 'unknown';
 
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex items-center w-fit ${getRoleStyle(displayRole)}`}>
-                        {getRoleIcon(displayRole)}
-                        {displayRole.charAt(0).toUpperCase() + displayRole.slice(1)}
-                    </span>
+                    <select
+                        value={displayRole}
+                        onChange={(e) => handleRoleChange(row._id, e.target.value)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent)] ${getRoleStyle(displayRole)}`}
+                    >
+                        {roles.map((role) => (
+                            <option key={role._id} value={role.name.toLowerCase()}>
+                                {role.name}
+                            </option>
+                        ))}
+                        {roles.length === 0 && (
+                            <>
+                                <option value="admin">Admin</option>
+                                <option value="farmer">Farmer</option>
+                                <option value="vendor">Vendor</option>
+                                <option value="buyer">Buyer</option>
+                            </>
+                        )}
+                    </select>
                 );
             }
         },

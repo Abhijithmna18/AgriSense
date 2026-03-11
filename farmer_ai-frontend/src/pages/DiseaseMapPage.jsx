@@ -397,10 +397,10 @@ const DiseaseMapPage = () => {
                                     : null;
 
                                 return (
-                                    <button
+                                    <div
                                         key={alert._id}
                                         onClick={() => handleCardClick(alert)}
-                                        className={`w-full text-left p-3 rounded-xl transition-all duration-200 group border ${isSelected
+                                        className={`w-full text-left p-3 rounded-xl transition-all duration-200 group border cursor-pointer ${isSelected
                                                 ? 'bg-gray-800 border-gray-600 shadow-lg ring-1 ring-gray-600'
                                                 : 'bg-gray-800/50 border-gray-700/50 hover:bg-gray-800 hover:border-gray-600'
                                             }`}
@@ -456,7 +456,7 @@ const DiseaseMapPage = () => {
                                                 )}
                                             </div>
                                         </div>
-                                    </button>
+                                    </div>
                                 );
                             })
                         )}

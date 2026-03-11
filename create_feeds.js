@@ -29,18 +29,16 @@ const HEADERS = {
     'Content-Type': 'application/json'
 };
 
-// All required feeds for the smart irrigation system
+// All required feeds for the smart irrigation system (matching official configuration)
 const REQUIRED_FEEDS = [
-    { name: 'pump-control', description: 'Pump ON/OFF command (0 or 1)' },
-    { name: 'pump-status', description: 'Actual pump state feedback (0 or 1)' },
+    { name: 'pump', description: 'Pump ON/OFF command (0 or 1)' },
     { name: 'soil-moisture', description: 'Soil moisture percentage (0-100%)' },
     { name: 'temperature', description: 'Ambient temperature (Celsius)' },
     { name: 'humidity', description: 'Relative humidity (0-100%)' },
     { name: 'tds', description: 'Total Dissolved Solids - fertilizer concentration (ppm)' },
-    { name: 'flow-rate', description: 'Water flow rate (L/min)' },
+    { name: 'water-flow', description: 'Water flow rate (L/min)' },
     { name: 'water-volume', description: 'Total water dispensed (liters)' },
-    { name: 'dry-run-alert', description: 'Dry run detection alert (1 = alert, 0 = OK)' },
-    { name: 'soil-warning', description: 'Soil not responding to irrigation (1 = warning, 0 = OK)' }
+    { name: 'dry-run-alert', description: 'Dry run detection alert (1 = alert, 0 = OK)' }
 ];
 
 async function checkFeedExists(feedName) {

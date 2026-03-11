@@ -27,14 +27,14 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 // WiFi Credentials
-#define WIFI_SSID "YOUR_WIFI_SSID"
-#define WIFI_PASS "YOUR_WIFI_PASSWORD"
+#define WIFI_SSID "moto g82 5G"
+#define WIFI_PASS "Abhijith123"
 
 // Adafruit IO Credentials
 #define AIO_SERVER "io.adafruit.com"
 #define AIO_SERVERPORT 1883
-#define AIO_USERNAME "YOUR_ADAFRUIT_USERNAME"
-#define AIO_KEY "YOUR_ADAFRUIT_IO_KEY"
+#define AIO_USERNAME "your_adafruit_username"
+#define AIO_KEY "your_adafruit_io_key"
 
 // Pin Definitions
 #define PUMP_RELAY_PIN 26        // Relay control pin
@@ -90,18 +90,17 @@ float totalWaterVolume = 0.0;
 // ═══════════════════════════════════════════════════════════════════════════
 
 // Publish Feeds (ESP32 → Adafruit IO → Dashboard)
-Adafruit_MQTT_Publish feed_pump_status = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/pump-status");
+Adafruit_MQTT_Publish feed_pump_status = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/pump");
 Adafruit_MQTT_Publish feed_soil_moisture = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/soil-moisture");
 Adafruit_MQTT_Publish feed_temperature = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/temperature");
 Adafruit_MQTT_Publish feed_humidity = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/humidity");
 Adafruit_MQTT_Publish feed_tds = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/tds");
-Adafruit_MQTT_Publish feed_flow_rate = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/flow-rate");
+Adafruit_MQTT_Publish feed_flow_rate = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/water-flow");
 Adafruit_MQTT_Publish feed_water_volume = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/water-volume");
 Adafruit_MQTT_Publish feed_dry_run_alert = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/dry-run-alert");
-Adafruit_MQTT_Publish feed_soil_warning = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/soil-warning");
 
 // Subscribe Feed (Dashboard → Adafruit IO → ESP32)
-Adafruit_MQTT_Subscribe feed_pump_control = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/pump-control");
+Adafruit_MQTT_Subscribe feed_pump_control = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/pump");
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INTERRUPT SERVICE ROUTINE - Flow Sensor
@@ -127,7 +126,7 @@ void setup() {
   
   // Initialize pins
   pinMode(PUMP_RELAY_PIN, OUTPUT);
-  digitalWrite(PUMP_RELAY_PIN, LOW);  // Pump OFF initially
+  digitalWrite(PUMP_RELAY_PIN, HIGH);  // Pump OFF initially (Active-LOW relay)
   pinMode(FLOW_SENSOR_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(FLOW_SENSOR_PIN), flowPulseCounter, FALLING);
   
@@ -165,9 +164,9 @@ void loop() {
     }
   }
   
-  // Read and publish sensor data every 4 seconds
+  // Read and publish sensor data every 60 seconds
   static unsigned long lastSensorRead = 0;
-  if (millis() - lastSensorRead >= 4000) {
+  if (millis() - lastSensorRead >= 60000) {
     readAndPublishSensors();
     lastSensorRead = millis();
   }
@@ -267,7 +266,7 @@ void pumpON() {
     return;
   }
   
-  digitalWrite(PUMP_RELAY_PIN, HIGH);
+  digitalWrite(PUMP_RELAY_PIN, LOW);   // Active-LOW relay ON
   pumpActive = true;
   pumpStartTime = millis();
   soilMoistureAtPumpStart = readSoilMoisture();
@@ -283,7 +282,6 @@ void pumpON() {
   // Publish pump status
   feed_pump_status.publish((uint32_t)1);
   feed_dry_run_alert.publish((uint32_t)0);  // Clear any previous alerts
-  feed_soil_warning.publish((uint32_t)0);
 }
 
 void pumpOFF() {
@@ -292,7 +290,7 @@ void pumpOFF() {
     return;
   }
   
-  digitalWrite(PUMP_RELAY_PIN, LOW);
+  digitalWrite(PUMP_RELAY_PIN, HIGH);  // Active-LOW relay OFF
   pumpActive = false;
   
   unsigned long runtime = (millis() - pumpStartTime) / 1000;
@@ -477,7 +475,6 @@ void checkSoilResponse() {
       Serial.println("╚════════════════════════════════════════╝\n");
       
       soilWarning = true;
-      feed_soil_warning.publish((uint32_t)1);
     }
   }
 }

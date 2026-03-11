@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getLoanQueue } from '../../../api/adminFinanceApi';
-import { Loader, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import Sidebar from '../../../components/dashboard/Sidebar';
-import TopBar from '../../../components/dashboard/TopBar';
+import { Loader } from 'lucide-react';
 
 const AdminLoanQueue = () => {
     const navigate = useNavigate();
@@ -40,90 +38,84 @@ const AdminLoanQueue = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            <Sidebar />
-            <div className="flex-1 ml-64">
-                <TopBar />
-                <main className="p-8">
-                    <div className="mb-6 flex justify-between items-center">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Loan Approval Queue</h1>
-                            <p className="text-gray-500">Review and decision pending applications</p>
-                        </div>
-                        <div className="flex gap-2">
-                            <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                                <span className="text-sm text-gray-500">Pending</span>
-                                <p className="text-xl font-bold text-blue-600">{loans.length}</p>
-                            </div>
-                        </div>
+        <div>
+            <div className="mb-6 flex justify-between items-center">
+                <div>
+                    <h1 className="text-2xl font-bold text-[var(--admin-text-primary)]">Loan Approval Queue</h1>
+                    <p className="text-[var(--admin-text-secondary)]">Review and decision pending applications</p>
+                </div>
+                <div className="flex gap-2">
+                    <div className="bg-[var(--admin-bg-secondary)] px-4 py-2 rounded-lg shadow-sm border border-[var(--admin-border)]">
+                        <span className="text-sm text-[var(--admin-text-secondary)]">Pending</span>
+                        <p className="text-xl font-bold text-[var(--admin-accent)]">{loans.length}</p>
                     </div>
-
-                    {loading ? (
-                        <div className="flex justify-center p-12">
-                            <Loader className="animate-spin text-green-600" size={32} />
-                        </div>
-                    ) : (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th className="px-6 py-4 font-semibold text-gray-700">Loan ID</th>
-                                        <th className="px-6 py-4 font-semibold text-gray-700">Farmer</th>
-                                        <th className="px-6 py-4 font-semibold text-gray-700">Amount</th>
-                                        <th className="px-6 py-4 font-semibold text-gray-700">Date Applied</th>
-                                        <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                                        <th className="px-6 py-4 font-semibold text-gray-700">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {loans.map(loan => (
-                                        <tr key={loan._id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 text-sm font-mono text-gray-500">
-                                                #{loan._id.slice(-6).toUpperCase()}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold">
-                                                        {loan.farmer?.name?.charAt(0) || 'F'}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-medium text-gray-900">{loan.farmer?.name}</p>
-                                                        <p className="text-xs text-gray-500">{loan.farmer?.email}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 font-medium text-gray-900">
-                                                ₹{loan.amount.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-500">
-                                                {new Date(loan.createdAt).toLocaleDateString()}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {getStatusBadge(loan.status)}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <button
-                                                    onClick={() => navigate(`/admin/loans/${loan._id}`)}
-                                                    className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                                                >
-                                                    Review
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {loans.length === 0 && (
-                                        <tr>
-                                            <td colSpan="6" className="px-6 py-12 text-center text-gray-400">
-                                                No pending loan applications found.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </main>
+                </div>
             </div>
+
+            {loading ? (
+                <div className="flex justify-center p-12">
+                    <Loader className="animate-spin text-[var(--admin-accent)]" size={32} />
+                </div>
+            ) : (
+                <div className="bg-[var(--admin-bg-secondary)] rounded-xl shadow-sm border border-[var(--admin-border)] overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead className="bg-[var(--admin-bg-hover)] border-b border-[var(--admin-border)]">
+                            <tr>
+                                <th className="px-6 py-4 font-semibold text-[var(--admin-text-primary)]">Loan ID</th>
+                                <th className="px-6 py-4 font-semibold text-[var(--admin-text-primary)]">Farmer</th>
+                                <th className="px-6 py-4 font-semibold text-[var(--admin-text-primary)]">Amount</th>
+                                <th className="px-6 py-4 font-semibold text-[var(--admin-text-primary)]">Date Applied</th>
+                                <th className="px-6 py-4 font-semibold text-[var(--admin-text-primary)]">Status</th>
+                                <th className="px-6 py-4 font-semibold text-[var(--admin-text-primary)]">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[var(--admin-border)]">
+                            {loans.map(loan => (
+                                <tr key={loan._id} className="hover:bg-[var(--admin-bg-hover)] transition-colors">
+                                    <td className="px-6 py-4 text-sm font-mono text-[var(--admin-text-secondary)]">
+                                        #{loan._id.slice(-6).toUpperCase()}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold">
+                                                {loan.farmer?.name?.charAt(0) || 'F'}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-[var(--admin-text-primary)]">{loan.farmer?.name}</p>
+                                                <p className="text-xs text-[var(--admin-text-secondary)]">{loan.farmer?.email}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-[var(--admin-text-primary)]">
+                                        ₹{loan.amount.toLocaleString()}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-[var(--admin-text-secondary)]">
+                                        {new Date(loan.createdAt).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {getStatusBadge(loan.status)}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => navigate(`/admin/loans/${loan._id}`)}
+                                            className="px-4 py-2 bg-[var(--admin-accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                                        >
+                                            Review
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {loans.length === 0 && (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center text-[var(--admin-text-muted)]">
+                                        No pending loan applications found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 };

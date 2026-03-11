@@ -8,26 +8,27 @@ const products = [
         name: 'Premium Saffron Bulbs',
         category: 'Seeds',
         price: '₹12,500',
-        image: 'https://images.unsplash.com/photo-1599909533730-c1b6e3c1e9d8?w=600&q=80',
+        image: 'https://images.unsplash.com/photo-1599909533730-c1b6e3c1e9d8?w=600&q=80&fit=crop',
     },
     {
         id: 2,
         name: 'Heirloom Tomatoes',
         category: 'Produce',
         price: '₹450',
-        image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&q=80',
+        image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&q=80&fit=crop',
     },
     {
         id: 3,
         name: 'Organic Wheat Seeds',
         category: 'Seeds',
         price: '₹2,800',
-        image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
+        image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80&fit=crop',
     },
 ];
 
 export const PremiumMarketplace = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [imageErrors, setImageErrors] = useState({});
 
     const nextSlide = () => {
         setCurrentIndex((prev) => (prev + 1) % products.length);
@@ -35,6 +36,10 @@ export const PremiumMarketplace = () => {
 
     const prevSlide = () => {
         setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
+    };
+
+    const handleImageError = (productId) => {
+        setImageErrors(prev => ({ ...prev, [productId]: true }));
     };
 
     return (
@@ -95,12 +100,25 @@ export const PremiumMarketplace = () => {
                                     >
                                         <div className="glass rounded-3xl overflow-hidden hover:border-[#D4AF37]/60 transition-all duration-300">
                                             {/* Image */}
-                                            <div className="relative aspect-[3/4] overflow-hidden">
-                                                <img
-                                                    src={product.image}
-                                                    alt={product.name}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                />
+                                            <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#D4AF37]/20 to-[#0B231E]/20">
+                                                {!imageErrors[product.id] ? (
+                                                    <img
+                                                        src={product.image}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                        onError={() => handleImageError(product.id)}
+                                                        loading="lazy"
+                                                        crossOrigin="anonymous"
+                                                        decoding="async"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#D4AF37]/30 to-[#0B231E]/30">
+                                                        <div className="text-center">
+                                                            <div className="text-4xl mb-2">🌾</div>
+                                                            <p className="text-[#F9F8F4]/60 text-sm">{product.name}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B231E] via-transparent to-transparent opacity-60"></div>
 
                                                 {/* Add Button */}

@@ -24,20 +24,20 @@ const SoilTestSchema = new mongoose.Schema({
         type: String,
         default: 'Self Test'
     },
-    // Macronutrients
+    // Macronutrients (in mg/kg or ppm)
     ph: {
         type: Number,
         required: true
     },
-    nitrogen: { // mg/kg or ppm
+    nitrogen: { // mg/kg or ppm (will be converted to kg/acre for calculations)
         type: Number,
         required: true
     },
-    phosphorus: {
+    phosphorus: { // mg/kg or ppm
         type: Number,
         required: true
     },
-    potassium: {
+    potassium: { // mg/kg or ppm
         type: Number,
         required: true
     },

@@ -669,3 +669,11 @@
 {"level":"warn","message":"404 - Can't find /api/finance/minibank/fixed-deposits/active on this server! - /api/finance/minibank/fixed-deposits/active - GET - ::1","service":"farmer-ai-backend"}
 {"level":"warn","message":"404 - Can't find /api/farms/69a44f9ddca2eee2c3bfa49e/crop-cycles on this server! - /api/farms/69a44f9ddca2eee2c3bfa49e/crop-cycles - GET - ::1","service":"farmer-ai-backend"}
 {"level":"warn","message":"404 - Can't find /api/farms/69a44f9ddca2eee2c3bfa49e/crop-cycles on this server! - /api/farms/69a44f9ddca2eee2c3bfa49e/crop-cycles - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/admin/roles/permissions/all on this server! - /api/admin/roles/permissions/all - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/admin/roles?page=1&search=&limit=10 on this server! - /api/admin/roles?page=1&search=&limit=10 - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /uploads/disease-scans/seeded-placeholder.jpg on this server! - /uploads/disease-scans/seeded-placeholder.jpg - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /uploads/disease-scans/seeded-placeholder.jpg on this server! - /uploads/disease-scans/seeded-placeholder.jpg - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /uploads/disease-scans/seeded-placeholder.jpg on this server! - /uploads/disease-scans/seeded-placeholder.jpg - GET - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/ai/agronomy-advice on this server! - /api/ai/agronomy-advice - POST - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/ai/agronomy-advice on this server! - /api/ai/agronomy-advice - POST - ::1","service":"farmer-ai-backend"}
+{"level":"warn","message":"404 - Can't find /api/ai/agronomy-advice on this server! - /api/ai/agronomy-advice - POST - ::1","service":"farmer-ai-backend"}

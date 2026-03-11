@@ -1,14 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './MarketplaceCard.css';
 
 const MarketplaceCard = ({ item }) => {
+    const [imageError, setImageError] = useState(false);
+
+    const getImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http') || path.startsWith('data:')) return path;
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+        return `${baseUrl}${path}`;
+    };
+
+    const getDefaultImage = () => {
+        return 'https://images.unsplash.com/photo-1627920769842-894768393af8?auto=format&fit=crop&q=80&w=600';
+    };
+
     return (
         <div className="marketplace-card">
             <div className="marketplace-card-image">
                 <img
-                    src={item.imageUrl || '/placeholder-product.jpg'}
+                    src={imageError ? getDefaultImage() : (getImageUrl(item.imageUrl) || getDefaultImage())}
                     alt={item.title}
                     loading="lazy"
+                    crossOrigin="anonymous"
+                    onError={() => setImageError(true)}
                 />
                 {item.rating && (
                     <div className="marketplace-rating">

@@ -15,18 +15,16 @@ import time
 import urllib.request
 import urllib.error
 
-# Feed definitions
+# Feed definitions (matching official Adafruit IO configuration)
 FEEDS = [
-    {'key': 'pump-control', 'name': 'Pump Control', 'description': 'Command to turn pump ON/OFF (0 or 1)'},
-    {'key': 'pump-status', 'name': 'Pump Status', 'description': 'Actual pump state feedback (0 or 1)'},
+    {'key': 'pump', 'name': 'Pump Control', 'description': 'Command to turn pump ON/OFF (0 or 1)'},
     {'key': 'soil-moisture', 'name': 'Soil Moisture', 'description': 'Soil moisture percentage (0-100%)'},
     {'key': 'temperature', 'name': 'Temperature', 'description': 'Ambient temperature in Celsius'},
     {'key': 'humidity', 'name': 'Humidity', 'description': 'Relative humidity percentage (0-100%)'},
     {'key': 'tds', 'name': 'TDS', 'description': 'Total Dissolved Solids - fertilizer concentration (ppm)'},
-    {'key': 'flow-rate', 'name': 'Flow Rate', 'description': 'Water flow rate (L/min)'},
+    {'key': 'water-flow', 'name': 'Water Flow', 'description': 'Water flow rate (L/min)'},
     {'key': 'water-volume', 'name': 'Water Volume', 'description': 'Total water dispensed (liters)'},
-    {'key': 'dry-run-alert', 'name': 'Dry Run Alert', 'description': 'Dry run detection alert (0 or 1)'},
-    {'key': 'soil-warning', 'name': 'Soil Warning', 'description': 'Soil not responding to irrigation (0 or 1)'}
+    {'key': 'dry-run-alert', 'name': 'Dry Run Alert', 'description': 'Dry run detection alert (0 or 1)'}
 ]
 
 def create_feed(username, aio_key, feed):

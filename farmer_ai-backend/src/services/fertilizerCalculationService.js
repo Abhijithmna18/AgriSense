@@ -28,11 +28,15 @@ const calculateFertilizerRequirement = (soilData, cropName, acres) => {
     throw new Error(`Crop '${cropName}' not found in database`);
   }
 
-  // Extract soil NPK values (convert from mg/kg or ppm to kg/acre if needed)
-  // Assuming soil test values are in kg/acre or already converted
-  const soilN = parseFloat(soilData.nitrogen || soilData.n || 0);
-  const soilP = parseFloat(soilData.phosphorus || soilData.p || 0);
-  const soilK = parseFloat(soilData.potassium || soilData.k || 0);
+  // Extract soil NPK values and convert from mg/kg (ppm) to kg/acre
+  // Conversion: mg/kg × 0.002 × bulk density (1.3) × depth (0.5 ft) × 43560 sq ft/acre ÷ 1000
+  // Simplified: mg/kg × 0.056 ≈ kg/acre for 6-inch depth
+  // For more accurate: mg/kg ÷ 10 ≈ kg/acre available nutrient
+  const conversionFactor = 0.1; // Conservative conversion from mg/kg to kg/acre available
+  
+  const soilN = parseFloat(soilData.nitrogen || soilData.n || 0) * conversionFactor;
+  const soilP = parseFloat(soilData.phosphorus || soilData.p || 0) * conversionFactor;
+  const soilK = parseFloat(soilData.potassium || soilData.k || 0) * conversionFactor;
 
   // Calculate nutrient deficit per acre
   const deficitN = Math.max(0, cropRequirement.nitrogen - soilN);

@@ -285,17 +285,23 @@ const FertilizerCalculatorPage = () => {
                       <div className="grid grid-cols-3 gap-3 text-sm">
                         <div>
                           <p className="text-gray-600">N</p>
-                          <p className="font-bold text-gray-800">{soilData.nitrogen} kg/acre</p>
+                          <p className="font-bold text-gray-800">{soilData.nitrogen} mg/kg</p>
+                          <p className="text-xs text-gray-500">~{(soilData.nitrogen * 0.1).toFixed(1)} kg/acre</p>
                         </div>
                         <div>
                           <p className="text-gray-600">P</p>
-                          <p className="font-bold text-gray-800">{soilData.phosphorus} kg/acre</p>
+                          <p className="font-bold text-gray-800">{soilData.phosphorus} mg/kg</p>
+                          <p className="text-xs text-gray-500">~{(soilData.phosphorus * 0.1).toFixed(1)} kg/acre</p>
                         </div>
                         <div>
                           <p className="text-gray-600">K</p>
-                          <p className="font-bold text-gray-800">{soilData.potassium} kg/acre</p>
+                          <p className="font-bold text-gray-800">{soilData.potassium} mg/kg</p>
+                          <p className="text-xs text-gray-500">~{(soilData.potassium * 0.1).toFixed(1)} kg/acre</p>
                         </div>
                       </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        pH: {soilData.ph || 'N/A'} | Test Date: {soilData.testDate ? new Date(soilData.testDate).toLocaleDateString() : 'N/A'}
+                      </p>
                     </div>
                   )}
 

@@ -9,11 +9,19 @@ const PYTHON_AI_URL = process.env.PYTHON_AI_URL || 'http://localhost:8000';
 
 // Helper: call Python AI service
 const callAI = async (endpoint, payload) => {
-    const res = await axios.post(`${PYTHON_AI_URL}${endpoint}`, payload, {
-        timeout: 10000,
-        headers: { 'Content-Type': 'application/json' }
-    });
-    return res.data;
+    try {
+        const res = await axios.post(`${PYTHON_AI_URL}${endpoint}`, payload, {
+            timeout: 10000,
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.data;
+    } catch (error) {
+        // If Python service is not available, throw a specific error
+        if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+            throw new Error('AI_SERVICE_UNAVAILABLE');
+        }
+        throw error;
+    }
 };
 
 // Helper: save insight to MongoDB
@@ -83,6 +91,14 @@ exports.getFarmHealth = async (req, res) => {
         res.status(200).json({ success: true, data: { ...aiResult, insightId: saved._id, generatedAt: saved.createdAt } });
     } catch (error) {
         console.error('Farm health error:', error.message);
+        if (error.message === 'AI_SERVICE_UNAVAILABLE') {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'AI service is currently unavailable. Please start the Python AI service.',
+                hint: 'Run START_PYTHON_AI_SERVICE.bat to start the service',
+                error: 'SERVICE_UNAVAILABLE'
+            });
+        }
         res.status(500).json({ success: false, message: 'Failed to compute farm health score', error: error.message });
     }
 };
@@ -126,6 +142,15 @@ exports.getYieldPrediction = async (req, res) => {
 
         res.status(200).json({ success: true, data: { ...aiResult, cropCycle: cycle.cropName || cycle.cropType, cropCycleId: cycle._id, insightId: saved._id } });
     } catch (error) {
+        console.error('Yield prediction error:', error.message);
+        if (error.message === 'AI_SERVICE_UNAVAILABLE') {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'AI service is currently unavailable. Please start the Python AI service.',
+                hint: 'Run START_PYTHON_AI_SERVICE.bat to start the service',
+                error: 'SERVICE_UNAVAILABLE'
+            });
+        }
         res.status(500).json({ success: false, message: 'Yield prediction failed', error: error.message });
     }
 };
@@ -167,6 +192,15 @@ exports.getPestRisk = async (req, res) => {
 
         res.status(200).json({ success: true, data: { ...aiResult, insightId: saved._id } });
     } catch (error) {
+        console.error('Pest risk error:', error.message);
+        if (error.message === 'AI_SERVICE_UNAVAILABLE') {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'AI service is currently unavailable. Please start the Python AI service.',
+                hint: 'Run START_PYTHON_AI_SERVICE.bat to start the service',
+                error: 'SERVICE_UNAVAILABLE'
+            });
+        }
         res.status(500).json({ success: false, message: 'Pest risk prediction failed', error: error.message });
     }
 };
@@ -210,6 +244,15 @@ exports.getIrrigationAdvice = async (req, res) => {
 
         res.status(200).json({ success: true, data: { ...aiResult, insightId: saved._id } });
     } catch (error) {
+        console.error('Irrigation advice error:', error.message);
+        if (error.message === 'AI_SERVICE_UNAVAILABLE') {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'AI service is currently unavailable. Please start the Python AI service.',
+                hint: 'Run START_PYTHON_AI_SERVICE.bat to start the service',
+                error: 'SERVICE_UNAVAILABLE'
+            });
+        }
         res.status(500).json({ success: false, message: 'Irrigation advice failed', error: error.message });
     }
 };
@@ -247,6 +290,15 @@ exports.getMarketIntelligence = async (req, res) => {
 
         res.status(200).json({ success: true, data: { ...aiResult, cropType, priceHistory: prices } });
     } catch (error) {
+        console.error('Market intelligence error:', error.message);
+        if (error.message === 'AI_SERVICE_UNAVAILABLE') {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'AI service is currently unavailable. Please start the Python AI service.',
+                hint: 'Run START_PYTHON_AI_SERVICE.bat to start the service',
+                error: 'SERVICE_UNAVAILABLE'
+            });
+        }
         res.status(500).json({ success: false, message: 'Market intelligence failed', error: error.message });
     }
 };
