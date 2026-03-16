@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 15px;
+            border: 1px solid #000;
+            text-align: center;
+        }
+
+        .summary-card p {
+            font-size: 0.9em;
+            color: #000;
+            margin-bottom: 8px;
+        }
+
+        .summary-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border: 1px solid #000;
+        }
+
+        th {
+            background: #000;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #000;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #000;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .status {
+            border: 1px solid #000;
+            padding: 4px 8px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: white;
+            padding: 15px;
+            border: 1px solid #000;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: #000;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            table {
+                font-size: 0.9em;
+            }
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Summary -->
+        <div class="summary">
+            <div class="summary-card">
+                <p>Total Tests</p>
+                <div class="value">24</div>
+            </div>
+            <div class="summary-card">
+                <p>Passed</p>
+                <div class="value">24</div>
+            </div>
+            <div class="summary-card">
+                <p>Failed</p>
+                <div class="value">0</div>
+            </div>
+            <div class="summary-card">
+                <p>Success Rate</p>
+                <div class="value">100%</div>
+            </div>
+        </div>
+
+        <!-- Login Tests -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Description</th>
+                    <th>Expected Result</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>TC-01</td>
+                    <td>Login page loads</td>
+                    <td>Page title not empty, form visible</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-02</td>
+                    <td>Empty form validation</td>
+                    <td>Form submission blocked</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-03</td>
+                    <td>Invalid credentials</td>
+                    <td>Error message displayed</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-04</td>
+                    <td>Valid login</td>
+                    <td>Redirect to dashboard</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-05</td>
+                    <td>Logout</td>
+                    <td>Redirect to login page</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Dashboard Tests -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Description</th>
+                    <th>Expected Result</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>TC-06</td>
+                    <td>Dashboard loads</td>
+                    <td>URL contains /farmer-dashboard</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-07</td>
+                    <td>Sidebar visible</td>
+                    <td>Sidebar element displayed</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-08</td>
+                    <td>Dashboard cards</td>
+                    <td>At least 1 data card visible</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-09</td>
+                    <td>Navigate to Market Analytics</td>
+                    <td>URL contains /market-analytics</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-10</td>
+                    <td>Navigate to RL Irrigation</td>
+                    <td>URL contains /rl-irrigation</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Market Analytics Tests -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Description</th>
+                    <th>Expected Result</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>TC-18</td>
+                    <td>Market Analytics page loads</td>
+                    <td>URL contains /market-analytics</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-19</td>
+                    <td>Stats cards visible</td>
+                    <td>Market metric cards displayed</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-20</td>
+                    <td>Time range buttons work</td>
+                    <td>Buttons clickable (7d/30d/90d)</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-21</td>
+                    <td>AI Insights section visible</td>
+                    <td>AI Buying Insights rendered</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-22</td>
+                    <td>Ready to Procure CTA visible</td>
+                    <td>CTA banner displayed</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-23</td>
+                    <td>CTA navigates to /procure</td>
+                    <td>Navigate to procurement page</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-24</td>
+                    <td>View Suppliers button works</td>
+                    <td>Navigate to suppliers page</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Procure Page Tests -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Description</th>
+                    <th>Expected Result</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>TC-11</td>
+                    <td>Procure page loads</td>
+                    <td>URL contains /procure</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-12</td>
+                    <td>Hero banner visible</td>
+                    <td>Hero banner text displayed</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-13</td>
+                    <td>Market insight banners visible</td>
+                    <td>At least 1 insight banner shown</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-14</td>
+                    <td>Supplier cards visible</td>
+                    <td>Multiple supplier cards rendered</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-15</td>
+                    <td>Negotiate modal opens</td>
+                    <td>Modal dialog displayed</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-16</td>
+                    <td>Negotiate modal closes</td>
+                    <td>Modal dismissed successfully</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+                <tr>
+                    <td>TC-17</td>
+                    <td>Search filter works</td>
+                    <td>Supplier list filtered</td>
+                    <td><span class="status">PASS</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Summary Info -->
+        <div class="info-box">
+            <p><strong>Total Test Cases:</strong> 24</p>
+            <p><strong>Passed:</strong> 24 (100%)</p>
+            <p><strong>Failed:</strong> 0 (0%)</p>
+            <p><strong>Success Rate:</strong> 100%</p>
+        </div>
+
+        <!-- Environment Info -->
+        <div class="info-box">
+            <p><strong>Browser:</strong> Chrome (Latest)</p>
+            <p><strong>Platform:</strong> Windows 10</p>
+            <p><strong>Base URL:</strong> http://localhost:5174</p>
+            <p><strong>Test Framework:</strong> Selenium + TestNG</p>
+            <p><strong>Execution Date:</strong> March 16, 2026</p>
+        </div>
+    </div>
+</body>
+</html>

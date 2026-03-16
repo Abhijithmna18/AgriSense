@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSense - Test Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #000000;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f5f5f5;
+            border-bottom: 2px solid #000000;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #000000;
+        }
+
+        .summary-card h3 {
+            color: #000000;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .summary-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .summary-card.pass .value {
+            color: #000000;
+        }
+
+        .summary-card.fail .value {
+            color: #000000;
+        }
+
+        .summary-card.total .value {
+            color: #000000;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #000000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #000000;
+            display: inline-block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #000000;
+        }
+
+        thead {
+            background: #000000;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #cccccc;
+        }
+
+        tbody tr:hover {
+            background: #f0f0f0;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-pass {
+            background: #ffffff;
+            color: #000000;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85em;
+            display: inline-block;
+            border: 1px solid #000000;
+        }
+
+        .status-fail {
+            background: #ffffff;
+            color: #000000;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85em;
+            display: inline-block;
+            border: 1px solid #000000;
+        }
+
+        .test-case {
+            background: #f5f5f5;
+            padding: 15px;
+            border-left: 4px solid #000000;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #000000;
+        }
+
+        .test-case strong {
+            color: #000000;
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 20px 30px;
+            text-align: center;
+            color: #000000;
+            border-top: 1px solid #000000;
+            font-size: 0.9em;
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #000000;
+        }
+
+        .chart h4 {
+            color: #000000;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border: 1px solid #000000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .progress-fill.fail {
+            background: #666666;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-right: 5px;
+            border: 1px solid #000000;
+        }
+
+        .badge-login {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .badge-dashboard {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .badge-market {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .badge-procure {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .summary {
+                grid-template-columns: 1fr 1fr;
+            }
+            table {
+                font-size: 0.9em;
+            }
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🌾 AgriSense Test Report</h1>
+            <p>Selenium Automation Test Results</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary">
+            <div class="summary-card total">
+                <h3>Total Tests</h3>
+                <div class="value">24</div>
+            </div>
+            <div class="summary-card pass">
+                <h3>Passed</h3>
+                <div class="value">24</div>
+            </div>
+            <div class="summary-card fail">
+                <h3>Failed</h3>
+                <div class="value">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>Success Rate</h3>
+                <div class="value" style="color: #28a745;">100%</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Overall Progress -->
+            <div class="section">
+                <h2 class="section-title">Overall Progress</h2>
+                <div class="chart-container">
+                    <div class="chart">
+                        <h4>Test Execution Status</h4>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;">100% Passed (24/24)</div>
+                        </div>
+                        <p style="color: #666; font-size: 0.9em; margin-top: 10px;">All tests executed successfully</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Tests -->
+            <div class="section">
+                <h2 class="section-title"><span class="badge badge-login">LOGIN</span>Login Tests</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Description</th>
+                            <th>Expected Result</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>TC-01</strong></td>
+                            <td>Login page loads</td>
+                            <td>Page title not empty, form visible</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-02</strong></td>
+                            <td>Empty form validation</td>
+                            <td>Form submission blocked</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-03</strong></td>
+                            <td>Invalid credentials</td>
+                            <td>Error message displayed</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-04</strong></td>
+                            <td>Valid login</td>
+                            <td>Redirect to dashboard</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-05</strong></td>
+                            <td>Logout</td>
+                            <td>Redirect to login page</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Dashboard Tests -->
+            <div class="section">
+                <h2 class="section-title"><span class="badge badge-dashboard">DASHBOARD</span>Dashboard Tests</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Description</th>
+                            <th>Expected Result</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>TC-06</strong></td>
+                            <td>Dashboard loads</td>
+                            <td>URL contains /farmer-dashboard</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-07</strong></td>
+                            <td>Sidebar visible</td>
+                            <td>Sidebar element displayed</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-08</strong></td>
+                            <td>Dashboard cards</td>
+                            <td>At least 1 data card visible</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-09</strong></td>
+                            <td>Navigate to Market Analytics</td>
+                            <td>URL contains /market-analytics</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-10</strong></td>
+                            <td>Navigate to RL Irrigation</td>
+                            <td>URL contains /rl-irrigation</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Market Analytics Tests -->
+            <div class="section">
+                <h2 class="section-title"><span class="badge badge-market">MARKET</span>Market Analytics Tests</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Description</th>
+                            <th>Expected Result</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>TC-18</strong></td>
+                            <td>Market Analytics page loads</td>
+                            <td>URL contains /market-analytics</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-19</strong></td>
+                            <td>Stats cards visible</td>
+                            <td>Market metric cards displayed</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-20</strong></td>
+                            <td>Time range buttons work</td>
+                            <td>Buttons clickable (7d/30d/90d)</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-21</strong></td>
+                            <td>AI Insights section visible</td>
+                            <td>AI Buying Insights rendered</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-22</strong></td>
+                            <td>Ready to Procure CTA visible</td>
+                            <td>CTA banner displayed</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-23</strong></td>
+                            <td>CTA navigates to /procure</td>
+                            <td>Navigate to procurement page</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-24</strong></td>
+                            <td>View Suppliers button works</td>
+                            <td>Navigate to suppliers page</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Procure Page Tests -->
+            <div class="section">
+                <h2 class="section-title"><span class="badge badge-procure">PROCURE</span>Procure Page Tests</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Description</th>
+                            <th>Expected Result</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>TC-11</strong></td>
+                            <td>Procure page loads</td>
+                            <td>URL contains /procure</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-12</strong></td>
+                            <td>Hero banner visible</td>
+                            <td>Hero banner text displayed</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-13</strong></td>
+                            <td>Market insight banners visible</td>
+                            <td>At least 1 insight banner shown</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-14</strong></td>
+                            <td>Supplier cards visible</td>
+                            <td>Multiple supplier cards rendered</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-15</strong></td>
+                            <td>Negotiate modal opens</td>
+                            <td>Modal dialog displayed</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-16</strong></td>
+                            <td>Negotiate modal closes</td>
+                            <td>Modal dismissed successfully</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TC-17</strong></td>
+                            <td>Search filter works</td>
+                            <td>Supplier list filtered</td>
+                            <td><span class="status-pass">PASS</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Test Summary -->
+            <div class="section">
+                <h2 class="section-title">Test Summary</h2>
+                <div class="test-case">
+                    <strong>Total Test Cases:</strong> 24<br>
+                    <strong>Passed:</strong> 24 (100%)<br>
+                    <strong>Failed:</strong> 0 (0%)<br>
+                    <strong>Skipped:</strong> 0 (0%)<br>
+                    <strong>Success Rate:</strong> 100%
+                </div>
+            </div>
+
+            <!-- Test Environment -->
+            <div class="section">
+                <h2 class="section-title">Test Environment</h2>
+                <div class="test-case">
+                    <strong>Browser:</strong> Chrome (Latest)<br>
+                    <strong>Platform:</strong> Windows 10<br>
+                    <strong>Base URL:</strong> http://localhost:5174<br>
+                    <strong>Test Framework:</strong> Selenium + TestNG<br>
+                    <strong>Execution Date:</strong> March 16, 2026<br>
+                    <strong>Execution Time:</strong> ~5 minutes
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Generated on March 16, 2026 | AgriSense Selenium Test Suite | All Rights Reserved</p>
+        </div>
+    </div>
+</body>
+</html>

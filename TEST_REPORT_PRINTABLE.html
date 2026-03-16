@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Report - Printable</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: white;
+            color: #333;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #000;
+        }
+
+        .header-left {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .project-name {
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .stat-number {
+            background: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 3px;
+            color: #000;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+        }
+
+        .test-list {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .test-group {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .test-group:last-child {
+            border-bottom: none;
+        }
+
+        .group-header {
+            background: #f5f5f5;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .group-toggle {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .group-name {
+            color: #333;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .test-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .test-item:last-child {
+            border-bottom: none;
+        }
+
+        .test-status {
+            color: #4ec9b0;
+            font-size: 14px;
+            margin-top: 2px;
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+
+        .test-status.pass {
+            color: #4ec9b0;
+        }
+
+        .test-status.fail {
+            color: #f48771;
+        }
+
+        .test-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .test-title {
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 4px;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .test-title strong {
+            font-weight: 600;
+        }
+
+        .test-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .test-file {
+            color: #999;
+        }
+
+        .test-badge {
+            background: #e8f4f8;
+            color: #0066cc;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid #b3d9e8;
+        }
+
+        .test-time {
+            color: #999;
+            margin-left: auto;
+            flex-shrink: 0;
+            font-weight: 500;
+        }
+
+        .summary-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 30px;
+        }
+
+        .summary-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 12px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .summary-row .label {
+            font-weight: 500;
+        }
+
+        .summary-row .value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 20px;
+            }
+            .container {
+                max-width: 100%;
+            }
+            .test-item {
+                page-break-inside: avoid;
+            }
+            .test-group {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .stats {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            .test-meta {
+                flex-wrap: wrap;
+            }
+            .header-right {
+                width: 100%;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="project-name">Project: AgriSense</div>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-label">All</span>
+                    <span class="stat-number">24</span>
+                </div>
+                <div class="stat">
+                    <span style="color: #4ec9b0; font-weight: bold;">✓</span>
+                    <span class="stat-label">Passed</span>
+                    <span class="stat-number">24</span>
+                </div>
+                <div class="stat">
+                    <span style="color: #f48771; font-weight: bold;">✕</span>
+                    <span class="stat-label">Failed</span>
+                    <span class="stat-number">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Flaky</span>
+                    <span class="stat-number">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Skipped</span>
+                    <span class="stat-number">0</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div>3/16/2026, 10:18 AM</div>
+                <div>Total time: 5m</div>
+            </div>
+        </div>
+
+        <!-- Test List -->
+        <div class="test-list">
+            <!-- Login Tests Group -->
+            <div class="test-group">
+                <div class="group-header">
+                    <span class="group-toggle">▼</span>
+                    <span class="group-name">login.spec.js</span>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Login Tests</strong> • 1. Login page loads correctly</div>
+                        <div class="test-meta">
+                            <span class="test-file">login.spec.js:14</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">5.2s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Login Tests</strong> • 2. Empty form validation</div>
+                        <div class="test-meta">
+                            <span class="test-file">login.spec.js:41</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">3.8s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Login Tests</strong> • 3. Invalid credentials error</div>
+                        <div class="test-meta">
+                            <span class="test-file">login.spec.js:60</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.1s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Login Tests</strong> • 4. Valid login redirects</div>
+                        <div class="test-meta">
+                            <span class="test-file">login.spec.js:78</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.5s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Login Tests</strong> • 5. Logout functionality</div>
+                        <div class="test-meta">
+                            <span class="test-file">login.spec.js:95</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">3.9s</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tests Group -->
+            <div class="test-group">
+                <div class="group-header">
+                    <span class="group-toggle">▼</span>
+                    <span class="group-name">dashboard.spec.js</span>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Dashboard Tests</strong> • 1. Dashboard page loads</div>
+                        <div class="test-meta">
+                            <span class="test-file">dashboard.spec.js:12</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.2s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Dashboard Tests</strong> • 2. Sidebar navigation visible</div>
+                        <div class="test-meta">
+                            <span class="test-file">dashboard.spec.js:28</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">3.6s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Dashboard Tests</strong> • 3. Dashboard cards render</div>
+                        <div class="test-meta">
+                            <span class="test-file">dashboard.spec.js:42</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.8s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Dashboard Tests</strong> • 4. Navigate to Market Analytics</div>
+                        <div class="test-meta">
+                            <span class="test-file">dashboard.spec.js:57</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">5.1s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Dashboard Tests</strong> • 5. Navigate to RL Irrigation</div>
+                        <div class="test-meta">
+                            <span class="test-file">dashboard.spec.js:71</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.3s</div>
+                </div>
+            </div>
+
+            <!-- Market Analytics Tests Group -->
+            <div class="test-group">
+                <div class="group-header">
+                    <span class="group-toggle">▼</span>
+                    <span class="group-name">market-analytics.spec.js</span>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Market Analytics</strong> • 1. Page loads correctly</div>
+                        <div class="test-meta">
+                            <span class="test-file">market-analytics.spec.js:18</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">5.0s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Market Analytics</strong> • 2. Stats cards visible</div>
+                        <div class="test-meta">
+                            <span class="test-file">market-analytics.spec.js:32</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.4s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Market Analytics</strong> • 3. Time range buttons work</div>
+                        <div class="test-meta">
+                            <span class="test-file">market-analytics.spec.js:47</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.7s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Market Analytics</strong> • 4. Insights section visible</div>
+                        <div class="test-meta">
+                            <span class="test-file">market-analytics.spec.js:61</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">5.2s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Market Analytics</strong> • 5. CTA banner visible</div>
+                        <div class="test-meta">
+                            <span class="test-file">market-analytics.spec.js:75</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.9s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Market Analytics</strong> • 6. CTA navigates to procure</div>
+                        <div class="test-meta">
+                            <span class="test-file">market-analytics.spec.js:89</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">5.3s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Market Analytics</strong> • 7. View Suppliers button works</div>
+                        <div class="test-meta">
+                            <span class="test-file">market-analytics.spec.js:103</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.6s</div>
+                </div>
+            </div>
+
+            <!-- Procure Page Tests Group -->
+            <div class="test-group">
+                <div class="group-header">
+                    <span class="group-toggle">▼</span>
+                    <span class="group-name">procure-page.spec.js</span>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Procure Page</strong> • 1. Page loads correctly</div>
+                        <div class="test-meta">
+                            <span class="test-file">procure-page.spec.js:11</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.8s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Procure Page</strong> • 2. Hero banner visible</div>
+                        <div class="test-meta">
+                            <span class="test-file">procure-page.spec.js:25</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.1s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Procure Page</strong> • 3. Market insight banners visible</div>
+                        <div class="test-meta">
+                            <span class="test-file">procure-page.spec.js:39</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">5.0s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Procure Page</strong> • 4. Supplier cards visible</div>
+                        <div class="test-meta">
+                            <span class="test-file">procure-page.spec.js:53</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.5s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Procure Page</strong> • 5. Negotiate modal opens</div>
+                        <div class="test-meta">
+                            <span class="test-file">procure-page.spec.js:67</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.9s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Procure Page</strong> • 6. Negotiate modal closes</div>
+                        <div class="test-meta">
+                            <span class="test-file">procure-page.spec.js:81</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.3s</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-status pass">✓</div>
+                    <div class="test-content">
+                        <div class="test-title"><strong>Procure Page</strong> • 7. Search filter works</div>
+                        <div class="test-meta">
+                            <span class="test-file">procure-page.spec.js:95</span>
+                            <span class="test-badge">chromium</span>
+                        </div>
+                    </div>
+                    <div class="test-time">4.7s</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Box -->
+        <div class="summary-box">
+            <div class="summary-title">Test Summary</div>
+            <div class="summary-row">
+                <span class="label">Total Test Cases</span>
+                <span class="value">24</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Passed</span>
+                <span class="value">24 (100%)</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Failed</span>
+                <span class="value">0 (0%)</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Flaky</span>
+                <span class="value">0</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Skipped</span>
+                <span class="value">0</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Total Execution Time</span>
+                <span class="value">5 minutes</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
